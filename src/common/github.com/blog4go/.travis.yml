@@ -1,0 +1,26 @@
+language: go
+
+os:
+        - linux
+
+group: travis_lts
+
+go:
+        - 1.8
+        - 1.9
+install:
+        - go get github.com/golang/lint/golint
+        - go get github.com/jgautheron/goconst/cmd/goconst
+        - go get github.com/mdempsky/unconvert
+        - go get github.com/mattn/goveralls
+        - go get golang.org/x/tools/cmd/cover
+
+script:
+        - $HOME/gopath/bin/goveralls -service=travis-ci
+        - test -z "$(go fmt ./...)"
+        - test -z "$(go vet ./...)"
+        - test -z "$(golint)"
+        - test -z "$(goconst .)"
+        - test -z "$(unconvert -v .)"
+        - go test -test.v .
+        - go test -test.v -race .
