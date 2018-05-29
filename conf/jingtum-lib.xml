@@ -1,1 +1,11 @@
-#this is a config file
+<blog4go minlevel="debug">
+    <filter levels="trace">
+        <rotatefile path="../log/trace.log" type="time"></rotatefile>
+    </filter>
+    <filter levels="debug,info" colored="true">
+        <file path="../log/debug.log"></file>
+    </filter>
+    <filter levels="error,critical">
+        <rotatefile path="../log/error.log" type="size" rotateSize="50000000" rotateLines="8000000"></rotatefile>
+    </filter>
+</blog4go>

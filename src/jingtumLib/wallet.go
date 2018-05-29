@@ -24,5 +24,5 @@ func Generate() {
 	sha.Write([]byte(randBytes))
 	sRandBytes := sha.Sum(nil)
 	fmt.Println(sRandBytes)
-	//Debugf("log in")
+	Debug(sRandBytes)
 }
