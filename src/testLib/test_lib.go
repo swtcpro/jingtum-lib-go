@@ -10,10 +10,15 @@ package main
 import (
 	"fmt"
 	jingtum "jingtumLib"
+	"os"
 )
 
 func main() {
-	jingtum.Init()
+	err := jingtum.Init()
+	if err != nil {
+		os.Exit(0)
+	}
 	jingtum.Generate()
 	fmt.Println("test_lib")
+	defer jingtum.Exits()
 }

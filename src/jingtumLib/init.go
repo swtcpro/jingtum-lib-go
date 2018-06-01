@@ -14,7 +14,7 @@ import (
 )
 
 func InitLog() {
-	err := Log.NewFileWriter("../log/", true)
+	err := Log.NewFileWriter("../../log/", true)
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -24,4 +24,5 @@ func InitLog() {
 
 func Init() {
 	InitLog()
+    Log.Debugf("Good morning, %s", "eddie")
 }

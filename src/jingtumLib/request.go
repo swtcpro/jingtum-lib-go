@@ -20,6 +20,8 @@ import (
 //提交请求
 func Submit() {
 
-	Log.Info("submit blockchain server.")
+    Log.Debugf("Good morning, %s", "eddie")
+	//Debugf("%s", "something")
+	//Log.Info("submit blockchain server.")
 }
 
