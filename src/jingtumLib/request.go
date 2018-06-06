@@ -13,15 +13,66 @@
 package jingtumLib
 
 import (
+    _ "errors"
 
-    Log "common/github.com/blog4go"
+    log "common/github.com/blog4go"
 )
 
-//提交请求
-func Submit() {
+type FilterFunc func(interface{}) interface{}
 
-    Log.Debugf("Good morning, %s", "eddie")
-	//Debugf("%s", "something")
-	//Log.Info("submit blockchain server.")
+type Request struct {
+	remote        Remote
+	message       map[string]interface{}
+    command       string
+    filter        FilterFunc
 }
 
+func NewRequest(remote *Remote, command string,filter FilterFunc) (request *Request , err error) {
+
+    request = new(Request)
+    request.remote = remote
+    request.command = command
+    request.filter = filter
+    request.message = mak(map[string]interface{})
+	return &request, nil
+}
+
+//提交请求
+func (request *Request) Submit(callback func(data interface{})) {
+    
+    for _, v := range request.message {
+        //if v, ok := s.(string); ok {
+		//fmt.Println(v)
+        //if v, ok := interface{}(s).(string); ok {
+		//fmt.Println(v)//}//}
+
+        if _v, ok := v.(error); ok {
+           callback(v)
+           return
+        }
+    }
+
+    request.remote.Submit(request.command, request.message, request.filter, callback)
+
+}
+
+func (request *Request) SelectLedger(ledger interface{}) {
+    
+    switch ledger.(type) {
+
+    case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+        request.message["ledger_index"] = ledger
+    case string:  
+        _, ok := LEDGER_STATES [ledger]
+
+        if (ok) {
+            request.message["ledger_index"] = ledger
+        } else if MatchString("^[A-F0-9]+$",ledger) {
+            request.message["ledger_hash"] = ledger;
+        } else {
+            request.message["ledger_index"] = "validated"
+        }
+    default:
+        request.message["ledger_index"] = "validated"
+    } 
+}
