@@ -1,0 +1,7 @@
+[Default]
+Name=jingtumLib
+version = 1.0.0
+ 
+[Service]
+Host = ws://ts5.jingtum.com
+Port = 5020

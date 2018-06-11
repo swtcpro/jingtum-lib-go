@@ -1,8 +1,8 @@
 /***  初始化
- *** init.go
- *** 主要用于初始化运行前的准备工作，例如初始化日志，读取配置文件，初始化网络等
- *** author:              1416205324@qq.com
- *** last_modified_time:  2018-5-25 13:13:23
+*** init.go
+*** 主要用于初始化运行前的准备工作，例如初始化日志，读取配置文件，初始化网络等
+*** author:              1416205324@qq.com
+*** last_modified_time:  2018-5-25 13:13:23
  */
 
 package jingtumLib
@@ -11,6 +11,10 @@ import (
 	log "common/github.com/blog4go"
 	"fmt"
 	"sync"
+)
+
+var (
+	JTConfig = new(Config)
 )
 
 type MyHook struct {
@@ -67,6 +71,7 @@ func (hook *MyHook) SetMessage(message string) {
 }
 
 func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...interface{}) {
+	hook = NewMyHook()
 	hook.Add()
 	hook.SetLevel(level)
 	hook.SetMessage(fmt.Sprint(args...))
@@ -151,10 +156,18 @@ func Flush() {
 	log.Flush()
 }
 
+func InitConfig() {
+	JTConfig.InitConfig("conf/jing_tong_lib_config.txt")
+}
+
 func Init() (err error) {
-	rerr := InitLog()
-	if rerr != nil {
-		return rerr
+	err := InitLog()
+	if err != nil {
+		return err
+	}
+	err = InitConfig()
+	if err != nil {
+		return err
 	}
 	return
 }
