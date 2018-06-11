@@ -13,6 +13,10 @@ import (
 	"sync"
 )
 
+var (
+    JTConfig = new(Config)
+)
+
 type MyHook struct {
 	cnt     int
 	level   log.LevelType
@@ -67,6 +71,7 @@ func (hook *MyHook) SetMessage(message string) {
 }
 
 func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...interface{}) {
+    hook = NewMyHook()
 	hook.Add()
 	hook.SetLevel(level)
 	hook.SetMessage(fmt.Sprint(args...))
@@ -151,11 +156,20 @@ func Flush() {
 	log.Flush()
 }
 
+func InitConfig()
+{
+    JTConfig.InitConfig("conf/jing_tong_lib_config.txt") 
+}
+
 func Init() (err error) {
-	rerr := InitLog()
-	if rerr != nil {
-		return rerr
-	}
+	err := InitLog()
+	if err != nil {
+		return err
+    }
+    err = InitConfig()
+	if err != nil {
+		return err
+    }
 	return
 }
 
