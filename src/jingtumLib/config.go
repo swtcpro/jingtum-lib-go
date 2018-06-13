@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"strings"
+    "strconv"
 )
 
 const middle = "========="
@@ -107,4 +108,13 @@ func (c Config) Read(node, key string) string {
 		return ""
 	}
 	return v
+}
+
+func (c Config) ReadInt(node, key string, defaultv int) int {
+	key = node + middle + key
+	v, found := c.Mymap[key]
+	if !found {
+		return defaultv
+	}
+	return strconv.Atoi(v)
 }

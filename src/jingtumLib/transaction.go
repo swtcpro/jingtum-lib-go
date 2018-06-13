@@ -15,6 +15,31 @@ package jingtumLib
 
 import "fmt"
 
+type MemoInfo struct {
+    MemoType        interface{}
+    MemoLen         interface{}
+    MemoData        string
+}
+
+type TxData struct {
+    Flags           uint32
+    Fee             interface{}// = JTConfig.ReadInt("Config","fee", 10000)
+    Account         string
+    TransactionType interface{}
+    SendMax         interface{}
+    Memos           []MemoInfo
+    Paths           interface{}
+    SendMax         interface{}
+    TransferRate    uint32
+}
+
+type Transaction struct {
+    remote        Remote
+    filter        Filter
+    secret        string
+    tx_json       TxData
+}
+
 func GetAccount() {
     fmt.Println("Get account info.")
 }

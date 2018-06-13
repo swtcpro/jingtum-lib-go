@@ -18,7 +18,7 @@ import (
     log "common/github.com/blog4go"
 )
 
-type FilterFunc func(interface{}) interface{}
+type Filter func(interface{}) interface{}
 
 type Request struct {
 	remote        Remote
@@ -27,7 +27,7 @@ type Request struct {
     filter        FilterFunc
 }
 
-func NewRequest(remote *Remote, command string,filter FilterFunc) (request *Request , err error) {
+func NewRequest(remote *Remote, command string,filter Filter) (request *Request , err error) {
 
     request = new(Request)
     request.remote = remote
