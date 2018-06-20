@@ -13,7 +13,11 @@
 
 package jingtumLib
 
-import "fmt"
+import (
+
+     "fmt"
+     "encoding/json"
+)
 
 type MemoInfo struct {
     MemoType        interface{}
@@ -37,9 +41,31 @@ type Transaction struct {
     remote        Remote
     filter        Filter
     secret        string
-    tx_json       TxData
+    tx_json       *TxData
 }
 
-func GetAccount() {
-    fmt.Println("Get account info.")
+func NewTransaction(remote *Remote, filter Filter) (transaction *Transaction , err error) {
+    transaction = new(Transaction)
+    transaction.remote = remote
+    transaction.tx_json = new(TxData)
+    transaction.tx_json.Flags = 0
+    transaction.tx_json.Fee = JTConfig.ReadInt("Config","fee", 10000);
+    transaction.filter = filter
+}
+
+func (transaction *Transaction) ParseJson (jsonStr string) (err error) {
+
+    err:=json.Unmarshal([]byte(jsonStr),&transaction.tx_json)
+}
+
+func (transaction *Transaction) GetAccount() (stirng) {
+    return transaction.tx_json.Account
+}
+
+func (transaction *Transaction) GetTransactionType (interface{}) {
+    return transaction.tx_json.TransactionType
+}
+
+func (transaction *Transaction) SetSecret (secret string) {
+    transaction.secret = secret
 }
