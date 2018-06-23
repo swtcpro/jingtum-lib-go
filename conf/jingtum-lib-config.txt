@@ -1,0 +1,13 @@
+[Default]
+Name=jingtumLib
+version = 1.0.0
+ 
+[Service]
+Host = ws://ts5.jingtum.com
+Port = 5020
+
+[Config]
+currency     = SWT
+ACCOUNT_ZERO = jjjjjjjjjjjjjjjjjjjjjhoLvTp
+ACCOUNT_ONE  = jjjjjjjjjjjjjjjjjjjjBZbvri
+fee          = 10000

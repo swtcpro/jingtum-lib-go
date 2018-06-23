@@ -156,8 +156,8 @@ func Flush() {
 	log.Flush()
 }
 
-func InitConfig() {
-	JTConfig.InitConfig("conf/jing_tong_lib_config.txt")
+func InitConfig() error {
+	return JTConfig.InitConfig("../conf/jingtum-lib-config.txt")
 }
 
 func Init() error {
@@ -169,7 +169,7 @@ func Init() error {
 	if err != nil {
 		return err
 	}
-	return
+	return nil
 }
 
 //退出

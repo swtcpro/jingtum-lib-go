@@ -110,6 +110,7 @@ func (c Config) Read(node, key string) string {
 	return v
 }
 
+
 func (c Config) ReadInt(node, key string, defaultv int) int {
 	key = node + middle + key
 	v, found := c.Mymap[key]

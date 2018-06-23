@@ -10,7 +10,7 @@ package main
 import (
 	"fmt"
 	jingtum "jingtumLib"
-	_ "os"
+	"os"
 )
 
 func main() {
@@ -94,6 +94,24 @@ func main() {
 		return
 	}
 	fmt.Println("Get Response Account Tx succ.len=", len(response), "data=", response)
+
+	//获得账号交易列表
+	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
+	atype := "trust"
+	err, response = jingtum.RequestAccountRelations(conn, account, atype)
+	if err != nil {
+		fmt.Println("Get data:", response)
+		return
+	}
+	fmt.Println("Get Response Account Relations succ.len=", len(response), "data=", response)
+
+	atype = "authorize"
+	err, response = jingtum.RequestAccountRelations(conn, account, atype)
+	if err != nil {
+		fmt.Println("Get data:", response)
+		return
+	}
+	fmt.Println("Get Response Account Relations succ.len=", len(response), "data=", response)
 
 	defer jingtum.Exits()
 }

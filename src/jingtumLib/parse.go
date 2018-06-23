@@ -52,3 +52,14 @@ func Pack_RequestAccountTx(account string, limit int) string {
 	Get_Seq()
 	return fmt.Sprintf("{\"id\":\"%d\",\"command\":\"account_tx\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\":\"%d\"}", Seq, account, limit)
 }
+
+func Pack_RequestAccountRelations(account string, atype string) string {
+	Get_Seq()
+	if atype == "trust" {
+		return fmt.Sprintf("{\"id\":\"%d\",\"command\":\"account_lines\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1}", Seq, account)
+	} else if atype == "authorize" || atype == "freeze" {
+		return fmt.Sprintf("{\"id\":\"%d\",\"command\":\"account_relation\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1}", Seq, account)
+	} else {
+		return ""
+	}
+}

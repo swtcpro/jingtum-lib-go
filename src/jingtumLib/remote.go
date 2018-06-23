@@ -232,6 +232,28 @@ func RequestAccountTums(conn *Conn, account string) (error, string) {
 }
 
 /*
+* 获得账号关系
+ */
+func RequestAccountRelations(conn *Conn, account string, atype string) (error, string) {
+	request := Pack_RequestAccountRelations(account, atype)
+	if request == "" {
+		return errors.New("RequestAccountRelations type value error"), ""
+	}
+	err := send(request, conn)
+	if err != nil {
+		Error("Send data fail!")
+		return err, ""
+	}
+	err, response := read(conn)
+	if err != nil {
+		Error("Received data fail!")
+		return err, ""
+	}
+	Info("Get Reqonse Account Relations succ: ", response)
+	return nil, response
+}
+
+/*
 * 获得账号交易列表
  */
 func RequestAccountTx(conn *Conn, account string, limit int) (error, string) {
