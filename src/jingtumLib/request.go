@@ -46,7 +46,7 @@ func (request *Request) Submit(callback func(data interface{})) {
         //if v, ok := interface{}(s).(string); ok {
 		//fmt.Println(v)//}//}
 
-        if _v, ok := v.(error); ok {
+        if _, ok := v.(error); ok {
            callback(v)
            return
         }
