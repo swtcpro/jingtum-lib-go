@@ -14,12 +14,15 @@ import (
 )
 
 func main() {
-<<<<<<< HEAD
 	err := jingtum.Init()
 	if err != nil {
 		fmt.Println("Init jingtum-lib error,errno", err)
 		os.Exit(0)
 	}
+
+	isNumber := jingtum.Number("5445")
+	fmt.Println(isNumber)
+
 	jingtum.Generate()
 	err, conn := jingtum.Connect()
 	if err != nil {
@@ -93,19 +96,4 @@ func main() {
 	fmt.Println("Get Response Account Tx succ.len=", len(response), "data=", response)
 
 	defer jingtum.Exits()
-=======
-    
-     isNumber  := jingtum.Number("5445")
-
-     fmt.Println(isNumber)
-
-	//err := jingtum.Init()
-	//if err != nil {
-		//os.Exit(0)
-	//}
-	//jingtum.Generate()
-	//fmt.Println("test_lib")
-    //jingtum.Submit()
-	//defer jingtum.Exits()
->>>>>>> e11b2f2630ff69fdcb8a520d062db59afb8a5fd8
 }

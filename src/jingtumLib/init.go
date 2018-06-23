@@ -15,7 +15,7 @@ import (
 
 var (
 	JTConfig = new(Config)
-    Seq = 1
+	Seq      = 1
 )
 
 type MyHook struct {
@@ -160,7 +160,7 @@ func InitConfig() {
 	JTConfig.InitConfig("conf/jing_tong_lib_config.txt")
 }
 
-func Init() (err error) {
+func Init() error {
 	err := InitLog()
 	if err != nil {
 		return err
