@@ -15,6 +15,7 @@ import (
 
 var (
 	JTConfig = new(Config)
+    Seq = 1
 )
 
 type MyHook struct {
@@ -79,7 +80,6 @@ func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...in
 
 func InitLog() (err error) {
 	rerr := log.NewWriterFromConfigAsFile("../conf/jingtum-lib.xml")
-	//rerr := log.NewWriterFromConfigAsFile("../conf/config.example.xml")
 	if nil != rerr {
 		fmt.Println(rerr.Error())
 		return rerr
