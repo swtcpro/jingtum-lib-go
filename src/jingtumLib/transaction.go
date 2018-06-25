@@ -20,6 +20,8 @@ import (
      "errors"
 )
 
+type FlagClass map[string] uint32
+
 type Amount struct {
     Currency        string
     Issuer          string
@@ -45,11 +47,15 @@ type TxData struct {
 }
 
 type Transaction struct {
-    remote        Remote
+    remote        *Remote
     filter        Filter
     secret        string
     tx_json       *TxData
 }
+
+var (
+     TransactionFlags = map[string]FlagClass {"Universal":{"FullyCanonicalSig":0x00010000},"AccountSet":{"RequireDestTag":0x00010000,"OptionalDestTag":0x00020000,"RequireAuth":0x00040000,"OptionalAuth":0x00080000,"DisallowSWT":0x00100000,"AllowSWT":0x00200000},"TrustSet":{"SetAuth":0x00010000,"NoSkywell":0x00020000,"SetNoSkywell":0x00020000,"ClearNoSkywell":0x00040000,"SetFreeze":0x00100000,"ClearFreeze":0x00200000},"OfferCreate":{"Passive":0x00010000,"ImmediateOrCancel":0x00020000,"FillOrKill":0x00040000,"Sell":0x00080000},"Payment":{"NoSkywellDirect":0x00010000,"PartialPayment":0x00020000,"LimitQuality":0x00040000},"RelationSet":{"Authorize":0x00000001,"Freeze":0x00000011}}
+)
 
 func NewTransaction(remote *Remote, filter Filter) (transaction *Transaction , err error) {
     transaction = new(Transaction)
@@ -154,4 +160,56 @@ func (transaction * Transaction) setPath(key string) (err error) {
     transaction.tx_json.Paths = path;
     var amount = MaxAmount(item.choice);
     transaction.tx_json.SendMax = amount;
+}
+
+/**
+ * limit send max amount
+*/
+func (transaction *Transaction) setSendMax(amount Amount) {
+    if !isValidAmount(amount) {
+       transaction.tx_json.SendMax = errors.New("invalid send max amount")
+       return
+    }
+
+    transaction.tx_json.SendMax = amount
+}
+
+/**
+ * transfer rate
+ * between 0 and 1, type is number
+ * @param rate
+ */
+func (transaction *Transaction) setTransferRate(rate float32) (err error) {
+    if (rate < 0 || rate > 1) {
+        err = errors.New("invalid transfer rate")
+        return
+    }
+
+    transaction.tx_json.TransferRate = (rate + 1) * 1000000000;
+}
+
+/**
+ * set transaction flags
+ *
+ */
+func (transaction *Transaction) setFlags(flags interface{}) (err error) {
+    if _, ok := flags.(uint32); ok {
+        transaction.tx_json.Flags = flags
+        return
+    }
+
+    if _, arrayOk := flags.([]string); arrayOk {
+       
+    }
+
+    err = errors.New("invalid flags")
+
+    var transaction_flags = Transaction.flags[this.getTransactionType()] || {};
+    var flag_set = Array.isArray(flags) ? flags : [].concat(flags);
+    for (var i = 0; i < flag_set.length; ++i) {
+        var flag = flag_set[i];
+        if (transaction_flags.hasOwnProperty(flag)) {
+            this.tx_json.Flags += transaction_flags[flag];
+        }
+    }
 }
