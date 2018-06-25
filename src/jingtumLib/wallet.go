@@ -11,6 +11,8 @@ import (
 	"common/goMath"
 	"crypto/sha256"
 	"fmt"
+
+    jtbl "jingtumLib/jingtumBaseLib"
 )
 
 const (
@@ -25,4 +27,7 @@ func Generate() {
 	sRandBytes := sha.Sum(nil)
 	fmt.Println(sRandBytes)
 	Debug(sRandBytes)
+}
+
+func isValidAddress(address string) bool {
 }
