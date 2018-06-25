@@ -3,7 +3,7 @@
  * 文件功能介绍
  *
  * @FileName: utils.go
- * @Auther : 13851485286
+ * @Auther : 杨雪波
  * @Email : yangxuebo@yeah.net
  * @CreateTime: 2013-09-16 10:44:32
  * @UpdateTime: 2013-09-16 10:44:54
@@ -16,6 +16,8 @@ import (
      "strconv"
      "regexp"
      "encoding/hex"
+
+     jtbLib "jingtumLib/jingtumBaseLib"
 )
 
 var (
@@ -61,7 +63,7 @@ func isValidAmount(amount Amount) bool {
     }
 
     // non native currency issuer is not allowed to be empty
-    if (amount.currency != JTConfig.Read("Config","currency") && !isValidAddress(amount.issuer)) {
+    if (amount.currency != JTConfig.Read("Config","currency") && !jtbLib.IsValidAddress(amount.issuer)) {
         return false;
     }
 
@@ -77,5 +79,5 @@ func isValidCurrency(currency string) bool {
 }
 
 func isValidAddress(issuer string) bool {
-    return false
+    return jtbLib.IsValidAddress(issuer)
 }

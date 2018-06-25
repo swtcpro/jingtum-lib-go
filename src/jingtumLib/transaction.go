@@ -5,7 +5,7 @@
  * 另一个是结果。
  *
  * @FileName: transaction.go
- * @Auther : 13851485286
+ * @Auther : 杨雪波
  * @Email : yangxuebo@yeah.net
  * @CreateTime: 2018-05-28 10:44:32
  * @UpdateTime: 2018-05-28 10:44:54

@@ -5,14 +5,12 @@
  *** last_modified_time:  2018-5-25 12:30:01
  */
 
-package jingtumLib
+package jingtumBaseLib
 
 import (
 	"common/goMath"
 	"crypto/sha256"
 	"fmt"
-
-    jtbl "jingtumLib/jingtumBaseLib"
 )
 
 const (
@@ -26,8 +24,9 @@ func Generate() {
 	sha.Write([]byte(randBytes))
 	sRandBytes := sha.Sum(nil)
 	fmt.Println(sRandBytes)
-	Debug(sRandBytes)
+	//Debug(sRandBytes)
 }
 
-func isValidAddress(address string) bool {
+func IsValidAddress(address string) bool {
+    return CheckAddress(address)
 }
