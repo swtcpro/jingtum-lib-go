@@ -20,8 +20,6 @@ import (
      "errors"
 )
 
-type FlagClass map[string] uint32
-
 type Amount struct {
     Currency        string
     Issuer          string
@@ -44,6 +42,9 @@ type TxData struct {
     TransferRate    uint32
     MemoType        interface{}
     MemoLen         interface{}
+    Sequence        uint32
+    Blob            string
+    TxAmount        interface{}
 }
 
 type Transaction struct {
@@ -51,7 +52,10 @@ type Transaction struct {
     filter        Filter
     secret        string
     tx_json       *TxData
+    local_sign   bool
 }
+
+type FlagClass map[string] uint32
 
 var (
      TransactionFlags = map[string]FlagClass {"Universal":{"FullyCanonicalSig":0x00010000},"AccountSet":{"RequireDestTag":0x00010000,"OptionalDestTag":0x00020000,"RequireAuth":0x00040000,"OptionalAuth":0x00080000,"DisallowSWT":0x00100000,"AllowSWT":0x00200000},"TrustSet":{"SetAuth":0x00010000,"NoSkywell":0x00020000,"SetNoSkywell":0x00020000,"ClearNoSkywell":0x00040000,"SetFreeze":0x00100000,"ClearFreeze":0x00200000},"OfferCreate":{"Passive":0x00010000,"ImmediateOrCancel":0x00020000,"FillOrKill":0x00040000,"Sell":0x00080000},"Payment":{"NoSkywellDirect":0x00010000,"PartialPayment":0x00020000,"LimitQuality":0x00040000},"RelationSet":{"Authorize":0x00000001,"Freeze":0x00000011}}
@@ -126,6 +130,7 @@ func (transaction *Transaction) MaxAmount(amount interface{}) (interface{}) {
 
     return errors.New("invalid amount to max")
 }
+
 /**
  * set a path to payment
  * this path is repesented as a key, which is computed in path find
@@ -198,18 +203,71 @@ func (transaction *Transaction) setFlags(flags interface{}) (err error) {
         return
     }
 
-    if _, arrayOk := flags.([]string); arrayOk {
-       
-    }
-
-    err = errors.New("invalid flags")
-
-    var transaction_flags = Transaction.flags[this.getTransactionType()] || {};
-    var flag_set = Array.isArray(flags) ? flags : [].concat(flags);
-    for (var i = 0; i < flag_set.length; ++i) {
-        var flag = flag_set[i];
-        if (transaction_flags.hasOwnProperty(flag)) {
-            this.tx_json.Flags += transaction_flags[flag];
+    if transType, isString := transaction.tx_json.TransactionType.(string); isString {
+        var transaction_flags = TransactionFlags[transType]
+        if transaction_flags != nil {
+           if flag_set, isArray := flags.([]string); isArray {
+               for i := 0; i < len(flag_set); i++ {
+                  flag := flag_set[i]
+                  transaction.tx_json.Flags += transaction_flags[flag]
+               }
+           }
         }
     }
+    err = errors.New("invalid flags")
+}
+
+func (transaction *Transaction) sign(callback func(param ...interface{})) {
+    remote := NewRemote(transaction.remote.url)
+    remote.Connect(func (err error, result interface{}) {
+        if err != nil {
+            callback(err)
+            return
+        }
+        req = transaction.remote.requestAccountInfo(map[string]string){"account": transaction.tx_json.Account, "type": "trust"})
+        req.Submit(func err error, data interface{}) {
+            if nil != err {
+                callback(err)
+                return
+            }
+            transaction.tx_json.Sequence = data.account_data.Sequence
+            transaction.tx_json.Fee = transaction.tx_json.Fee/1000000
+
+            //payment
+            if nil != transaction.tx_json.TxAmount && (amount, ok := transaction.tx_json.TxAmount.(string); ok) {
+                //基础货币
+                if number(amount) {
+                    f, err := strconv.ParseFloat(amount, 32) / 1000000
+                    if (err == nil) {
+                      transaction.tx_json.TxAmount = f/1000000
+                    }
+                }
+                
+            }
+
+            if(transaction.tx_json.Memos){
+                transaction.tx_json.Memos[0].Memo.MemoData = utf8.decode(__hexToString(self.tx_json.Memos[0].Memo.MemoData));
+            }
+            if(transaction.tx_json.SendMax && typeof self.tx_json.SendMax === 'string'){
+                transaction.tx_json.SendMax = Number(self.tx_json.SendMax)/1000000;
+            }
+
+            //order
+            if(transaction.tx_json.TakerPays && JSON.stringify(self.tx_json.TakerPays).indexOf('{') < 0){//基础货币
+                self.tx_json.TakerPays = Number(self.tx_json.TakerPays)/1000000;
+            }
+            if(transaction.tx_json.TakerGets && JSON.stringify(transaction.tx_json.TakerGets).indexOf('{') < 0){//基础货币
+                transaction.tx_json.TakerGets = Number(transaction.tx_json.TakerGets)/1000000
+            }
+
+            wt := new base(transaction.secret)
+            transaction.tx_json.SigningPubKey = wt.getPublicKey()
+            prefix := 0x53545800
+            hash := jser.from_json(transaction.tx_json).hash(prefix)
+            transaction.tx_json.TxnSignature = wt.signTx(hash)
+            transaction.tx_json.Blob = jser.from_json(transaction.tx_json).to_hex()
+            transaction.local_sign = true
+            callback(nil,transaction.tx_json.Blob)
+        })
+    })
 }

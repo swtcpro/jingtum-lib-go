@@ -38,7 +38,7 @@ func NewRequest(remote *Remote, command string,filter Filter) (request *Request 
 }
 
 //提交请求
-func (request *Request) Submit(callback func(data interface{})) {
+func (request *Request) Submit(callback func(err error, data interface{})) {
     
     for _, v := range request.message {
         //if v, ok := s.(string); ok {
@@ -47,7 +47,7 @@ func (request *Request) Submit(callback func(data interface{})) {
 		//fmt.Println(v)//}//}
 
         if _, ok := v.(error); ok {
-           callback(v)
+           callback(v, nil)
            return
         }
     }
