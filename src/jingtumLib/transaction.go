@@ -45,6 +45,9 @@ type TxData struct {
     Sequence        uint32
     Blob            string
     TxAmount        interface{}
+    TakerPays       interface{}
+    TakerGets       interface{}
+
 }
 
 type Transaction struct {
@@ -96,7 +99,7 @@ func (transaction *Transaction AddMemo(memo string) {
     var _memo MemoInfo = new(MemoInfo)
     _memo.MemoData = stringToHex(memo)
 
-    append(transaction.tx_json.Memos, _memo)
+    transaction.tx_json.Memos = append(transaction.tx_json.Memos, *_memo)
 }
 
 func (transaction *Transaction) SetFee(fee uint32) {
@@ -234,30 +237,47 @@ func (transaction *Transaction) sign(callback func(param ...interface{})) {
             transaction.tx_json.Fee = transaction.tx_json.Fee/1000000
 
             //payment
-            if nil != transaction.tx_json.TxAmount && (amount, ok := transaction.tx_json.TxAmount.(string); ok) {
-                //基础货币
-                if number(amount) {
-                    f, err := strconv.ParseFloat(amount, 32) / 1000000
-                    if (err == nil) {
-                      transaction.tx_json.TxAmount = f/1000000
+            if nil != transaction.tx_json.TxAmount {
+                if amount, ok := transaction.tx_json.TxAmount.(string); ok {
+                    //基础货币
+                    if number(amount) {
+                       f, err := strconv.ParseFloat(amount, 32) / 1000000
+                       if (err == nil) {
+                         transaction.tx_json.TxAmount = f / 1000000
+                       }
                     }
                 }
-                
             }
 
-            if(transaction.tx_json.Memos){
-                transaction.tx_json.Memos[0].Memo.MemoData = utf8.decode(__hexToString(self.tx_json.Memos[0].Memo.MemoData));
+            if len(transaction.tx_json.Memos) > 0 {
+                hexStr = hexToString()
+                transaction.tx_json.Memos[0].MemoData = hexToString(transaction.tx_json.Memos[0].MemoData)
             }
-            if(transaction.tx_json.SendMax && typeof self.tx_json.SendMax === 'string'){
-                transaction.tx_json.SendMax = Number(self.tx_json.SendMax)/1000000;
+            if nil != transaction.tx_json.SendMax {
+                 if sendMax, ok := transaction.tx_json.SendMax.(string); ok {
+                     if number(sendMax) {
+                         transaction.tx_json.SendMax = strconv.ParseFloat(sendMax, 32) /1000000
+                     }
+                 }
             }
 
             //order
-            if(transaction.tx_json.TakerPays && JSON.stringify(self.tx_json.TakerPays).indexOf('{') < 0){//基础货币
-                self.tx_json.TakerPays = Number(self.tx_json.TakerPays)/1000000;
+            if nil != transaction.tx_json.TakerPays {
+                //基础货币
+                if takerPays, ok := transaction.tx_json.TakerPays.(string) {
+                    if number(takerPays) {
+                        transaction.tx_json.TakerPays = strconv.ParseFloat(takerPays, 32)/1000000
+                    }
+                }
             }
-            if(transaction.tx_json.TakerGets && JSON.stringify(transaction.tx_json.TakerGets).indexOf('{') < 0){//基础货币
-                transaction.tx_json.TakerGets = Number(transaction.tx_json.TakerGets)/1000000
+
+            if nil != transaction.tx_json.TakerGets {
+                //基础货币
+                if takerGets, ok := transaction.tx_json.TakerGets.(string) {
+                    if number(takerGets) {
+                        transaction.tx_json.TakerGets = strconv.ParseFloat(takerGets, 32)/1000000
+                    }
+                }
             }
 
             wt := new base(transaction.secret)

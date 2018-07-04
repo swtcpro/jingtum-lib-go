@@ -25,9 +25,15 @@ func Test_sha256Util(t *testing.T) {
 }
 
 func Test_CheckAddress(t *testing.T) {
-	s2 := "ddddddd"
+	s2 := "jPFikqnwT44sNDaYa32MX4gNRcXbSxnQJe"
     ok := CheckAddress(s2)
     t.Log(ok)
+}
+
+func Test_encode(t *testing.T) {
+   address := []byte{250,95,217,244,150,117,99,213,201,175,202,133,239,51,28,120,142,54,36,56}
+   adds := __encode(ACCOUNT_PREFIX, address)
+   t.Log(adds)
 }
 
 func TestMain(m *testing.M) {
