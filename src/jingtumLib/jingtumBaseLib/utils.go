@@ -19,9 +19,9 @@ import (
 )
 
 
-func BytesToBigInt(bytes []byte) big.Int {
-    b_buf  : =  bytes .NewBuffer(b)
+func BytesToBigInt(b []byte) *big.Int {
+    b_buf  :=  bytes.NewBuffer(b)
     var x big.Int 
     binary.Read(b_buf, binary.BigEndian, &x)
-    return x
+    return &x
 }

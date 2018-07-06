@@ -16,6 +16,7 @@ import (
       "crypto/sha256"
       "errors"
       "fmt"
+      "math/big"
 
       "github.com/shengdoushi/base58"
 )
@@ -97,37 +98,35 @@ func __decode(version uint8, input string) (decodedBytes []byte, err error) {
     return
 }
 
-//func derivePrivateKey(seed []byte) {
-  //var order = ec.curve.n;
-  //var privateGen = secp256k1.ScalarMultiple(seed);
-  //var publicGen = ec.g.mul(privateGen);
-  //return secp256k1.ScalarMultiple(publicGen.encodeCompressed(), 0).add(privateGen).mod(order);
-//}
+func derivePrivateKey(seed []byte) *big.Int {
+  order := secp256k1.N
+  fmt.Println("start private gen ..")
+  privateGen := ScalarMultiple(seed)
+  fmt.Println("private Gen ",privateGen)
+  Q := secp256k1.ScalarBaseMult(privateGen)
+  publickGen := compression(Q)
+   fmt.Println("public Gen ",privateGen)
+  pb := ScalarMultiple2(publickGen, 0)
+  return pb.Add(pb, privateGen).Mod(pb,order)
+}
 
-//func deriveKeyPair(secret string) (error){
-    //prefix := "00"
-    //myAlphabet := base58.NewAlphabet(ALPHABET)
-    //entropy, err := base58.Decode(input, myAlphabet)
-    //if err != nil {
-        //return err
-    //}
+func deriveKeyPair(secret string) (error,*big.Int,*big.Int) {
+    myAlphabet := base58.NewAlphabet(ALPHABET)
+    decodedBytes, err := base58.Decode(secret, myAlphabet)
+    if (err != nil || decodedBytes[0] != SEED_PREFIX || len(decodedBytes) < 5) {
+        err := errors.New("invalid input size")
+		return err,nil,nil
+	}
 
-    //entropy = entropy[1:len(entropy) - 4]
+	entropy := decodedBytes[1:len(decodedBytes) - 4]
+    privateKey := derivePrivateKey(entropy)
+    fmt.Println(privateKey)
 
+    Q := secp256k1.ScalarBaseMult(privateKey)
+    publicKey := new(big.Int).SetBytes(compression(Q))
 
-	//var entropy = __decode(SEED_PREFIX, secret)
-   // myAlphabet := base58.NewAlphabet(ALPHABET)
-   // decodedBytes, err = base58.Decode(secret, myAlphabet)
-   // if (err != nil || decodedBytes[0] != ACCOUNT_PREFIX || len(decodedBytes) < 5) {
-       // err = errors.New("invalid input size")
-		//return
-	//}
-
-	//entropy := decodedBytes[1:len(decodedBytes) - 4]
-	//var privateKey = prefix + derivePrivateKey(entropy).toString(16, 64).toUpperCase();
-	//var publicKey = bytesToHex(ec.keyFromPrivate(privateKey.slice(2)).getPublic().encodeCompressed());
-	//return { privateKey: privateKey, publicKey: publicKey };
-//}
+    return nil,privateKey,publicKey
+}
 
 func CheckAddress(address string) bool {
     _, err := __decode(ACCOUNT_PREFIX, address)
