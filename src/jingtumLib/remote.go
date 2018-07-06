@@ -155,6 +155,9 @@ func (remote *Remote) send(request string) error {
 			return err
 		}
 	}
+	if request == "" {
+		return errors.New("Nothing to send")
+	}
 	_, err := remote.Wsconn.Ws.Write([]byte(request))
 	if err != nil {
 		Error("Send ", request, "fail!", "errno:", err)
