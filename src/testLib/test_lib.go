@@ -20,19 +20,22 @@ func main() {
 		os.Exit(0)
 	}
 
+    /*
 	isNumber := jingtum.Number("5445")
 	fmt.Println(isNumber)
 
 	jingtum.Generate()
-	err, conn := jingtum.Connect()
+    */
+	_, remote := jingtum.NewRemote()
+	err = remote.Connect()
 	if err != nil {
-		fmt.Println("Connect service", conn.Host, conn.Port, "fail.", err)
+		fmt.Println("Connect service", remote.Wsconn.Host, remote.Wsconn.Port, "fail.", err)
 		return
 	}
-	fmt.Println("Connect service", conn.Host, conn.Port, "succ.")
+	fmt.Println("Connect service", remote.Wsconn.Host, remote.Wsconn.Port, "succ.")
 
 	//请求底层服务器信息
-	err, response := jingtum.RequestServerInfo(conn)
+	err, response := remote.RequestServerInfo()
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -40,7 +43,7 @@ func main() {
 	fmt.Println("Get Response Server Info succ.len=", len(response), "data=", response)
 
 	//获取最新账本信息
-	err, response = jingtum.RequestLedgerClosed(conn)
+	err, response = remote.RequestLedgerClosed()
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -50,8 +53,8 @@ func main() {
 	//获取某一账本具体信息
 	var ledger_index string = "8488670"
 	var ledger_hash string = ""
-	var transactions bool = true
-	err, response = jingtum.RequestLedger(conn, ledger_index, ledger_hash, transactions)
+	var transactions bool = false
+	err, response = remote.RequestLedger(ledger_index, ledger_hash, transactions)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -60,7 +63,7 @@ func main() {
 
 	//获取某一账本具体信息
 	var hash string = "084C7823C318B8921A362E39C67A6FB15ADA5BCCD0C7E9A3B13485B1EF2A4313"
-	err, response = jingtum.RequestTx(conn, hash)
+	err, response = remote.RequestTx(hash)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -69,7 +72,7 @@ func main() {
 
 	//请求账号信息
 	account := "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
-	err, response = jingtum.RequestAccountInfo(conn, account)
+	err, response = remote.RequestAccountInfo(account)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -78,7 +81,7 @@ func main() {
 
 	//获得账号可接收和发送的货币
 	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
-	err, response = jingtum.RequestAccountTums(conn, account)
+	err, response = remote.RequestAccountTums(account)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -88,7 +91,7 @@ func main() {
 	//获得账号交易列表
 	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
 	var limit int = 100
-	err, response = jingtum.RequestAccountTx(conn, account, limit)
+	err, response = remote.RequestAccountTx(account, limit)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -98,7 +101,7 @@ func main() {
 	//获得账号交易列表
 	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
 	atype := "trust"
-	err, response = jingtum.RequestAccountRelations(conn, account, atype)
+	err, response = remote.RequestAccountRelations(account, atype)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
@@ -106,12 +109,41 @@ func main() {
 	fmt.Println("Get Response Account Relations succ.len=", len(response), "data=", response)
 
 	atype = "authorize"
-	err, response = jingtum.RequestAccountRelations(conn, account, atype)
+	err, response = remote.RequestAccountRelations(account, atype)
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return
 	}
 	fmt.Println("Get Response Account Relations succ.len=", len(response), "data=", response)
 
+	//获得账号挂单
+	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
+	err, response = remote.RequestAccountOffers(account)
+	if err != nil {
+		fmt.Println("Get data:", response)
+		return
+	}
+	fmt.Println("Get Response Account Offers succ.len=", len(response), "data=", response)
+
+	//获得账号挂单
+	account = "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
+	gets := "SWT"
+	pays := "CNY"
+	err, response = remote.RequestOrderBook(account, gets, pays)
+	if err != nil {
+		fmt.Println("Get data:", response)
+		return
+	}
+	fmt.Println("Get Response Account Order Book succ.len=", len(response), "data=", response)
+
+	/*
+		//获得账号挂单
+		err, response = remote.BuildPaymentTx()
+		if err != nil {
+			fmt.Println("Get data:", response)
+			return
+		}
+		fmt.Println("Get Response Build Payment Tx succ.len=", len(response), "data=", response)
+	*/
 	defer jingtum.Exits()
 }
