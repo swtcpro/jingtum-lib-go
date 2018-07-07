@@ -13,25 +13,15 @@
 package jingtumBaseLib
 
 import (
-      "crypto/sha256"
       "errors"
       "fmt"
       "math/big"
-
-      "github.com/shengdoushi/base58"
 )
 
 var (
     ACCOUNT_PREFIX uint8 = 0
-    ALPHABET = "jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz"
     SEED_PREFIX uint8 = 33
 )
-
-func sha256Util(sbytes []byte) ([]byte) {
-    h := sha256.New()
-    h.Write(sbytes)
-    return h.Sum(nil)
-}
 
 /**
  * concat an item and a buffer
@@ -68,22 +58,20 @@ func bufCat1(buf1 []byte, buf2 []byte) []byte {
  */
 func __encode(version uint8, bytes []byte) (string) {
 	buffer := bufCat0(version, bytes)
-	checksum := sha256Util(sha256Util(buffer))[0:4]
+	checksum := Sha256Util(Sha256Util(buffer))[0:4]
 	ret := bufCat1(buffer, checksum);
-    myAlphabet := base58.NewAlphabet(ALPHABET)
-    encodedString := base58.Encode(ret, myAlphabet)
+    encodedString := Base58Encode(ret,JingTumAlphabet)
 	return encodedString
 }
 
 func __decode(version uint8, input string) (decodedBytes []byte, err error) {
-    myAlphabet := base58.NewAlphabet(ALPHABET)
-    decodedBytes, err = base58.Decode(input, myAlphabet)
+    decodedBytes, err = Base58Decode(input,JingTumAlphabet)
     if (err != nil || decodedBytes[0] != version || len(decodedBytes) < 5) {
         err = errors.New("invalid input size")
 		return
 	}
     
-    computed := sha256Util(sha256Util(decodedBytes[0:len(decodedBytes) - 4]))[0:4]
+    computed := Sha256Util(Sha256Util(decodedBytes[0:len(decodedBytes) - 4]))[0:4]
     checksum := decodedBytes[len(decodedBytes) - 4:]
 
     for i := 0; i != 4; i++ {
@@ -111,8 +99,7 @@ func derivePrivateKey(seed []byte) *big.Int {
 }
 
 func deriveKeyPair(secret string) (error,*big.Int,*big.Int) {
-    myAlphabet := base58.NewAlphabet(ALPHABET)
-    decodedBytes, err := base58.Decode(secret, myAlphabet)
+    decodedBytes, err := Base58Decode(secret,JingTumAlphabet)
     if (err != nil || decodedBytes[0] != SEED_PREFIX || len(decodedBytes) < 5) {
         err := errors.New("invalid input size")
 		return err,nil,nil

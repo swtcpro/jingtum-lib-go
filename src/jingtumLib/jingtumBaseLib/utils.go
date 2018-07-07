@@ -16,6 +16,7 @@ import (
     "bytes"
     "encoding/binary"
     "math/big"
+    "crypto/sha256"
 )
 
 
@@ -24,4 +25,10 @@ func BytesToBigInt(b []byte) *big.Int {
     var x big.Int 
     binary.Read(b_buf, binary.BigEndian, &x)
     return &x
+}
+
+func Sha256Util(sbytes []byte) ([]byte) {
+    h := sha256.New()
+    h.Write(sbytes)
+    return h.Sum(nil)
 }

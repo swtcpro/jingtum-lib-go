@@ -21,7 +21,7 @@ import (
 
 func Test_sha256Util(t *testing.T) {
     s2 := ([]byte)("ddddddd")
-    sbyte := sha256Util(s2)
+    sbyte := Sha256Util(s2)
     t.Log(sbyte)
 }
 
