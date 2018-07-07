@@ -28,9 +28,10 @@ import (
 
 var secp256k1 EllipticCurve
 
+/**
+ *  初始化椭圆曲线参数
+ */
 func init() {
-	/* See Certicom's SEC2 2.7.1, pg.15 */
-	/* secp256k1 elliptic curve parameters */
 	secp256k1.P, _ = new(big.Int).SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
 	secp256k1.A, _ = new(big.Int).SetString("0000000000000000000000000000000000000000000000000000000000000000", 16)
 	secp256k1.B, _ = new(big.Int).SetString("0000000000000000000000000000000000000000000000000000000000000007", 16)

@@ -5,8 +5,8 @@
  * @FileName: keypairs.go
  * @Auther : 杨雪波
  * @Email : yangxuebo@yeah.net
- * @CreateTime: 2013-09-16 10:44:32
- * @UpdateTime: 2013-09-16 10:44:54
+ * @CreateTime: 2018-06-16 10:44:32
+ * @UpdateTime: 2018-06-16 10:44:54
  * Copyright@2013 版权所有
  */
 
@@ -24,6 +24,14 @@ var (
 )
 
 /**
+ *  接口定义
+ */
+type KeyPair interface {
+    //根据seed 生成公私钥
+    GenerateKey(seed []byte) (PrivateKey, error)
+}
+
+/**
  * concat an item and a buffer
  * @param {integer} item1, should be an integer
  * @param {buffer} buf2, a buffer
@@ -35,6 +43,7 @@ func bufCat0 (item1 uint8, buf2 []byte) ([]byte) {
     buf = append(buf, buf2...)
 	return buf
 }
+
 /**
  * concat one buffer and another
  * @param {buffer} item1, should be an integer
@@ -88,12 +97,9 @@ func __decode(version uint8, input string) (decodedBytes []byte, err error) {
 
 func derivePrivateKey(seed []byte) *big.Int {
   order := secp256k1.N
-  fmt.Println("start private gen ..")
   privateGen := ScalarMultiple(seed)
-  fmt.Println("private Gen ",privateGen)
   Q := secp256k1.ScalarBaseMult(privateGen)
   publickGen := compression(Q)
-   fmt.Println("public Gen ",privateGen)
   pb := ScalarMultiple2(publickGen, 0)
   return pb.Add(pb, privateGen).Mod(pb,order)
 }
