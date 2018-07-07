@@ -78,37 +78,11 @@ func (secp256k1 *Secp256KeyPair) DeriveKeyPair(secret string) (priv *PrivateKey,
 	}
 	entropy := decodedBytes[1:len(decodedBytes) - 4]
     priv.D = derivePrivateKey(entropy)
-
-    Q := secp256k1.ScalarBaseMult(privateKey)
-    publicKey := new(big.Int).SetBytes(compression(Q))
-
-    return nil,privateKey,publicKey
-    
-    /* See Certicom's SEC1 3.2.1, pg.23 */
-	/* See NSA's Suite B Implementer’s Guide to FIPS 186-3 (ECDSA) A.1.1, pg.18 */
-
-	/* Select private key d randomly from [1, n) */
-
-	/* Read N bit length random bytes + 64 extra bits  */
-	b := make([]byte, secp256k1.N.BitLen()/8+8)
-	_, err = io.ReadFull(rand, b)
-	if err != nil {
-		return priv, fmt.Errorf("Reading random reader: %v", err)
-	}
-
-	d := new(big.Int).SetBytes(b)
-
-	/* Mod n-1 to shift d into [0, n-1) range */
-	d.Mod(d, new(big.Int).Sub(secp256k1.N, big.NewInt(1)))
-	/* Add one to shift d to [1, n) range */
-	d.Add(d, big.NewInt(1))
-
-	priv.D = d
-
-	/* Derive public key from private key */
-	priv.derive()
-
-	return priv, nil
+    Q:= ec.ScalarBaseMult(priv.D)
+    priv.X = Q.X
+    priv.Y = Q.Y
+    //publicKey := new(big.Int).SetBytes(ec.ScalarBaseMult(priv.D).compression())
+    return
 }
 
 /******************************************************************************/
