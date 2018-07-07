@@ -475,6 +475,32 @@ func (pub *PublicKey) ToAddress() (address string) {
 	return address
 }
 
+// ToAddress converts a Bitcoin public key to a compressed Bitcoin address string.
+func ToAddress2(pub *big.Int) (address string) {
+	/* See https://en.bitcoin.it/wiki/Technical_background_of_Bitcoin_addresses */
+
+	/* Convert the public key to bytes */
+	pub_bytes := pub.Bytes()//pub.ToBytes()
+
+	/* SHA256 Hash */
+	sha256_h := sha256.New()
+	sha256_h.Reset()
+	sha256_h.Write(pub_bytes)
+	pub_hash_1 := sha256_h.Sum(nil)
+
+	/* RIPEMD-160 Hash */
+	ripemd160_h := ripemd160.New()
+	ripemd160_h.Reset()
+	ripemd160_h.Write(pub_hash_1)
+	pub_hash_2 := ripemd160_h.Sum(nil)
+
+	/* Convert hash bytes to base58 check encoded sequence */
+	address = __encode(ACCOUNT_PREFIX,pub_hash_2)//b58checkencode(0x00, pub_hash_2)
+
+	return address
+}
+
+
 // ToAddressUncompressed converts a Bitcoin public key to an uncompressed Bitcoin address string.
 func (pub *PublicKey) ToAddressUncompressed() (address string) {
 	/* See https://en.bitcoin.it/wiki/Technical_background_of_Bitcoin_addresses */

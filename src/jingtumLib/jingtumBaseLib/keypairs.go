@@ -128,6 +128,10 @@ func deriveKeyPair(secret string) (error,*big.Int,*big.Int) {
     return nil,privateKey,publicKey
 }
 
+func address(pub *big.Int) string {
+    return ToAddress2(pub)
+}
+
 func CheckAddress(address string) bool {
     _, err := __decode(ACCOUNT_PREFIX, address)
 

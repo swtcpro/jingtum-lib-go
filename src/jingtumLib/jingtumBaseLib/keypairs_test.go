@@ -38,9 +38,10 @@ func Test_encode(t *testing.T) {
 }
 
 func Test_deriveKeyPair(t *testing.T) {
-    _,pri,pub := deriveKeyPair("777777777777")
+    _,pri,pub := deriveKeyPair("shvLwmy5oLuFUuSss7L2PTTh7513J")
     t.Log("private key : ",pri)
     t.Log("public key : ",pub)
+    t.Log("public address : ",address(pub))
 }
 
 func TestMain(m *testing.M) {
