@@ -27,8 +27,8 @@ var (
  *  接口定义
  */
 type KeyPair interface {
-    //根据seed 生成公私钥
-    GenerateKey(seed []byte) (PrivateKey, error)
+    //根据私钥获取秘钥对
+    DeriveKeyPair(secret string) (*PrivateKey, error)
 }
 
 /**

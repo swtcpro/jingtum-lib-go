@@ -39,7 +39,7 @@ type Alphabet struct {
  *  params:
  *      自定义的字母表字符
  *  return:
- *      [*Alphabet]
+ *      *Alphabet
  *
  */
 func NewAlphabet(alphabet string) *Alphabet {
@@ -71,7 +71,7 @@ func NewAlphabet(alphabet string) *Alphabet {
  *      input:待编码字节数组
  *      alphabet:base58编码字母表
  *  return:
- *      [string]
+ *      string
  */
 func Base58Encode(input []byte, alphabet *Alphabet) string {
 	inputLength := len(input)
@@ -124,7 +124,7 @@ func Base58Encode(input []byte, alphabet *Alphabet) string {
  *      input:待解码字符串
  *      alphabet:base58编码字母表
  *  return:
- *      [[]byte, error]
+ *      []byte, error
  */
 func Base58Decode(input string, alphabet *Alphabet) ([]byte, error) {
 	inputBytes := []rune(input)

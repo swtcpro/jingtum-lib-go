@@ -54,6 +54,23 @@ func (p *Point) format() string {
 	return fmt.Sprintf("(%s,%s)", hex.EncodeToString(p.X.Bytes()), hex.EncodeToString(p.Y.Bytes()))
 }
 
+/**
+ *  将椭圆点压缩成(02+X 如Y 偶), 或(03+X 如Y奇),得到publickGen
+ *  return:
+ *      []byte
+ */
+func (p *Point) compression() (b []byte) {
+	x := p.X.Bytes()
+
+	padded_x := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
+
+	if p.Y.Bit(0) == 0 {
+		return append([]byte{0x02}, padded_x...)
+	}
+
+	return append([]byte{0x03}, padded_x...)
+}
+
 /*** Modular Arithmetic ***/
 
 /* NOTE: Returning a new z each time below is very space inefficient, but the
