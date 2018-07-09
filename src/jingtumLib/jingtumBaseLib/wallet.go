@@ -11,11 +11,16 @@ import (
 	"common/goMath"
 	"crypto/sha256"
 	"fmt"
+    "errors"
 )
 
 const (
 	RandomLen = 16
 )
+
+type Wallet struct {
+    priv *PrivateKey
+}
 
 //创建一个新钱包
 func Generate() {
@@ -29,4 +34,20 @@ func Generate() {
 
 func IsValidAddress(address string) bool {
     return CheckAddress(address)
+}
+
+func FromSecret(secret string) *Wallet,error {
+    keyPair KeyPair = &Secp256KeyPair{}
+    priv,err := keyPair.DeriveKeyPair("snsYqv2FsYLuibE9TGHdG5x5V5Qcn")
+    
+    if nil != err {
+        return nil, err
+    }
+    wallet Wallet = &Wallet{}
+    wallet.priv = priv
+    return wallet,nil
+}
+
+func (wallet *Wallet) GetPublicKey() PublicKey {
+    return wallet.priv.PublicKey
 }

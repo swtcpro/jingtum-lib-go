@@ -46,6 +46,7 @@ func Test_deriveKeyPair(t *testing.T) {
     t.Log("private key : ",pri.D)
     t.Log("public key : ",new(big.Int).SetBytes(pri.PublicKey.ToBytes()))
     t.Log("public address : ",pri.PublicKey.ToAddress())
+    t.Log("public key to hex : ",pri.PublicKey.BytesToHex())
 }
 
 func TestMain(m *testing.M) {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"math/big"
     "errors"
+    "encoding/hex"
 )
 
 /******************************************************************************/
@@ -190,6 +191,10 @@ func (priv *PrivateKey) ToBytes() (b []byte) {
 	padded_d := append(bytes.Repeat([]byte{0x00}, 32-len(d)), d...)
 
 	return padded_d
+}
+
+func (pub *PublicKey) BytesToHex() string {
+    return hex.EncodeToString(pub.ToBytes())
 }
 
 // ToAddress converts a Bitcoin public key to a compressed Bitcoin address string.

@@ -47,7 +47,7 @@ type TxData struct {
     TxAmount        interface{}
     TakerPays       interface{}
     TakerGets       interface{}
-
+    SigningPubKey   string
 }
 
 type Transaction struct {
@@ -280,8 +280,8 @@ func (transaction *Transaction) sign(callback func(param ...interface{})) {
                 }
             }
 
-            wt := new base(transaction.secret)
-            transaction.tx_json.SigningPubKey = wt.getPublicKey()
+            wt := FromSecret(transaction.secret)
+            transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
             prefix := 0x53545800
             hash := jser.from_json(transaction.tx_json).hash(prefix)
             transaction.tx_json.TxnSignature = wt.signTx(hash)
