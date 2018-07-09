@@ -16,7 +16,11 @@ import (
      "testing"
      "os"
      "flag"
-     _"math/big"
+     "math/big"
+)
+
+var (
+    keyPair KeyPair = &Secp256KeyPair{}
 )
 
 func Test_sha256Util(t *testing.T) {
@@ -27,7 +31,7 @@ func Test_sha256Util(t *testing.T) {
 
 func Test_CheckAddress(t *testing.T) {
 	s2 := "jPFikqnwT44sNDaYa32MX4gNRcXbSxnQJe"
-    ok := CheckAddress(s2)
+    ok := keyPair.CheckAddress(s2)
     t.Log(ok)
 }
 
@@ -38,10 +42,10 @@ func Test_encode(t *testing.T) {
 }
 
 func Test_deriveKeyPair(t *testing.T) {
-    _,pri,pub := deriveKeyPair("shvLwmy5oLuFUuSss7L2PTTh7513J")
-    t.Log("private key : ",pri)
-    t.Log("public key : ",pub)
-    t.Log("public address : ",address(pub))
+    pri,_ := keyPair.DeriveKeyPair("snsYqv2FsYLuibE9TGHdG5x5V5Qcn")
+    t.Log("private key : ",pri.D)
+    t.Log("public key : ",new(big.Int).SetBytes(pri.PublicKey.ToBytes()))
+    t.Log("public address : ",pri.PublicKey.ToAddress())
 }
 
 func TestMain(m *testing.M) {

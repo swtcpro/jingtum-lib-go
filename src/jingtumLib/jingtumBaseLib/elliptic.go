@@ -14,9 +14,9 @@ package jingtumBaseLib
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
+    "bytes"
 )
 
 /* We gotta do a lot ourselves because golang's crypto/elliptic uses curves
@@ -52,23 +52,6 @@ func (p *Point) format() string {
 		return "(inf,inf)"
 	}
 	return fmt.Sprintf("(%s,%s)", hex.EncodeToString(p.X.Bytes()), hex.EncodeToString(p.Y.Bytes()))
-}
-
-/**
- *  将椭圆点压缩成(02+X 如Y 偶), 或(03+X 如Y奇),得到publickGen
- *  return:
- *      []byte
- */
-func (p *Point) compression() (b []byte) {
-	x := p.X.Bytes()
-
-	padded_x := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
-
-	if p.Y.Bit(0) == 0 {
-		return append([]byte{0x02}, padded_x...)
-	}
-
-	return append([]byte{0x03}, padded_x...)
 }
 
 /*** Modular Arithmetic ***/
@@ -251,6 +234,18 @@ func (ec *EllipticCurve) Add(P, Q Point) (R Point) {
 	return R
 }
 
+func (p Point) Compression() (b []byte) {
+	x := p.X.Bytes()
+
+	padded_x := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
+
+	if p.Y.Bit(0) == 0 {
+		return append([]byte{0x02}, padded_x...)
+	}
+
+	return append([]byte{0x03}, padded_x...)
+}
+
 // ScalarMult computes Q = k * P on EllipticCurve ec.
 func (ec *EllipticCurve) ScalarMult(k *big.Int, P Point) (Q Point) {
 	/* Note: this function is not constant time, due to the branching nature of
@@ -285,32 +280,4 @@ func (ec *EllipticCurve) ScalarMult(k *big.Int, P Point) (Q Point) {
 // ScalarBaseMult computes Q = k * G on EllipticCurve ec.
 func (ec *EllipticCurve) ScalarBaseMult(k *big.Int) (Q Point) {
 	return ec.ScalarMult(k, ec.G)
-}
-
-// Decompress decompresses coordinate x and ylsb (y's least significant bit) into a Point P on EllipticCurve ec.
-func (ec *EllipticCurve) Decompress(x *big.Int, ylsb uint) (P Point, err error) {
-	/* y**2 = x**3 + a*x + b  % p */
-	rhs := addMod(
-		addMod(
-			expMod(x, big.NewInt(3), ec.P),
-			mulMod(ec.A, x, ec.P),
-			ec.P),
-		ec.B, ec.P)
-
-	/* y = sqrt(rhs) % p */
-	y := sqrtMod(rhs, ec.P)
-
-	/* Use -y if opposite lsb is required */
-	if y.Bit(0) != (ylsb & 0x1) {
-		y = subMod(big.NewInt(0), y, ec.P)
-	}
-
-	P.X = x
-	P.Y = y
-
-	if !ec.IsOnCurve(P) {
-		return P, errors.New("Compressed (x, ylsb) not on curve.")
-	}
-
-	return P, nil
 }
