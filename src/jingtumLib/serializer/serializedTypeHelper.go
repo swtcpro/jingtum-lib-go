@@ -7,7 +7,7 @@
  * @Email : yangxuebo@yeah.net
  * @CreateTime: 2018-07-11 10:44:32
  * @UpdateTime: 2018-07-11 10:44:54
- * Copyright@2011 版权所有
+ * Copyright@2018 版权所有
  */
 
 package serializer

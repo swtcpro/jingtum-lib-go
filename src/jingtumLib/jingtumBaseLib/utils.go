@@ -2,12 +2,12 @@
  *
  * 文件功能介绍
  *
- * @FileName: .go
- * @Auther : Pandao
- * @Email : 272383090@qq.com
- * @CreateTime: 2013-09-16 10:44:32
- * @UpdateTime: 2013-09-16 10:44:54
- * Copyright@2013 版权所有
+ * @FileName: utils.go
+ * @Auther : 杨雪波
+ * @Email : yangxuebo@yeah.net
+ * @CreateTime: 2018-07-10 10:44:32
+ * @UpdateTime: 2018-07-10 10:44:54
+ * Copyright@2018 版权所有
  */
 
 package jingtumBaseLib
