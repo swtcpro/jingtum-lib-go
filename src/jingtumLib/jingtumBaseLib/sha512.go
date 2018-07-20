@@ -5,8 +5,8 @@
  * @FileName: sha512.go
  * @Auther : 杨雪波
  * @Email : yangxuebo@yeah.net
- * @CreateTime: 2018-07-16 10:44:32
- * @UpdateTime: 2018-07-16 10:44:54
+ * @CreateTime: 2018-07-11 10:44:32
+ * @UpdateTime: 2018-07-11 10:44:54
  * Copyright@2018 版权所有
  */
 
