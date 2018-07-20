@@ -24,6 +24,15 @@ type KeyPair interface {
 }
 
 
+func DecodeAddress(address string) []byte {
+    decodedBytes, err := __decode(ACCOUNT_PREFIX, address)
+    if err != nil {
+        panic(fmt.Sprintf("Issuer invalid issuer info %v", address))
+    }
+
+    return decodedBytes
+}
+
 
 
 //func GenerateSeed () {

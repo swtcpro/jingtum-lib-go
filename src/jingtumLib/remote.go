@@ -27,6 +27,7 @@ type Remote struct {
 	Wsconn *WsConn
 	Params map[string]string
 	Status bool
+    LocalSign bool
 }
 
 /*

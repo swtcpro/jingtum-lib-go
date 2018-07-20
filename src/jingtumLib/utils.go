@@ -16,6 +16,7 @@ import (
      "strconv"
      "regexp"
      "encoding/hex"
+     "errors"
 
      jtbLib "jingtumLib/jingtumBaseLib"
 )
@@ -28,7 +29,45 @@ var (
 
 func number(s string) bool {
     
-    return MatchString("^[0-9]+\\.?[0-9]*$", s)
+    return number("^(-?)(\\d*)(\\.\\d{0,6})?$", s)
+}
+
+func IsNumber(s string) bool {
+    return number(s)
+}
+
+func IsNumberType(obj interface{}) bool {
+    switch obj.(type) {
+        case float64,float32,int,int8,int32,int64,byte,uint32,uint64:
+            return true
+        default:
+            return false
+    }
+}
+
+func NumberToString(obj interface{}) string {
+    switch v := obj.(type) {
+        case float32:
+            return strconv.FormatFloat(float64(v), 'f', -1, 64)
+        case float64:
+            return strconv.FormatFloat(v, 'f', -1, 64)
+        case int:
+            return strconv.Itoa(v)
+        case int8:
+            return strconv.FormatInt(int64(v), 10)
+        case int32:
+            return strconv.FormatInt(int64(v), 10)
+        case int64:
+            return strconv.FormatInt(v, 10)
+        case uint8:
+            return strconv.FormatUint(uint64(v),10)
+        case uint32:
+            return strconv.FormatUint(uint64(v),10)
+        case uint64:
+            return strconv.FormatUint(uint64(v),10)
+        default:
+            return ""
+    }
 }
 
 func matchString(patter string, str string) bool {
@@ -71,6 +110,14 @@ func isValidAmount(amount Amount) bool {
 }
 
 func isValidCurrency(currency string) bool {
+    if (currency == "") {
+        return false;
+    }
+
+    return matchString(CURRENCY_RE, currency);
+}
+
+func IsValidCurrency(currency string) bool {
     if (currency == "") {
         return false;
     }

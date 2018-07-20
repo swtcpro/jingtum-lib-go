@@ -18,6 +18,8 @@ import (
      "encoding/json"
      "strings"
      "errors"
+     jtbLib "jingtumLib/jingtumBaseLib"
+     jtSerz "jingtumLib/serializer"
 )
 
 type Amount struct {
@@ -27,7 +29,13 @@ type Amount struct {
 }
 
 type MemoInfo struct {
+    Memo MemoDataInfo
+}
+
+type MemoDataInfo struct {
     MemoData        string
+    MemoFormat      string
+    MemoType        string
 }
 
 type TxData struct {
@@ -37,10 +45,8 @@ type TxData struct {
     TransactionType interface{}
     SendMax         interface{}
     Memos           []MemoInfo
-    Paths           interface{}
-    SendMax         interface{}
+    Paths           [][]interface{}
     TransferRate    uint32
-    MemoType        interface{}
     MemoLen         interface{}
     Sequence        uint32
     Blob            string
@@ -69,7 +75,7 @@ func NewTransaction(remote *Remote, filter Filter) (transaction *Transaction , e
     transaction.remote = remote
     transaction.tx_json = new(TxData)
     transaction.tx_json.Flags = 0
-    transaction.tx_json.Fee = JTConfig.ReadInt("Config","fee", 10000);
+    transaction.tx_json.Fee = JTConfig.ReadInt("Config","fee", 10000)
     transaction.filter = filter
 }
 
@@ -97,7 +103,11 @@ func (transaction *Transaction AddMemo(memo string) {
     }
 
     var _memo MemoInfo = new(MemoInfo)
-    _memo.MemoData = stringToHex(memo)
+    //_memo.MemoData = stringToHex(memo)
+
+    var mdi = new(MemoDataInfo)
+    mdi.MemoData = stringToHex(memo)
+    _memo.Memo = mdi
 
     transaction.tx_json.Memos = append(transaction.tx_json.Memos, *_memo)
 }
@@ -112,9 +122,9 @@ func (transaction *Transaction) SetFee(fee uint32) {
 }
 
 func (transaction *Transaction) MaxAmount(amount interface{}) (interface{}) {
-    if _, ok := amount.(string); ok {
-        if (number(amount)) {
-            f, err := strconv.ParseFloat(amount, 32)
+    if mt, ok := amount.(string); ok {
+        if (number(mt)) {
+            f, err := strconv.ParseFloat(mt, 32)
             if (err != nil) {
                 return errors.New("invalid amount to max")
             }
@@ -123,8 +133,8 @@ func (transaction *Transaction) MaxAmount(amount interface{}) (interface{}) {
         }
     }
 
-    if _, ok := amount.(Amount); ok && isValidAmount(amount) {
-        f, err := strconv.ParseFloat(amount.value, 32)
+    if at, ok := amount.(Amount); ok && isValidAmount(amount) {
+        f, err := strconv.ParseFloat(at.value, 32)
            if (err != nil) {
                return errors.New("invalid amount to max")
            }
@@ -220,7 +230,7 @@ func (transaction *Transaction) setFlags(flags interface{}) (err error) {
     err = errors.New("invalid flags")
 }
 
-func (transaction *Transaction) sign(callback func(param ...interface{})) {
+func (transaction *Transaction) Sign(callback func(param ...interface{})) {
     remote := NewRemote(transaction.remote.url)
     remote.Connect(func (err error, result interface{}) {
         if err != nil {
@@ -228,7 +238,7 @@ func (transaction *Transaction) sign(callback func(param ...interface{})) {
             return
         }
         req = transaction.remote.requestAccountInfo(map[string]string){"account": transaction.tx_json.Account, "type": "trust"})
-        req.Submit(func err error, data interface{}) {
+        req.Submit(func (err error, data interface{}) {
             if nil != err {
                 callback(err)
                 return
@@ -280,14 +290,56 @@ func (transaction *Transaction) sign(callback func(param ...interface{})) {
                 }
             }
 
-            wt := FromSecret(transaction.secret)
+            wt := jtbLib.FromSecret(transaction.secret)
             transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
-            prefix := 0x53545800
-            hash := jser.from_json(transaction.tx_json).hash(prefix)
+            var prefix uint32 = 0x53545800
+            hash, _ := jtSerz.FromJson(transaction.tx_json).Hash(prefix)
             transaction.tx_json.TxnSignature = wt.signTx(hash)
-            transaction.tx_json.Blob = jser.from_json(transaction.tx_json).to_hex()
+            transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
             transaction.local_sign = true
             callback(nil,transaction.tx_json.Blob)
         })
     })
+}
+
+func (transaction *Transaction) Submit(callback func(param ...interface{})) {
+    err := checkTxError(transaction.tx_json)
+    if err != nil {
+        callback(err)
+        return
+    }
+
+    if transaction.remote.LocalSign {
+        transaction.Sign(func (err error, blob string)) {
+            if nil != err {
+                callback(errors.New("sig error. "+ err.Error()))
+            } else {
+                var data struct{tx_blob string}
+                data.tx_blob = transaction.tx_json.Blob
+                transaction.remote.Submit('submit', data, transaction.filter, callback)
+            }
+        })
+    } else if(transaction.tx_json.TransactionType == "Signer") {
+        //直接将blob传给底层
+        var data struct{tx_blob string}
+        data.tx_blob = transaction.tx_json.Blob
+        transaction.remote.Submit('submit', data, transaction.filter, callback)
+    } else {
+        //不签名交易传给底层
+        var data struct{tx_json *TxData;secret string}
+        data.tx_json = transaction.tx_json
+        data.secret = transaction.secret
+        transaction.remote.Submit('submit', data, transaction.filter, callback)
+    }
+}
+
+func checkTxError(txJson *TxData) error {
+    fields := jtSerz.GetFieldNames(txJson)
+    for i,fn := range fields {
+        v := GetFieldValue(txJson, fn)
+        if err,ok:=v.(error); ok {
+            return err
+        }
+    }
+    return nil
 }

@@ -33,12 +33,13 @@ func Generate() {
 }
 
 func IsValidAddress(address string) bool {
-    return CheckAddress(address)
+    secp256k1 := new(Secp256KeyPair)
+    return secp256k1.CheckAddress(address)
 }
 
 func FromSecret(secret string) *Wallet,error {
     keyPair KeyPair = &Secp256KeyPair{}
-    priv,err := keyPair.DeriveKeyPair("snsYqv2FsYLuibE9TGHdG5x5V5Qcn")
+    priv,err := keyPair.DeriveKeyPair(secret)
     
     if nil != err {
         return nil, err
