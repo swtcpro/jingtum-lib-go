@@ -18,7 +18,6 @@ import (
     "encoding/binary"
     "reflect"
     "encoding/hex"
-    _"errors"
     "regexp"
     "sort"
     "encoding/json"
