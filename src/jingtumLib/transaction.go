@@ -22,40 +22,6 @@ import (
      jtSerz "jingtumLib/serializer"
 )
 
-type Amount struct {
-    Currency        string
-    Issuer          string
-    Value           string
-}
-
-type MemoInfo struct {
-    Memo MemoDataInfo
-}
-
-type MemoDataInfo struct {
-    MemoData        string
-    MemoFormat      string
-    MemoType        string
-}
-
-type TxData struct {
-    Flags           uint32
-    Fee             interface{}
-    Account         string
-    TransactionType interface{}
-    SendMax         interface{}
-    Memos           []MemoInfo
-    Paths           [][]interface{}
-    TransferRate    uint32
-    MemoLen         interface{}
-    Sequence        uint32
-    Blob            string
-    TxAmount        interface{}
-    TakerPays       interface{}
-    TakerGets       interface{}
-    SigningPubKey   string
-}
-
 type Transaction struct {
     remote        *Remote
     filter        Filter
@@ -79,9 +45,10 @@ func NewTransaction(remote *Remote, filter Filter) (transaction *Transaction , e
     transaction.filter = filter
 }
 
-func (transaction *Transaction) ParseJson (jsonStr string) (err error) {
+func (transaction *Transaction) ParseJson (jsonStr string) (error) {
 
-    err:=json.Unmarshal([]byte(jsonStr),&transaction.tx_json)
+    _,err:=json.Unmarshal([]byte(jsonStr),&transaction.tx_json)
+    return err
 }
 
 func (transaction *Transaction) GetAccount() (stirng) {
@@ -96,7 +63,7 @@ func (transaction *Transaction) SetSecret (secret string) {
     transaction.secret = secret
 }
 
-func (transaction *Transaction AddMemo(memo string) {
+func (transaction *Transaction) AddMemo(memo string) {
     if (len(memo) > 2048) {
        transaction.tx_json.MemoLen = errors.New("The length of Memo shoule be less than or equal 2048.")
        return
@@ -237,7 +204,7 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
             callback(err)
             return
         }
-        req = transaction.remote.requestAccountInfo(map[string]string){"account": transaction.tx_json.Account, "type": "trust"})
+        req = transaction.remote.requestAccountInfo(map[string]string{"account": transaction.tx_json.Account, "type": "trust"})
         req.Submit(func (err error, data interface{}) {
             if nil != err {
                 callback(err)
@@ -274,7 +241,7 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
             //order
             if nil != transaction.tx_json.TakerPays {
                 //基础货币
-                if takerPays, ok := transaction.tx_json.TakerPays.(string) {
+                if takerPays, ok := transaction.tx_json.TakerPays.(string); ok {
                     if number(takerPays) {
                         transaction.tx_json.TakerPays = strconv.ParseFloat(takerPays, 32)/1000000
                     }
@@ -283,7 +250,7 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 
             if nil != transaction.tx_json.TakerGets {
                 //基础货币
-                if takerGets, ok := transaction.tx_json.TakerGets.(string) {
+                if takerGets, ok := transaction.tx_json.TakerGets.(string); ok {
                     if number(takerGets) {
                         transaction.tx_json.TakerGets = strconv.ParseFloat(takerGets, 32)/1000000
                     }

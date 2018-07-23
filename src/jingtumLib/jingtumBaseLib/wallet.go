@@ -11,7 +11,6 @@ import (
 	"common/goMath"
 	"crypto/sha256"
 	"fmt"
-    "errors"
 )
 
 const (
@@ -19,7 +18,7 @@ const (
 )
 
 type Wallet struct {
-    priv *PrivateKey
+	priv *PrivateKey
 }
 
 //创建一个新钱包
@@ -33,22 +32,22 @@ func Generate() {
 }
 
 func IsValidAddress(address string) bool {
-    secp256k1 := new(Secp256KeyPair)
-    return secp256k1.CheckAddress(address)
+	secp256k1 := new(Secp256KeyPair)
+	return secp256k1.CheckAddress(address)
 }
 
-func FromSecret(secret string) *Wallet,error {
-    keyPair KeyPair = &Secp256KeyPair{}
-    priv,err := keyPair.DeriveKeyPair(secret)
-    
-    if nil != err {
-        return nil, err
-    }
-    wallet Wallet = &Wallet{}
-    wallet.priv = priv
-    return wallet,nil
+func FromSecret(secret string) (*Wallet, error) {
+	var kp KeyPair = &Secp256KeyPair{}
+	priv, err := kp.DeriveKeyPair(secret)
+
+	if nil != err {
+		return nil, err
+	}
+	wallet := new(Wallet)
+	wallet.priv = priv
+	return wallet, nil
 }
 
 func (wallet *Wallet) GetPublicKey() PublicKey {
-    return wallet.priv.PublicKey
+	return wallet.priv.PublicKey
 }

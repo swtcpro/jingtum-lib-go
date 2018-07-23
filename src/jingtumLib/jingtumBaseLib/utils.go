@@ -13,22 +13,32 @@
 package jingtumBaseLib
 
 import (
-    "bytes"
-    "encoding/binary"
-    "math/big"
-    "crypto/sha256"
+	"bytes"
+	"crypto/sha256"
+	"encoding/binary"
+	"math/big"
+	"regexp"
 )
 
-
 func BytesToBigInt(b []byte) *big.Int {
-    b_buf  :=  bytes.NewBuffer(b)
-    var x big.Int 
-    binary.Read(b_buf, binary.BigEndian, &x)
-    return &x
+	b_buf := bytes.NewBuffer(b)
+	var x big.Int
+	binary.Read(b_buf, binary.BigEndian, &x)
+	return &x
 }
 
-func Sha256Util(sbytes []byte) ([]byte) {
-    h := sha256.New()
-    h.Write(sbytes)
-    return h.Sum(nil)
+func Sha256Util(sbytes []byte) []byte {
+	h := sha256.New()
+	h.Write(sbytes)
+	return h.Sum(nil)
+}
+
+func IsValidCurrency(currency string) bool {
+	if currency == "" {
+		return false
+	}
+
+	match, _ := regexp.MatchString("^([a-zA-Z0-9]{3,6}|[A-F0-9]{40})$", currency)
+
+	return match
 }

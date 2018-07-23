@@ -11,6 +11,8 @@ import (
 	log "common/github.com/blog4go"
 	"fmt"
 	"sync"
+
+	"jingtumLib/serializer"
 )
 
 var (
@@ -169,6 +171,9 @@ func Init() error {
 	if err != nil {
 		return err
 	}
+
+	serializer.ConfigCurrencty = JTConfig.Read("Config", "currency")
+
 	return nil
 }
 

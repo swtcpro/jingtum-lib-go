@@ -1,9 +1,8 @@
 package jingtumLib
 
 import (
-	"common/golang.org/x/net/websocket"
 	"errors"
-	//"fmt"
+	"golang.org/x/net/websocket"
 	"time"
 )
 
@@ -24,10 +23,10 @@ type WsConn struct {
  */
 
 type Remote struct {
-	Wsconn *WsConn
-	Params map[string]string
-	Status bool
-    LocalSign bool
+	Wsconn    *WsConn
+	Params    map[string]string
+	Status    bool
+	LocalSign bool
 }
 
 /*

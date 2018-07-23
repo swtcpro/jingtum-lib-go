@@ -13,34 +13,36 @@
 package serializer
 
 import (
-    "fmt"
-    "encoding/binary"
-    "bytes"
-    "reflect"
-    "encoding/json"
-    "encoding/hex"
-    jtbLib "jingtumLib/jingtumBaseLib"
-    jtLib "jingtumLib"
+	"bytes"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+
+	jtbLib "jingtumLib/jingtumBaseLib"
 )
 
 var (
-    CURRENCY_NAME_LEN = 3
-    CURRENCY_NAME_LEN2 = 6
+	CURRENCY_NAME_LEN      = 3
+	CURRENCY_NAME_LEN2     = 6
+	typeBoundary       int = 0xff
+	typeEnd            int = 0x00
+	typeAccount        int = 0x01
+	typeCurrency       int = 0x10
+	typeIssuer         int = 0x20
 )
 
 type ISerializedType interface {
-    //Serialize( val interface{}, noMarker bool)
-    Serialize(so *Serializer, val interface{}, noMarker bool)
-    Parse(so *Serializer) interface{}
+	//Serialize( val interface{}, noMarker bool)
+	Serialize(so *Serializer, val interface{}, noMarker bool)
+	Parse(so *Serializer) interface{}
 }
 
 type PathComputed struct {
-    Currency        string
-    Issuer          string
-    Value           string
-}
-
-type SerializedInt8 struct {
+	Currency string
+	Issuer   string
+	Value    string
+	Account  string
 }
 
 type SerializedInt16 struct {
@@ -80,11 +82,6 @@ type SerializedHash160 struct {
 }
 
 type SerializedPathSet struct {
-    typeBoundary int = 0xff
-    typeEnd int = 0x00
-    typeAccount int = 0x01
-    typeCurrency int = 0x10
-    typeIssuer int = 0x20
 }
 
 type SerializedVector256 struct {
@@ -97,407 +94,412 @@ type SerializedAccount struct {
 }
 
 func (serInt8 SerializedInt8) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    so.Append(GetBytes(val))
+	so.Append(GetBytes(val))
 }
 
 func (serInt8 SerializedInt8) Parse(so *Serializer) interface{} {
-    return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serInt16 SerializedInt16) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    so.Append(GetBytes(val))
+	so.Append(GetBytes(val))
 }
 
 func (serInt16 SerializedInt16) Parse(so *Serializer) interface{} {
-    return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serInt32 SerializedInt32) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    so.Append(GetBytes(val))
+	so.Append(GetBytes(val))
 }
 
 func (serInt32 SerializedInt32) Parse(so *Serializer) interface{} {
-    return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serInt64 SerializedInt64) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    if number, ok := val.(uint64) ; ok {
-        so.Append(GetBytes(number))
-        return
-    }
+	if number, ok := val.(uint64); ok {
+		so.Append(GetBytes(number))
+		return
+	}
 
-    if str, ok := val.(string) ; ok {
-        if !IsHexString(str) {
-            panic(fmt.Sprintf("Invalid hex string %v", str))
-        }
+	if str, ok := val.(string); ok {
+		if !IsHexString(str) {
+			panic(fmt.Sprintf("Invalid hex string %v", str))
+		}
 
-        if len(str) > 16 {
-            panic(fmt.Sprintf("Int64 is too large %v", str))
-        }
-        
-        b := bytes.NewBufferString("")
+		if len(str) > 16 {
+			panic(fmt.Sprintf("Int64 is too large %v", str))
+		}
 
-        for b.Len() < 16 - len(str) {
-            b.WriteString("0")
-        }
+		b := bytes.NewBufferString("")
 
-        b.WriteString(str)
+		for b.Len() < 16-len(str) {
+			b.WriteString("0")
+		}
 
-        SerializeHex(so, b.String(), true)
-        return
-    }
+		b.WriteString(str)
 
-    panic(fmt.Sprintf("Invalid type for Int64 %v", str))
-    
+		SerializeHex(so, b.String(), true)
+		return
+	}
+
+	panic(fmt.Sprintf("Invalid type for Int64 %v", val))
+
 }
 
 func (serInt64 SerializedInt64) Parse(so *Serializer) interface{} {
-    return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serMemo SerializedMemo) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    fileds := GetFieldNames(val)
-    for i := 0; i < len(fileds); i++ {
-        kvp := INVERSE_FIELDS_MAP[fileds[i]]
-        if kvp == nil {
-            panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
-        }
-    }
-    SortByFieldName(fileds)
+	fileds := GetFieldNames(val)
+	for i := 0; i < len(fileds); i++ {
+		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		if kvp == nil {
+			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
+		}
+	}
+	SortByFieldName(fileds)
 
-    isJson := GetFieldValue(val, "MemoFormat") == "json"
+	isJson := GetFieldValue(val, "MemoFormat") == "json"
 
-    for _, fn := range fileds {
-        value := GetFieldValue(val,fn)
-        switch fn {
-            case "MemoType" :
-                value = StringToHex(value)
-            case "MemoFormat" :
-                value = StringToHex(value)
-            case "MemoData" :
-                if vstr, ok := value.(string); ok {
-                    value = StringToHex(value)
-                    break
-                }
-                if isJson {
-                    mjson,_ :=json.Marshal(value)
-                    value = StringToHex(string(mjson))
-                    break
-                }
-                panic(fmt.Sprintf("MemoData can only be a JSON object with a valid json MemoFormat. %v", value))
-        }
+	for _, fn := range fileds {
+		value := GetFieldValue(val, fn)
+		switch fn {
+		case "MemoType":
+			value = StringToHex(value.(string))
+		case "MemoFormat":
+			value = StringToHex(value.(string))
+		case "MemoData":
+			if _, ok := value.(string); ok {
+				value = StringToHex(value.(string))
+				break
+			}
+			if isJson {
+				mjson, _ := json.Marshal(value)
+				value = StringToHex(string(mjson))
+				break
+			}
+			panic(fmt.Sprintf("MemoData can only be a JSON object with a valid json MemoFormat. %v", value))
+		}
 
-        Serialize(so, fn, value)
-    }
+		Serialize(so, fn, value)
+	}
 
-    if !noMarker {
-        STInt8.Serialize(so, 0xe1,false)
-    }
+	if !noMarker {
+		STInt8.Serialize(so, 0xe1, false)
+	}
 }
 
 func (serArg SerializedArg) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    fileds := GetFieldNames(val)
-    for i := 0; i < len(fileds); i++ {
-        kvp := INVERSE_FIELDS_MAP[fileds[i]]
-        if kvp == nil {
-            panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
-        }
-    }
-    SortByFieldName(fileds)
+	fileds := GetFieldNames(val)
+	for i := 0; i < len(fileds); i++ {
+		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		if kvp == nil {
+			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
+		}
+	}
+	SortByFieldName(fileds)
 
-    for _, fn := range fileds {
-        if fn == "Parameter" {
-            break
-        }
-        value := GetFieldValue(val,fn)
-        Serialize(so, fn, value)
-    }
+	for _, fn := range fileds {
+		if fn == "Parameter" {
+			break
+		}
+		value := GetFieldValue(val, fn)
+		Serialize(so, fn, value)
+	}
 
-    if !noMarker {
-        STInt8.Serialize(so, 0xe1,false)
-    }
+	if !noMarker {
+		STInt8.Serialize(so, 0xe1, false)
+	}
 }
 
 func (serHash128 SerializedHash128) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serHash128 SerializedHash128) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    if v,ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$") && len(v) <= 32 {
-        SerializeHex(so, v ,true)
-        return
-    }
+	if v, ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 32 {
+		SerializeHex(so, v, true)
+		return
+	}
 }
 
 func (serHash256 SerializedHash256) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serHash256 SerializedHash256) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    if v,ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$") && len(v) <= 64 {
-        SerializeHex(so, v ,true)
-        return
-    }
+	if v, ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 64 {
+		SerializeHex(so, v, true)
+		return
+	}
 }
 
 func (serAmount SerializedAmount) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    if !serAmount.IsValid() {
-        panic("Not a valid Amount object.")
-    }
+	amount := val.(TumAmount)
+	if !amount.IsValid {
+		panic("Not a valid Amount object.")
+	}
 
-    amount := val.(Amount)
-    if amount.IsNative() {
-        valueHex := hex.EncodeToString(amount.Value.Bytes())
+	if amount.IsNative {
+		valueHex := hex.EncodeToString(amount.Value.Bytes())
 
-        if len(valueHex) > 16 {
-            panic("Amount value out of bounds.")
-        }
-        b := bytes.NewBufferString("")
-        for b.Len() < 16 {
-            b.WriteString("0")
-        }
-        b.WriteString(valueHex)
+		if len(valueHex) > 16 {
+			panic("Amount value out of bounds.")
+		}
+		b := bytes.NewBufferString("")
+		for b.Len() < 16 {
+			b.WriteString("0")
+		}
+		b.WriteString(valueHex)
 
-        valueBytes,err := HexToBytes(b.String())
-        if err != nil {
-            panic("Hex to bytes error.")
-        }
+		valueBytes, err := HexToBytes(b.String())
+		if err != nil {
+			panic("Hex to bytes error.")
+		}
 
-        valueBytes[0] &= 0x3f
+		valueBytes[0] &= 0x3f
 
-        if amount.IsNegative() {
-            valueBytes[0] |= 0x40
-        }
+		if amount.IsNegative {
+			valueBytes[0] |= 0x40
+		}
 
-        so.Append(valueBytes)
-    } else {
-        //For other non-native currency
-        //1. Serialize the currency value with offset
-        //Put offset
-        var hi,lo int64  = 0,0
-        hi |= 1 << 31
-        if !amount.IsZero() {
-            // Second bit: non-negative?
-            if amount.IsNegative() {
-                hi |= 1 << 30
-            }
-            // Next eight bits: offset/exponent
-            hi |= ((int64(97) + int64(amount.Offset)) & 0xff) << 22
-            // Remaining 54 bits: mantissa
-            hi |= (amount.Value.Int64() >> 32) & 0x3fffff
-            lo = amount.Value.Int64() & 0xffffffff
-        }
+		so.Append(valueBytes)
+	} else {
+		//For other non-native currency
+		//1. Serialize the currency value with offset
+		//Put offset
+		var hi, lo int64 = 0, 0
+		hi |= 1 << 31
+		if !amount.IsZeroM() {
+			// Second bit: non-negative?
+			if amount.IsNegative {
+				hi |= 1 << 30
+			}
+			// Next eight bits: offset/exponent
+			hi |= ((int64(97) + int64(amount.Offset)) & 0xff) << 22
+			// Remaining 54 bits: mantissa
+			hi |= (amount.Value.Int64() >> 32) & 0x3fffff
+			lo = amount.Value.Int64() & 0xffffffff
+		}
 
-        // Convert from a bitArray to an array of bytes.
-        arr := []int64{hi,lo}
-        l := len(arr)
-        var bl int64
-        if l == 0 {
-            bl = 0
-        } else {
-            x := arr[l -1]
-            roundX := x / 0x10000000000
-            if roundX == 0 {
-                roundX = 32
-            }
-            bl = (l -1) * 32 + roundX
-        }
+		// Convert from a bitArray to an array of bytes.
+		arr := []int64{hi, lo}
+		l := len(arr)
+		var bl int64
+		if l == 0 {
+			bl = 0
+		} else {
+			x := arr[l-1]
+			roundX := x / 0x10000000000
+			if roundX == 0 {
+				roundX = 32
+			}
+			bl = int64((l-1)*32) + int64(roundX)
+		}
 
-        var tmparray []byte
-        var tmp int64 = 0
-        for i := 0; i < bl / 8; i++ {
-            if (i & 3) == 0 {
-                tmp = arr[i / 4]
-            }
+		var tmparray []byte
+		var tmp int64 = 0
+		for i := 0; int64(i) < int64(bl/8); i++ {
+			if (i & 3) == 0 {
+				tmp = arr[i/4]
+			}
 
-            tmparray = append(tmparray, tmp >> 24)
-            tmp <<= 8
-        }
+			tmparray = append(tmparray, byte(tmp>>24))
+			tmp <<= 8
+		}
 
-        if len(tmparray) > 8 {
-            panic("Invalid byte array length in AMOUNT value representation")
-        }
+		if len(tmparray) > 8 {
+			panic("Invalid byte array length in AMOUNT value representation")
+		}
 
-        so.Append(tmparray)
-        tumBytes := amount.TumToBytes()
-        so.Append(tumBytes)
-        so.Append(jtbLib.DecodeAddress(amount.Issuer))
-    }
+		so.Append(tmparray)
+		tumBytes := amount.TumToBytes()
+		so.Append(tumBytes)
+		so.Append(jtbLib.DecodeAddress(amount.Issuer))
+	}
 }
 
 func (serCurrency SerializedCurrency) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serCurrency SerializedCurrency) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    currencty := val.(string)
-    so.Append(serCurrency.fromJsonToBytes(currencty))
+	currencty := val.(string)
+	so.Append(serCurrency.fromJsonToBytes(currencty))
 }
 
 func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
-    var result []byte
-    if currencty != "" {
-        if IsHexString(currencty) && len(currencty) == 40 {
-            var err error
-            result,err = HexToBytes(currencty)
-        } else if jtLib.IsValidCurrency(currencty) {
-            if len(currencty) >= CURRENCY_NAME_LEN && len(currencty) <= CURRENCY_NAME_LEN2 {
-                var end = 14
-                var clen = len(currencty) -1
-                for x:= clen; x >=0; x-- {
-                    result[end - x] = byte(currencty[clen - x] & 0xff)
-                }
-            }
-        } else {
-            panic(fmt.Sprintf("Input tum code invalid %v", currencty))
-        }
-    } else {
-        panic(fmt.Sprintf("Input tum code invalid %v", currencty))
-    }
+	var result []byte
+	if currencty != "" {
+		if IsHexString(currencty) && len(currencty) == 40 {
+			var err error
+			result, err = HexToBytes(currencty)
 
-    return result
+			if err != nil {
+				panic("Invalid currencty.")
+			}
+
+		} else if jtbLib.IsValidCurrency(currencty) {
+			if len(currencty) >= CURRENCY_NAME_LEN && len(currencty) <= CURRENCY_NAME_LEN2 {
+				var end = 14
+				var clen = len(currencty) - 1
+				for x := clen; x >= 0; x-- {
+					result[end-x] = byte(currencty[clen-x] & 0xff)
+				}
+			}
+		} else {
+			panic(fmt.Sprintf("Input tum code invalid %v", currencty))
+		}
+	} else {
+		panic(fmt.Sprintf("Input tum code invalid %v", currencty))
+	}
+
+	return result
 }
 
 func (serObject SerializedObject) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    fileds := GetFieldNames(val)
-    for i := 0; i < len(fileds); i++ {
-        kvp := INVERSE_FIELDS_MAP[fileds[i]]
-        if kvp == nil {
-            panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
-        }
-    }
-    SortByFieldName(fileds)
+	fileds := GetFieldNames(val)
+	for i := 0; i < len(fileds); i++ {
+		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		if kvp == nil {
+			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
+		}
+	}
+	SortByFieldName(fileds)
 
-    for _, fn := range fileds {
-        value := GetFieldValue(val,fn)
-        if value == nil || value == ""  {
-            continue
-        }
-        
-        Serialize(so, fn, value)
-    }
+	for _, fn := range fileds {
+		value := GetFieldValue(val, fn)
+		if value == nil || value == "" {
+			continue
+		}
 
-    if !noMarker {
-        STInt8.Serialize(so, 0xe1,false)
-    }
+		Serialize(so, fn, value)
+	}
+
+	if !noMarker {
+		STInt8.Serialize(so, 0xe1, false)
+	}
 }
 
 func (serArray SerializedArray) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    array := v.([]interface{})
-    for i := 0; i < len(array); i++ {
-        fileds := GetFieldNames(array[i])
-        if len(fileds) != 1 {
-            panic("Cannot serialize an array containing non-single-key objects.")
-        }
-        value := GetFieldValue(array[i],fileds[0])
-        Serialize(so, fileds[0], value)
-    }
-    STInt8.Serialize(so, 0xf1,false)
+	array := val.([]interface{})
+	for i := 0; i < len(array); i++ {
+		fileds := GetFieldNames(array[i])
+		if len(fileds) != 1 {
+			panic("Cannot serialize an array containing non-single-key objects.")
+		}
+		value := GetFieldValue(array[i], fileds[0])
+		Serialize(so, fileds[0], value)
+	}
+	STInt8.Serialize(so, 0xf1, false)
 }
 
 func (serHash160 SerializedHash160) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serHash160 SerializedHash160) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    valStr := val.(string)
-    SerializeHex(so, valStr, true)
+	valStr := val.(string)
+	SerializeHex(so, valStr, true)
 }
 
 func (serPathSet SerializedPathSet) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    path := val.([][]PathComputed)
-    for i := 0; i < len(path); i++ {
-        if i > 0 {
-            STInt8.Serialize(so, serPathSet.typeBoundary, false)
-        }
+	path := val.([][]PathComputed)
+	for i := 0; i < len(path); i++ {
+		if i > 0 {
+			STInt8.Serialize(so, typeBoundary, false)
+		}
 
-        pathes := path[i]
-        for j,l2 := 0,len(pathes); j < l2; j++ {
-            entry := pathes[j]
-            typev := 0
-            if entry.Account != "" {
-                typev |= serPathSet.typeAccount
-            }
-            
-            if entry.Currency != "" {
-                typev |= serPathSet.typeCurrency
-            }
-            
-            if entry.Issuer != "" {
-                typev |= serPathSet.typeIssuer
-            }
-            
-            STInt8.Serialize(so, typev, false)
+		pathes := path[i]
+		for j, l2 := 0, len(pathes); j < l2; j++ {
+			entry := pathes[j]
+			typev := 0
+			if entry.Account != "" {
+				typev |= typeAccount
+			}
 
-            if entry.Account != "" {
-                so.Append(jtbLib.DecodeAddress(entry.Account))
-            }
+			if entry.Currency != "" {
+				typev |= typeCurrency
+			}
 
-            if entry.Currency != "" {
-                sc := new(SerializedCurrency)
-                so.Append(sc.fromJsonToBytes(entry.Currency))
-            }
+			if entry.Issuer != "" {
+				typev |= typeIssuer
+			}
 
-            if entry.Issuer != "" {
-                so.Append(jtbLib.DecodeAddress(entry.Issuer))
-            }
-        }
-    }
+			STInt8.Serialize(so, typev, false)
 
-    STInt8.Serialize(so, serPathSet.typeEnd, false)
+			if entry.Account != "" {
+				so.Append(jtbLib.DecodeAddress(entry.Account))
+			}
+
+			if entry.Currency != "" {
+				sc := new(SerializedCurrency)
+				so.Append(sc.fromJsonToBytes(entry.Currency))
+			}
+
+			if entry.Issuer != "" {
+				so.Append(jtbLib.DecodeAddress(entry.Issuer))
+			}
+		}
+	}
+
+	STInt8.Serialize(so, typeEnd, false)
 }
 
-func (serHash160 SerializedHash160) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+func (serVector256 SerializedVector256) Parse(so *Serializer) interface{} {
+	return errors.New("Not implemented error.")
 }
 
-func (serHash160 SerializedHash160) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    array := v.([]string)
-    SerializeVarint(so, uint(len(array) * 32))
+func (serVector256 SerializedVector256) Serialize(so *Serializer, val interface{}, noMarker bool) {
+	array := val.([]string)
+	SerializeVarint(so, uint(len(array)*32))
 
-    for _,v := range array {
-        STHash256.Serialize(so, v, false)
-    }
+	for _, v := range array {
+		STHash256.Serialize(so, v, false)
+	}
 }
 
 func (serVL SerializedVariableLength) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serVL SerializedVariableLength) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    SerializeHex(so, val.(string), false)
+	SerializeHex(so, val.(string), false)
 }
 
 func (serAccount SerializedAccount) Parse(so *Serializer) interface{} {
-     return errors.New("Not implemented error.")
+	return errors.New("Not implemented error.")
 }
 
 func (serAccount SerializedAccount) Serialize(so *Serializer, val interface{}, noMarker bool) {
-    var bytes := jtbLib.DecodeAddress(val.(string))
-    SerializeVarint(so, uint(len(bytes)))
-    so.Append(bytes)
+	bytes := jtbLib.DecodeAddress(val.(string))
+	SerializeVarint(so, uint(len(bytes)))
+	so.Append(bytes)
 }
