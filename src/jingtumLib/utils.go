@@ -14,11 +14,12 @@ package jingtumLib
 
 import (
 	"encoding/hex"
-	"errors"
+	_ "errors"
 	"regexp"
-	"strconv"
+	_ "strconv"
 
 	jtbLib "jingtumLib/jingtumBaseLib"
+	jtSerz "jingtumLib/serializer"
 )
 
 var (
@@ -50,7 +51,7 @@ func stringToHex(str string) string {
 	return hex.EncodeToString([]byte(str))
 }
 
-func isValidAmount(amount Amount) bool {
+func isValidAmount(amount jtSerz.Amount) bool {
 
 	if amount.Value == "" {
 		return false

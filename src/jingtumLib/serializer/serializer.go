@@ -64,7 +64,7 @@ var (
 )
 
 type MemoInfo struct {
-	Memo MemoDataInfo
+	Memo *MemoDataInfo
 }
 
 type MemoDataInfo struct {
@@ -80,7 +80,7 @@ type TxData struct {
 	TransactionType interface{}
 	SendMax         interface{}
 	Memos           []MemoInfo
-	Paths           [][]interface{}
+	Paths           [][]PathComputed
 	TransferRate    uint32
 	MemoLen         interface{}
 	Sequence        uint32

@@ -3,6 +3,9 @@ package jingtumLib
 import (
 	"errors"
 	"golang.org/x/net/websocket"
+	jtLRU "jingtumLib/lruCache"
+	_ "jingtumLib/serializer"
+
 	"time"
 )
 
@@ -27,6 +30,7 @@ type Remote struct {
 	Params    map[string]string
 	Status    bool
 	LocalSign bool
+	Paths     *jtLRU.LRU
 }
 
 /*
@@ -107,6 +111,11 @@ func NewRemote() (error, *Remote) {
 	}
 	remote.Params = make(map[string]string)
 	remote.Status = false
+	lru, err := jtLRU.NewLRU(100, 1000*60*5, nil)
+	if err != nil {
+		return err, remote
+	}
+	remote.Paths = lru
 	return nil, remote
 }
 
@@ -485,6 +494,10 @@ func (remote *Remote) RequestOrderBook(account string, gets string, pays string)
 	}
 	Info("Get Reqonse Account Tx succ: ", response)
 	return nil, response
+}
+
+func (remote *Remote) Submit(command string, message map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
+
 }
 
 /*

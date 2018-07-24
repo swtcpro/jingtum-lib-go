@@ -1,6 +1,6 @@
 /**
  *
- * 文件功能介绍
+ * 各数据类型的序列化实现
  *
  * @FileName: serializedTypes.go
  * @Auther : 杨雪波
@@ -43,6 +43,11 @@ type PathComputed struct {
 	Issuer   string
 	Value    string
 	Account  string
+}
+
+type PathData struct {
+	Pathcomputed [][]PathComputed
+	Choice       interface{}
 }
 
 type SerializedInt16 struct {

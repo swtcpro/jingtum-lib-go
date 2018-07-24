@@ -13,66 +13,67 @@
 package jingtumLib
 
 import (
-    _ "errors"
+	_ "errors"
 
-    log "common/github.com/blog4go"
+	_ "common/github.com/blog4go"
+	jtSerz "jingtumLib/serializer"
 )
 
 type Filter func(interface{}) interface{}
 
 type Request struct {
-	remote        Remote
-	message       map[string]interface{}
-    command       string
-    filter        FilterFunc
+	remote  *Remote
+	message map[string]interface{}
+	command string
+	filter  Filter
 }
 
-func NewRequest(remote *Remote, command string,filter Filter) (request *Request , err error) {
+func NewRequest(remote *Remote, command string, filter Filter) (request *Request, err error) {
 
-    request = new(Request)
-    request.remote = remote
-    request.command = command
-    request.filter = filter
-    request.message = mak(map[string]interface{})
-	return &request, nil
+	request = new(Request)
+	request.remote = remote
+	request.command = command
+	request.filter = filter
+	request.message = make(map[string]interface{})
+	return request, nil
 }
 
 //提交请求
 func (request *Request) Submit(callback func(err error, data interface{})) {
-    
-    for _, v := range request.message {
-        //if v, ok := s.(string); ok {
+
+	for _, v := range request.message {
+		//if v, ok := s.(string); ok {
 		//fmt.Println(v)
-        //if v, ok := interface{}(s).(string); ok {
+		//if v, ok := interface{}(s).(string); ok {
 		//fmt.Println(v)//}//}
 
-        if _, ok := v.(error); ok {
-           callback(v, nil)
-           return
-        }
-    }
+		if ve, ok := v.(error); ok {
+			callback(ve, nil)
+			return
+		}
+	}
 
-    request.remote.Submit(request.command, request.message, request.filter, callback)
+	request.remote.Submit(request.command, request.message, request.filter, callback)
 
 }
 
 func (request *Request) SelectLedger(ledger interface{}) {
-    
-    switch ledger.(type) {
 
-    case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-        request.message["ledger_index"] = ledger
-    case string:  
-        _, ok := LEDGER_STATES [ledger]
+	switch ledger.(type) {
 
-        if (ok) {
-            request.message["ledger_index"] = ledger
-        } else if MatchString("^[A-F0-9]+$",ledger) {
-            request.message["ledger_hash"] = ledger;
-        } else {
-            request.message["ledger_index"] = "validated"
-        }
-    default:
-        request.message["ledger_index"] = "validated"
-    } 
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		request.message["ledger_index"] = ledger
+	case string:
+		_, ok := LEDGER_STATES[ledger.(string)]
+
+		if ok {
+			request.message["ledger_index"] = ledger
+		} else if jtSerz.MatchString("^[A-F0-9]+$", ledger.(string)) {
+			request.message["ledger_hash"] = ledger
+		} else {
+			request.message["ledger_index"] = "validated"
+		}
+	default:
+		request.message["ledger_index"] = "validated"
+	}
 }
