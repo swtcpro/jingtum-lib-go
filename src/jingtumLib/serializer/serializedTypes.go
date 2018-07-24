@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	CURRENCY_NAME_LEN      = 3
-	CURRENCY_NAME_LEN2     = 6
+	CURRENCY_NAME_LEN  int = 3
+	CURRENCY_NAME_LEN2 int = 6
 	typeBoundary       int = 0xff
 	typeEnd            int = 0x00
 	typeAccount        int = 0x01
@@ -39,10 +39,12 @@ type ISerializedType interface {
 }
 
 type PathComputed struct {
-	Currency string
-	Issuer   string
-	Value    string
-	Account  string
+	Currency string `json:"currency"`
+	Issuer   string `json:"issuer"`
+	Value    string `json:"value"`
+	Account  string `json:"account"`
+	Type     int    `json:"type"`
+	TypeHex  string `json:"type_hex"`
 }
 
 type PathData struct {
