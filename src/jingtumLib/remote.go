@@ -119,6 +119,17 @@ func NewRemote() (error, *Remote) {
 	return nil, remote
 }
 
+func NewRemoteByURL(url string) (*Remote, error) {
+	err, remote := NewRemote()
+	if err != nil {
+		return nil, err
+	}
+
+	remote.Wsconn.Host = url
+
+	return remote, nil
+}
+
 /*
 * 连接函数
  */
@@ -331,7 +342,7 @@ func (remote *Remote) RequestTx(hash string) (error, string) {
 /*
 * 请求账号信息
  */
-func (remote *Remote) RequestAccountInfo(account string) (error, string) {
+func (remote *Remote) RequestAccountInfo(options map[string]string) (error, string) {
 	if !remote.Status {
 		err := remote.Connect()
 		if err != nil {
@@ -340,7 +351,7 @@ func (remote *Remote) RequestAccountInfo(account string) (error, string) {
 			return err, ""
 		}
 	}
-	request := Pack_RequestAccountInfo(account)
+	request := Pack_RequestAccountInfo(options["account"])
 	err := remote.send(request)
 	if err != nil {
 		Error("Send data fail!")

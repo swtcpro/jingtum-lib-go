@@ -134,7 +134,7 @@ func (transaction *Transaction) setPath(key string) (err error) {
 	}
 
 	//沒有支付路径，不需要传下面的参数
-	if item.(jtSerz.PathData).Pathcomputed == nil || len(item.(jtSerz.PathData).Pathcomputed) == 0 {
+	if item.(jtSerz.PathData).PathsComputed == nil || len(item.(jtSerz.PathData).PathsComputed) == 0 {
 		return
 	}
 	//var path [][]interface{}
@@ -144,7 +144,7 @@ func (transaction *Transaction) setPath(key string) (err error) {
 	//return
 	//}
 
-	transaction.tx_json.Paths = item.(jtSerz.PathData).Pathcomputed
+	transaction.tx_json.Paths = item.(jtSerz.PathData).PathsComputed
 	amount := transaction.MaxAmount(item.(jtSerz.PathData).Choice)
 	transaction.tx_json.SendMax = amount
 	return
@@ -203,13 +203,25 @@ func (transaction *Transaction) setFlags(flags interface{}) (err error) {
 }
 
 func (transaction *Transaction) Sign(callback func(param ...interface{})) {
-	remote := NewRemote()
+	err, remote := NewRemote()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer remote.Disconnect()
+
 	remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			callback(err)
 			return
 		}
-		req := transaction.remote.RequestAccountInfo(map[string]string{"account": transaction.tx_json.Account, "type": "trust"})
+
+		errReq, req := transaction.remote.RequestAccountInfo(map[string]string{"account": transaction.tx_json.Account, "type": "trust"})
+
+		if errReq != nil {
+			panic(errReq.Error())
+		}
+
 		req.Submit(func(err error, data interface{}) {
 			if nil != err {
 				callback(err)

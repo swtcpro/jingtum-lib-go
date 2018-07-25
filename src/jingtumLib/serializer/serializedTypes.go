@@ -48,8 +48,8 @@ type PathComputed struct {
 }
 
 type PathData struct {
-	Pathcomputed [][]PathComputed
-	Choice       interface{}
+	PathsComputed [][]PathComputed
+	Choice        interface{}
 }
 
 type SerializedInt16 struct {
