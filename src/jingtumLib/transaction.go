@@ -227,15 +227,15 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 				callback(err)
 				return
 			}
-			transaction.tx_json.Sequence = data.account_data.Sequence
-			transaction.tx_json.Fee = transaction.tx_json.Fee / 1000000
+			//transaction.tx_json.Sequence = data.account_data.Sequence
+			transaction.tx_json.Fee = transaction.tx_json.Fee.(float64) / 1000000
 
 			//payment
 			if nil != transaction.tx_json.TxAmount {
 				if amount, ok := transaction.tx_json.TxAmount.(string); ok {
 					//基础货币
 					if number(amount) {
-						f, err := strconv.ParseFloat(amount, 32) / 1000000
+						f, err := strconv.ParseFloat(amount, 32)
 						if err == nil {
 							transaction.tx_json.TxAmount = f / 1000000
 						}
@@ -244,13 +244,16 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 			}
 
 			if len(transaction.tx_json.Memos) > 0 {
-				hexStr = hexToString()
-				transaction.tx_json.Memos[0].MemoData = hexToString(transaction.tx_json.Memos[0].MemoData)
+				mdStr, errMd := hexToString(transaction.tx_json.Memos[0].Memo.MemoData)
+				transaction.tx_json.Memos[0].Memo.MemoData = mdStr
 			}
 			if nil != transaction.tx_json.SendMax {
 				if sendMax, ok := transaction.tx_json.SendMax.(string); ok {
 					if number(sendMax) {
-						transaction.tx_json.SendMax = strconv.ParseFloat(sendMax, 32) / 1000000
+						f, err := strconv.ParseFloat(sendMax, 32)
+						if err == nil {
+							transaction.tx_json.SendMax = f / 1000000
+						}
 					}
 				}
 			}
@@ -260,7 +263,10 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 				//基础货币
 				if takerPays, ok := transaction.tx_json.TakerPays.(string); ok {
 					if number(takerPays) {
-						transaction.tx_json.TakerPays = strconv.ParseFloat(takerPays, 32) / 1000000
+						f, err := strconv.ParseFloat(takerPays, 32)
+						if err == nil {
+							transaction.tx_json.TakerPays = f / 1000000
+						}
 					}
 				}
 			}
@@ -269,12 +275,19 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 				//基础货币
 				if takerGets, ok := transaction.tx_json.TakerGets.(string); ok {
 					if number(takerGets) {
-						transaction.tx_json.TakerGets = strconv.ParseFloat(takerGets, 32) / 1000000
+						f, err := strconv.ParseFloat(takerGets, 32)
+						if err == nil {
+							transaction.tx_json.TakerGets = f / 1000000
+						}
 					}
 				}
 			}
 
-			wt := jtbLib.FromSecret(transaction.secret)
+			wt, err := jtbLib.FromSecret(transaction.secret)
+			if err != nil {
+				panic(err.Error())
+			}
+
 			transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
 			var prefix uint32 = 0x53545800
 			hash, _ := jtSerz.FromJson(transaction.tx_json).Hash(prefix)

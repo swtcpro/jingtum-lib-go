@@ -8,9 +8,9 @@
 package jingtumBaseLib
 
 import (
-	"common/goMath"
-	"crypto/sha256"
-	"fmt"
+//"common/goMath"
+//"crypto/sha256"
+//"fmt"
 )
 
 const (
@@ -23,11 +23,11 @@ type Wallet struct {
 
 //创建一个新钱包
 func Generate() {
-	randBytes := goMath.GetRandomStr(RandomLen)
-	sha := sha256.New()
-	sha.Write([]byte(randBytes))
-	sRandBytes := sha.Sum(nil)
-	fmt.Println(sRandBytes)
+	//	randBytes := goMath.GetRandomStr(RandomLen)
+	//	sha := sha256.New()
+	//	sha.Write([]byte(randBytes))
+	//	sRandBytes := sha.Sum(nil)
+	//	fmt.Println(sRandBytes)
 	//Debug(sRandBytes)
 }
 
@@ -48,6 +48,6 @@ func FromSecret(secret string) (*Wallet, error) {
 	return wallet, nil
 }
 
-func (wallet *Wallet) GetPublicKey() PublicKey {
-	return wallet.priv.PublicKey
+func (wallet *Wallet) GetPublicKey() *PublicKey {
+	return &wallet.priv.PublicKey
 }
