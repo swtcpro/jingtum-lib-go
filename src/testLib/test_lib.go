@@ -20,12 +20,12 @@ func main() {
 		os.Exit(0)
 	}
 
-    /*
-	isNumber := jingtum.Number("5445")
-	fmt.Println(isNumber)
+	/*
+		isNumber := jingtum.Number("5445")
+		fmt.Println(isNumber)
 
-	jingtum.Generate()
-    */
+		jingtum.Generate()
+	*/
 	_, remote := jingtum.NewRemote()
 	err = remote.Connect()
 	if err != nil {

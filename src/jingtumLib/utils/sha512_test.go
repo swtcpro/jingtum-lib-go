@@ -10,19 +10,17 @@
  * Copyright@2018 版权所有
  */
 
-package jingtumBaseLib
+package utils
 
 import (
-     "testing"
-     "encoding/hex"
-     _"os"
-     _"flag"
+	"encoding/hex"
+	"testing"
 )
 
 func Test_sha512Util(t *testing.T) {
-   sh512 := NewSha512()
-   sh512.Add([]byte("6666我"))
-   sh512.Add([]byte("888"))
-   sh512.Add32(4294967295)
-   t.Log(hex.EncodeToString(sh512.Finish128()))
+	sh512 := NewSha512()
+	sh512.Add([]byte("6666我"))
+	sh512.Add([]byte("888"))
+	sh512.Add32(4294967295)
+	t.Log(hex.EncodeToString(sh512.Finish128()))
 }

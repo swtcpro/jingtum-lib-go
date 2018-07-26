@@ -10,12 +10,12 @@
  * Copyright@2013 版权所有
  */
 
-package jingtumBaseLib
+package encoding
 
 import (
-     "testing"
+	"testing"
 )
 
 func Test_base58Encode(t *testing.T) {
-    t.Log(Base58Encode([]byte("ddddd"),JingTumAlphabet))
+	t.Log(Base58Encode([]byte("ddddd"), JingTumAlphabet))
 }

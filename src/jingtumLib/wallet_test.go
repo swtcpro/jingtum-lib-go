@@ -1,4 +1,4 @@
-package jingtumBaseLib
+package jingtumLib
 
 import (
 	"testing"

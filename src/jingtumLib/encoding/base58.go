@@ -10,11 +10,11 @@
  * Copyright@2013 版权所有
  */
 
-package jingtumBaseLib
+package encoding
 
 import (
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
 )
 
 // Errors
@@ -22,8 +22,8 @@ var (
 	ErrorInvalidBase58String = errors.New("invalid base58 string")
 )
 
-var (    
-    //井通字母表
+var (
+	//井通字母表
 	JingTumAlphabet = NewAlphabet("jpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65rkm8oFqi1tuvAxyz")
 )
 
@@ -129,7 +129,7 @@ func Base58Encode(input []byte, alphabet *Alphabet) string {
 func Base58Decode(input string, alphabet *Alphabet) ([]byte, error) {
 	inputBytes := []rune(input)
 	inputLength := len(inputBytes)
-	capacity := inputLength*733/1000 + 1 // log(58) / log(256)
+	capacity := inputLength*733/1000 + 1
 	output := make([]byte, capacity)
 	outputReverseEnd := capacity - 1
 

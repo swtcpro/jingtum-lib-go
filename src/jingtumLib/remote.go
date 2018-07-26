@@ -4,7 +4,6 @@ import (
 	"errors"
 	"golang.org/x/net/websocket"
 	jtLRU "jingtumLib/lruCache"
-	_ "jingtumLib/serializer"
 
 	"time"
 )

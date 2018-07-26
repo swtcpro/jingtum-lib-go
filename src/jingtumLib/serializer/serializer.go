@@ -17,7 +17,7 @@ import (
 	"errors"
 	"strconv"
 
-	jtbLib "jingtumLib/jingtumBaseLib"
+	jtUtils "jingtumLib/utils"
 )
 
 type Serializer struct {
@@ -128,7 +128,7 @@ func (so *Serializer) Hash(prefix uint32) []byte {
 	sotemp := new(Serializer)
 	STInt32.Serialize(sotemp, prefix, false)
 	sotemp.Buffer = append(sotemp.Buffer, so.Buffer...)
-	sh512 := jtbLib.NewSha512()
+	sh512 := jtUtils.NewSha512()
 	sh512.Add(sotemp.Buffer)
 	return sh512.Finish256()
 }

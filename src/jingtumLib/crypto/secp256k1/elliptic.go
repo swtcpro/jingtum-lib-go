@@ -10,13 +10,13 @@
  * Copyright@2018 版权所有
  */
 
-package jingtumBaseLib
+package secp256k1
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"math/big"
-    "bytes"
 )
 
 /* We gotta do a lot ourselves because golang's crypto/elliptic uses curves

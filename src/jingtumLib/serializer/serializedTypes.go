@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	jtbLib "jingtumLib/jingtumBaseLib"
+	jtUtils "jingtumLib/utils"
 )
 
 var (
@@ -337,7 +337,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		so.Append(tmparray)
 		tumBytes := amount.TumToBytes()
 		so.Append(tumBytes)
-		so.Append(jtbLib.DecodeAddress(amount.Issuer))
+		so.Append(jtUtils.DecodeAddress(amount.Issuer))
 	}
 }
 
@@ -361,7 +361,7 @@ func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
 				panic("Invalid currencty.")
 			}
 
-		} else if jtbLib.IsValidCurrency(currencty) {
+		} else if jtUtils.IsValidCurrency(currencty) {
 			if len(currencty) >= CURRENCY_NAME_LEN && len(currencty) <= CURRENCY_NAME_LEN2 {
 				var end = 14
 				var clen = len(currencty) - 1
@@ -463,7 +463,7 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 			STInt8.Serialize(so, typev, false)
 
 			if entry.Account != "" {
-				so.Append(jtbLib.DecodeAddress(entry.Account))
+				so.Append(jtUtils.DecodeAddress(entry.Account))
 			}
 
 			if entry.Currency != "" {
@@ -472,7 +472,7 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 			}
 
 			if entry.Issuer != "" {
-				so.Append(jtbLib.DecodeAddress(entry.Issuer))
+				so.Append(jtUtils.DecodeAddress(entry.Issuer))
 			}
 		}
 	}
@@ -506,7 +506,7 @@ func (serAccount SerializedAccount) Parse(so *Serializer) interface{} {
 }
 
 func (serAccount SerializedAccount) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	bytes := jtbLib.DecodeAddress(val.(string))
+	bytes := jtUtils.DecodeAddress(val.(string))
 	SerializeVarint(so, uint(len(bytes)))
 	so.Append(bytes)
 }

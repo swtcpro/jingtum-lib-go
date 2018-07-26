@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	jtbLib "jingtumLib/jingtumBaseLib"
+	jtUtils "jingtumLib/utils"
 )
 
 type Amount struct {
@@ -82,7 +82,7 @@ func (amount *TumAmount) parseJson(json interface{}) {
 		} else {
 			amount.Currency = jsonAmount.Currency
 			amount.IsNative = false
-			if jsonAmount.Issuer == "" || !jtbLib.IsValidAddress(jsonAmount.Issuer) {
+			if jsonAmount.Issuer == "" || !jtUtils.IsValidAddress(jsonAmount.Issuer) {
 				panic(fmt.Sprintf("Input Amount has invalid issuer info %v", jsonAmount.Issuer))
 			} else {
 				amount.Issuer = jsonAmount.Issuer
