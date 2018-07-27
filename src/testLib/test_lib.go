@@ -72,7 +72,7 @@ func main() {
 
 	//请求账号信息
 	account := "jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq"
-	err, response = remote.RequestAccountInfo(account)
+	err, response = remote.RequestAccountInfo(map[string]string{"account": account})
 	if err != nil {
 		fmt.Println("Get data:", response)
 		return

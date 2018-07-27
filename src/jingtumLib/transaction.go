@@ -20,7 +20,9 @@ import (
 	"strings"
 
 	//jtbLib "jingtumLib/jingtumBaseLib"
+	"jingtumLib/constant"
 	jtSerz "jingtumLib/serializer"
+	"jingtumLib/utils"
 )
 
 type Transaction struct {
@@ -75,7 +77,7 @@ func (transaction *Transaction) AddMemo(memo string) {
 	//_memo.MemoData = stringToHex(memo)
 
 	var mdi = new(jtSerz.MemoDataInfo)
-	mdi.MemoData = stringToHex(memo)
+	mdi.MemoData = utils.StringToHex(memo)
 	_memo.Memo = mdi
 
 	transaction.tx_json.Memos = append(transaction.tx_json.Memos, *_memo)
@@ -92,7 +94,7 @@ func (transaction *Transaction) SetFee(fee uint32) {
 
 func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
 	if mt, ok := amount.(string); ok {
-		if number(mt) {
+		if utils.IsNumberString(mt) {
 			f, err := strconv.ParseFloat(mt, 32)
 			if err != nil {
 				return errors.New("invalid amount to max")
@@ -102,7 +104,7 @@ func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
 		}
 	}
 
-	if at, ok := amount.(jtSerz.Amount); ok && isValidAmount(at) {
+	if at, ok := amount.(constant.Amount); ok && utils.IsValidAmount(at) {
 		f, err := strconv.ParseFloat(at.Value, 32)
 		if err != nil {
 			return errors.New("invalid amount to max")
@@ -153,8 +155,8 @@ func (transaction *Transaction) setPath(key string) (err error) {
 /**
  * limit send max amount
  */
-func (transaction *Transaction) setSendMax(amount jtSerz.Amount) {
-	if !isValidAmount(amount) {
+func (transaction *Transaction) setSendMax(amount constant.Amount) {
+	if !utils.IsValidAmount(amount) {
 		transaction.tx_json.SendMax = errors.New("invalid send max amount")
 		return
 	}
@@ -203,7 +205,7 @@ func (transaction *Transaction) setFlags(flags interface{}) (err error) {
 }
 
 func (transaction *Transaction) Sign(callback func(param ...interface{})) {
-	err, remote := NewRemote()
+	/*err, remote := NewRemote()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -296,11 +298,11 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 			transaction.local_sign = true
 			callback(nil, transaction.tx_json.Blob)
 		})
-	})
+	})*/
 }
 
 func (transaction *Transaction) Submit(callback func(param ...interface{})) {
-	err := checkTxError(transaction.tx_json)
+	/*err := checkTxError(transaction.tx_json)
 	if err != nil {
 		callback(err)
 		return
@@ -330,13 +332,13 @@ func (transaction *Transaction) Submit(callback func(param ...interface{})) {
 		data.tx_json = transaction.tx_json
 		data.secret = transaction.secret
 		transaction.remote.Submit("submit", data, transaction.filter, callback)
-	}
+	}*/
 }
 
 func checkTxError(txJson *jtSerz.TxData) error {
-	fields := jtSerz.GetFieldNames(txJson)
-	for i, fn := range fields {
-		v := GetFieldValue(txJson, fn)
+	fields := utils.GetFieldNames(txJson)
+	for _, fn := range fields {
+		v := utils.GetFieldValue(txJson, fn)
 		if err, ok := v.(error); ok {
 			return err
 		}

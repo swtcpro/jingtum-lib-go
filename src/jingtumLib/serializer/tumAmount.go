@@ -19,14 +19,9 @@ import (
 	"strconv"
 	"strings"
 
+	"jingtumLib/constant"
 	jtUtils "jingtumLib/utils"
 )
-
-type Amount struct {
-	Currency string
-	Issuer   string
-	Value    string
-}
 
 type TumAmount struct {
 	Currency   string
@@ -72,12 +67,12 @@ func FromJsonTumA(json interface{}) *TumAmount {
 }
 
 func (amount *TumAmount) parseJson(json interface{}) {
-	if IsNumberType(json) {
-		amount.parseSwtValue(NumberToString(json))
+	if jtUtils.IsNumberType(json) {
+		amount.parseSwtValue(jtUtils.NumberToString(json))
 	} else if v, ok := json.(string); ok {
 		amount.parseSwtValue(v)
-	} else if jsonAmount, ok := json.(Amount); ok {
-		if jsonAmount.Currency == ConfigCurrencty {
+	} else if jsonAmount, ok := json.(constant.Amount); ok {
+		if jsonAmount.Currency == constant.CFG_CURRENCY {
 			amount.parseSwtValue(jsonAmount.Value)
 		} else {
 			amount.Currency = jsonAmount.Currency
@@ -136,7 +131,7 @@ func (amount *TumAmount) TumToBytes() []byte {
 }
 
 func (amount *TumAmount) parseSwtValue(jsonStr string) {
-	if !MatchString("^(-?)(\\d*)(\\.\\d{0,6})?$", jsonStr) {
+	if !jtUtils.MatchString("^(-?)(\\d*)(\\.\\d{0,6})?$", jsonStr) {
 		amount.Value = nil
 		return
 	}

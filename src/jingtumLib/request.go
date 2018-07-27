@@ -16,7 +16,8 @@ import (
 	_ "errors"
 
 	_ "common/github.com/blog4go"
-	jtSerz "jingtumLib/serializer"
+	"jingtumLib/constant"
+	"jingtumLib/utils"
 )
 
 type Filter func(interface{}) interface{}
@@ -58,11 +59,11 @@ func (request *Request) SelectLedger(ledger interface{}) {
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
 		request.message["ledger_index"] = ledger
 	case string:
-		_, ok := LEDGER_STATES[ledger.(string)]
+		_, ok := constant.LEDGER_STATES[ledger.(string)]
 
 		if ok {
 			request.message["ledger_index"] = ledger
-		} else if jtSerz.MatchString("^[A-F0-9]+$", ledger.(string)) {
+		} else if utils.MatchString("^[A-F0-9]+$", ledger.(string)) {
 			request.message["ledger_hash"] = ledger
 		} else {
 			request.message["ledger_index"] = "validated"

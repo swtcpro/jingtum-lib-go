@@ -12,7 +12,7 @@
 
 package serializer
 
-import (
+/*import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
@@ -92,74 +92,74 @@ func NumberToString(obj interface{}) string {
 func IsHexString(str string) bool {
 	match, _ := regexp.MatchString("^[0-9a-fA-F]+$", str)
 	return match
-}
+}*/
 
 /**
  *  获取对象字段存储的值
  */
-func GetFieldValue(obj interface{}, fieldName string) interface{} {
-	v := reflect.ValueOf(obj)
-
-	if v.Kind() == reflect.Struct {
-		return v.FieldByName(fieldName).Interface()
-	} else if v.Kind() == reflect.Ptr {
-		return v.Elem().FieldByName(fieldName).Interface()
-	} else {
-		return nil
-	}
-}
+//func GetFieldValue(obj interface{}, fieldName string) interface{} {
+//	v := reflect.ValueOf(obj)
+//
+//	if v.Kind() == reflect.Struct {
+//		return v.FieldByName(fieldName).Interface()
+//	} else if v.Kind() == reflect.Ptr {
+//		return v.Elem().FieldByName(fieldName).Interface()
+//	} else {
+//		return nil
+//	}
+//}
 
 /**
  *  获取对象的字段名
  */
-func GetFieldNames(obj interface{}) []string {
-	t := reflect.TypeOf(obj)
-	var fields []string
-	if t.Kind() == reflect.Struct {
-		for i := 0; i < t.NumField(); i++ {
-			fields = append(fields, t.Field(i).Name)
-		}
-	} else if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-		for i := 0; i < t.NumField(); i++ {
-			fields = append(fields, t.Field(i).Name)
-		}
-	}
-
-	return fields
-}
-
-func HexToBytes(hexStr string) ([]byte, error) {
-	return hex.DecodeString(hexStr)
-}
-
-func StringToHex(str string) string {
-	return hex.EncodeToString([]byte(str))
-}
-
-func SortByFieldName(fields []string) {
-	sortField(fields, func(p, q string) bool {
-		xMap := INVERSE_FIELDS_MAP[p]
-		xTypeBits := xMap.Key
-		xFieldBits := xMap.Value
-		yMap := INVERSE_FIELDS_MAP[q]
-		yTypeBits := yMap.Key
-		yFieldBits := yMap.Value
-
-		if xTypeBits != yTypeBits {
-			ret := xTypeBits - yTypeBits
-			if ret > 0 || ret == 0 {
-				return true
-			} else {
-				return false
-			}
-		} else {
-			ret := xFieldBits - yFieldBits
-			if ret > 0 || ret == 0 {
-				return true
-			} else {
-				return false
-			}
-		}
-	})
-}
+//func GetFieldNames(obj interface{}) []string {
+//	t := reflect.TypeOf(obj)
+//	var fields []string
+//	if t.Kind() == reflect.Struct {
+//		for i := 0; i < t.NumField(); i++ {
+//			fields = append(fields, t.Field(i).Name)
+//		}
+//	} else if t.Kind() == reflect.Ptr {
+//		t = t.Elem()
+//		for i := 0; i < t.NumField(); i++ {
+//			fields = append(fields, t.Field(i).Name)
+//		}
+//	}
+//
+//	return fields
+//}
+//
+//func HexToBytes(hexStr string) ([]byte, error) {
+//	return hex.DecodeString(hexStr)
+//}
+//
+//func StringToHex(str string) string {
+//	return hex.EncodeToString([]byte(str))
+//}
+//
+//func SortByFieldName(fields []string) {
+//	sortField(fields, func(p, q string) bool {
+//		xMap := constant.INVERSE_FIELDS_MAP[p]
+//		xTypeBits := xMap.Key
+//		xFieldBits := xMap.Value
+//		yMap := constant.INVERSE_FIELDS_MAP[q]
+//		yTypeBits := yMap.Key
+//		yFieldBits := yMap.Value
+//
+//		if xTypeBits != yTypeBits {
+//			ret := xTypeBits - yTypeBits
+//			if ret > 0 || ret == 0 {
+//				return true
+//			} else {
+//				return false
+//			}
+//		} else {
+//			ret := xFieldBits - yFieldBits
+//			if ret > 0 || ret == 0 {
+//				return true
+//			} else {
+//				return false
+//			}
+//		}
+//	})
+//}

@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"jingtumLib/constant"
 	jtUtils "jingtumLib/utils"
 )
 
@@ -101,7 +102,7 @@ type SerializedAccount struct {
 }
 
 func (serInt8 SerializedInt8) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	so.Append(GetBytes(val))
+	so.Append(jtUtils.GetBytes(val))
 }
 
 func (serInt8 SerializedInt8) Parse(so *Serializer) interface{} {
@@ -109,7 +110,7 @@ func (serInt8 SerializedInt8) Parse(so *Serializer) interface{} {
 }
 
 func (serInt16 SerializedInt16) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	so.Append(GetBytes(val))
+	so.Append(jtUtils.GetBytes(val))
 }
 
 func (serInt16 SerializedInt16) Parse(so *Serializer) interface{} {
@@ -117,7 +118,7 @@ func (serInt16 SerializedInt16) Parse(so *Serializer) interface{} {
 }
 
 func (serInt32 SerializedInt32) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	so.Append(GetBytes(val))
+	so.Append(jtUtils.GetBytes(val))
 }
 
 func (serInt32 SerializedInt32) Parse(so *Serializer) interface{} {
@@ -126,12 +127,12 @@ func (serInt32 SerializedInt32) Parse(so *Serializer) interface{} {
 
 func (serInt64 SerializedInt64) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if number, ok := val.(uint64); ok {
-		so.Append(GetBytes(number))
+		so.Append(jtUtils.GetBytes(number))
 		return
 	}
 
 	if str, ok := val.(string); ok {
-		if !IsHexString(str) {
+		if !jtUtils.IsHexString(str) {
 			panic(fmt.Sprintf("Invalid hex string %v", str))
 		}
 
@@ -164,32 +165,32 @@ func (serMemo SerializedMemo) Parse(so *Serializer) interface{} {
 }
 
 func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	fileds := GetFieldNames(val)
+	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
-		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		kvp := constant.INVERSE_FIELDS_MAP[fileds[i]]
 		if kvp == nil {
 			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
 		}
 	}
-	SortByFieldName(fileds)
+	jtUtils.SortByFieldName(fileds)
 
-	isJson := GetFieldValue(val, "MemoFormat") == "json"
+	isJson := jtUtils.GetFieldValue(val, "MemoFormat") == "json"
 
 	for _, fn := range fileds {
-		value := GetFieldValue(val, fn)
+		value := jtUtils.GetFieldValue(val, fn)
 		switch fn {
 		case "MemoType":
-			value = StringToHex(value.(string))
+			value = jtUtils.StringToHex(value.(string))
 		case "MemoFormat":
-			value = StringToHex(value.(string))
+			value = jtUtils.StringToHex(value.(string))
 		case "MemoData":
 			if _, ok := value.(string); ok {
-				value = StringToHex(value.(string))
+				value = jtUtils.StringToHex(value.(string))
 				break
 			}
 			if isJson {
 				mjson, _ := json.Marshal(value)
-				value = StringToHex(string(mjson))
+				value = jtUtils.StringToHex(string(mjson))
 				break
 			}
 			panic(fmt.Sprintf("MemoData can only be a JSON object with a valid json MemoFormat. %v", value))
@@ -208,20 +209,20 @@ func (serArg SerializedArg) Parse(so *Serializer) interface{} {
 }
 
 func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	fileds := GetFieldNames(val)
+	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
-		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		kvp := constant.INVERSE_FIELDS_MAP[fileds[i]]
 		if kvp == nil {
 			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
 		}
 	}
-	SortByFieldName(fileds)
+	jtUtils.SortByFieldName(fileds)
 
 	for _, fn := range fileds {
 		if fn == "Parameter" {
 			break
 		}
-		value := GetFieldValue(val, fn)
+		value := jtUtils.GetFieldValue(val, fn)
 		Serialize(so, fn, value)
 	}
 
@@ -235,7 +236,7 @@ func (serHash128 SerializedHash128) Parse(so *Serializer) interface{} {
 }
 
 func (serHash128 SerializedHash128) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	if v, ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 32 {
+	if v, ok := val.(string); ok && jtUtils.MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 32 {
 		SerializeHex(so, v, true)
 		return
 	}
@@ -246,7 +247,7 @@ func (serHash256 SerializedHash256) Parse(so *Serializer) interface{} {
 }
 
 func (serHash256 SerializedHash256) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	if v, ok := val.(string); ok && MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 64 {
+	if v, ok := val.(string); ok && jtUtils.MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 64 {
 		SerializeHex(so, v, true)
 		return
 	}
@@ -274,7 +275,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		}
 		b.WriteString(valueHex)
 
-		valueBytes, err := HexToBytes(b.String())
+		valueBytes, err := jtUtils.HexToBytes(b.String())
 		if err != nil {
 			panic("Hex to bytes error.")
 		}
@@ -353,9 +354,9 @@ func (serCurrency SerializedCurrency) Serialize(so *Serializer, val interface{},
 func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
 	var result []byte
 	if currencty != "" {
-		if IsHexString(currencty) && len(currencty) == 40 {
+		if jtUtils.IsHexString(currencty) && len(currencty) == 40 {
 			var err error
-			result, err = HexToBytes(currencty)
+			result, err = jtUtils.HexToBytes(currencty)
 
 			if err != nil {
 				panic("Invalid currencty.")
@@ -384,17 +385,17 @@ func (serObject SerializedObject) Parse(so *Serializer) interface{} {
 }
 
 func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	fileds := GetFieldNames(val)
+	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
-		kvp := INVERSE_FIELDS_MAP[fileds[i]]
+		kvp := constant.INVERSE_FIELDS_MAP[fileds[i]]
 		if kvp == nil {
 			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
 		}
 	}
-	SortByFieldName(fileds)
+	jtUtils.SortByFieldName(fileds)
 
 	for _, fn := range fileds {
-		value := GetFieldValue(val, fn)
+		value := jtUtils.GetFieldValue(val, fn)
 		if value == nil || value == "" {
 			continue
 		}
@@ -414,11 +415,11 @@ func (serArray SerializedArray) Parse(so *Serializer) interface{} {
 func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	array := val.([]interface{})
 	for i := 0; i < len(array); i++ {
-		fileds := GetFieldNames(array[i])
+		fileds := jtUtils.GetFieldNames(array[i])
 		if len(fileds) != 1 {
 			panic("Cannot serialize an array containing non-single-key objects.")
 		}
-		value := GetFieldValue(array[i], fileds[0])
+		value := jtUtils.GetFieldValue(array[i], fileds[0])
 		Serialize(so, fileds[0], value)
 	}
 	STInt8.Serialize(so, 0xf1, false)

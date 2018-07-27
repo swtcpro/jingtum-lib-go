@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"sync"
 
-	"jingtumLib/serializer"
+	"jingtumLib/constant"
 )
 
 var (
@@ -172,7 +172,7 @@ func Init() error {
 		return err
 	}
 
-	serializer.ConfigCurrencty = JTConfig.Read("Config", "currency")
+	constant.CFG_CURRENCY = JTConfig.Read("Config", "currency")
 
 	return nil
 }
