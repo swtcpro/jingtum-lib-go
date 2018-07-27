@@ -14,23 +14,23 @@
 package jingtumLib
 
 import (
-	"encoding/json"
-	"errors"
-	"strconv"
-	"strings"
+	//	"encoding/json"
+	//	"errors"
+	//	"strconv"
+	//	"strings"
 
 	"jingtumLib/constant"
-	jtSerz "jingtumLib/serializer"
+	"jingtumLib/serializer"
 	"jingtumLib/utils"
 )
 
-type Transaction1 struct {
-	remote     *Remote
-	filter     Filter
-	secret     string
-	tx_json    *jtSerz.TxData
-	local_sign bool
-}
+//type Transaction1 struct {
+//	remote     *Remote
+//	filter     Filter
+//	secret     string
+//	tx_json    *serializer.TxData
+//	local_sign bool
+//}
 
 type Transaction struct {
 	remote     *Remote
@@ -94,15 +94,15 @@ func (tx *Transaction) AddMemo(memo string) {
 		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
 	}
 
-	mi := new(jtSerz.MemoInfo)
-	mdi := new(jtSerz.MemoDataInfo)
+	mi := new(serializer.MemoInfo)
+	mdi := new(serializer.MemoDataInfo)
 	mdi.MemoData = utils.StringToHex(memo)
 	mi.Memo = mdi
 
-	memos := tx.tx_json["Memos"].([]MemoInfo)
+	memos := tx.tx_json["Memos"].([]serializer.MemoInfo)
 
 	if memos == nil {
-		memos = make([]MemoInfo, 0) //[]MemoInfo
+		memos = make([]serializer.MemoInfo, 0) //[]MemoInfo
 		tx.AddTxJson("Memos", memos)
 		memos = append(memos, *mi)
 	}
@@ -379,13 +379,13 @@ func (transaction *Transaction) Submit(callback func(param ...interface{})) {
 	}*/
 }
 
-func checkTxError(txJson *jtSerz.TxData) error {
-	fields := utils.GetFieldNames(txJson)
-	for _, fn := range fields {
-		v := utils.GetFieldValue(txJson, fn)
-		if err, ok := v.(error); ok {
-			return err
-		}
-	}
-	return nil
-}
+//func checkTxError(txJson *jtSerz.TxData) error {
+//	fields := utils.GetFieldNames(txJson)
+//	for _, fn := range fields {
+//		v := utils.GetFieldValue(txJson, fn)
+//		if err, ok := v.(error); ok {
+//			return err
+//		}
+//	}
+//	return nil
+//}

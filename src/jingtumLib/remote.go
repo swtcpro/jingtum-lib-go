@@ -518,7 +518,7 @@ func (remote *Remote) Submit(command string, message map[string]interface{}, fil
 /**
  * 创建支付对象
  */
-func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (Transaction, error) {
+func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error) {
 	tx, err := NewTransaction(remote)
 	if err != nil {
 		return nil, err
@@ -532,7 +532,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 		return nil, constant.ERR_PAYMENT_INVALID_DST_ADDR
 	}
 
-	if !utils.IsValidAmount(amount) {
+	if !utils.IsValidAmount(&amount) {
 		return nil, constant.ERR_PAYMENT_INVALID_AMOUNT
 	}
 

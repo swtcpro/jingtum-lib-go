@@ -202,7 +202,7 @@ func IsHexString(str string) bool {
 /**
  * 根据货币类型转换成相应的金额对象。如果是SWT则返回基本数据类型
  */
-func ToAmount(amount constant.Amount) (interface{}, error) {
+func ToAmount(amount jtConst.Amount) (interface{}, error) {
 	if amount.Value != "" {
 		return nil, jtConst.ERR_EMPTY_PARAM
 	}
@@ -217,11 +217,11 @@ func ToAmount(amount constant.Amount) (interface{}, error) {
 		return nil, jtConst.ERR_PAYMENT_OUT_OF_AMOUNT
 	}
 
-	if amount.Currency == CFG_CURRENCY {
-		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	if amount.Currency == jtConst.CFG_CURRENCY {
+		return strconv.FormatFloat(value, 'f', -1, 64), nil
 	}
 
-	return amount
+	return amount, nil
 }
 
 /**
@@ -272,7 +272,7 @@ func HexToString(hexStr string) (string, error) {
 	return string(bytes), err
 }
 
-func IsValidAmount(amount jtConst.Amount) bool {
+func IsValidAmount(amount *jtConst.Amount) bool {
 	if nil == amount {
 		return false
 	}
