@@ -3,9 +3,9 @@ package jingtumLib
 import (
 	"errors"
 	"golang.org/x/net/websocket"
-	jtLRU "jingtumLib/lruCache"
-
 	"time"
+
+	jtLRU "jingtumLib/lruCache"
 )
 
 //接收最长报文
