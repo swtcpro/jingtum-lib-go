@@ -11,3 +11,5 @@ package constant
 
 const ACCOUNT_PREFIX uint8 = 0
 const SEED_PREFIX uint8 = 33
+const REGEX_CURRENCY = "^([a-zA-Z0-9]{3,6}|[A-F0-9]{40})$"
+const TXJSON_ERROR_KEY = "Error"

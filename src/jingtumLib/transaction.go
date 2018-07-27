@@ -19,17 +19,23 @@ import (
 	"strconv"
 	"strings"
 
-	//jtbLib "jingtumLib/jingtumBaseLib"
 	"jingtumLib/constant"
 	jtSerz "jingtumLib/serializer"
 	"jingtumLib/utils"
 )
 
-type Transaction struct {
+type Transaction1 struct {
 	remote     *Remote
 	filter     Filter
 	secret     string
 	tx_json    *jtSerz.TxData
+	local_sign bool
+}
+
+type Transaction struct {
+	remote     *Remote
+	secret     string
+	tx_json    map[string]interface{}
 	local_sign bool
 }
 
@@ -39,170 +45,208 @@ var (
 	TransactionFlags = map[string]FlagClass{"Universal": {"FullyCanonicalSig": 0x00010000}, "AccountSet": {"RequireDestTag": 0x00010000, "OptionalDestTag": 0x00020000, "RequireAuth": 0x00040000, "OptionalAuth": 0x00080000, "DisallowSWT": 0x00100000, "AllowSWT": 0x00200000}, "TrustSet": {"SetAuth": 0x00010000, "NoSkywell": 0x00020000, "SetNoSkywell": 0x00020000, "ClearNoSkywell": 0x00040000, "SetFreeze": 0x00100000, "ClearFreeze": 0x00200000}, "OfferCreate": {"Passive": 0x00010000, "ImmediateOrCancel": 0x00020000, "FillOrKill": 0x00040000, "Sell": 0x00080000}, "Payment": {"NoSkywellDirect": 0x00010000, "PartialPayment": 0x00020000, "LimitQuality": 0x00040000}, "RelationSet": {"Authorize": 0x00000001, "Freeze": 0x00000011}}
 )
 
-func NewTransaction(remote *Remote, filter Filter) (transaction *Transaction, err error) {
-	transaction = new(Transaction)
-	transaction.remote = remote
-	transaction.tx_json = new(jtSerz.TxData)
-	transaction.tx_json.Flags = 0
-	transaction.tx_json.Fee = JTConfig.ReadInt("Config", "fee", 10000)
-	transaction.filter = filter
-	return transaction, nil
+//func NewTransaction2(remote *Remote, filter Filter) (transaction *Transaction, err error) {
+//	transaction := new(Transaction)
+//	transaction.remote = remote
+//	transaction.tx_json = new(jtSerz.TxData)
+//	transaction.tx_json.Flags = 0
+//	transaction.tx_json.Fee = JTConfig.ReadInt("Config", "fee", 10000)
+//	transaction.filter = filter
+//	return transaction, nil
+//}
+
+/**
+ * 构造Transaction对象
+ */
+func NewTransaction(remote *Remote) (*Transaction, error) {
+	if nil == remote {
+		return nil, constant.ERR_EMPTY_PARAM
+	}
+	tx := new(Transaction)
+	tx.remote = remote
+	tx.tx_json = make(map[string]interface{})
+	return tx, nil
 }
 
-func (transaction *Transaction) ParseJson(jsonStr string) error {
+/**
+ * 添加交易参数
+ */
+func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
+	if key == "" || tx.tx_json == nil {
+		return false
+	}
 
-	err := json.Unmarshal([]byte(jsonStr), &transaction.tx_json)
-	return err
+	tx.tx_json[key] = value
+	return true
 }
 
-func (transaction *Transaction) GetAccount() string {
-	return transaction.tx_json.Account
-}
+/**
+ * 设置备注
+ */
+func (tx *Transaction) AddMemo(memo string) {
+	if memo == "" {
+		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_MEMO_EMPTY)
+		return
+	}
 
-func (transaction *Transaction) GetTransactionType() interface{} {
-	return transaction.tx_json.TransactionType
-}
-
-func (transaction *Transaction) SetSecret(secret string) {
-	transaction.secret = secret
-}
-
-func (transaction *Transaction) AddMemo(memo string) {
+	//if len([]rune(memo)) > 2048 {
 	if len(memo) > 2048 {
-		transaction.tx_json.MemoLen = errors.New("The length of Memo shoule be less than or equal 2048.")
-		return
+		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
 	}
 
-	var _memo = new(jtSerz.MemoInfo)
-	//_memo.MemoData = stringToHex(memo)
-
-	var mdi = new(jtSerz.MemoDataInfo)
+	mi := new(jtSerz.MemoInfo)
+	mdi := new(jtSerz.MemoDataInfo)
 	mdi.MemoData = utils.StringToHex(memo)
-	_memo.Memo = mdi
+	mi.Memo = mdi
 
-	transaction.tx_json.Memos = append(transaction.tx_json.Memos, *_memo)
+	memos := tx.tx_json["Memos"].([]MemoInfo)
+
+	if memos == nil {
+		memos = make([]MemoInfo, 0) //[]MemoInfo
+		tx.AddTxJson("Memos", memos)
+		memos = append(memos, *mi)
+	}
 }
 
-func (transaction *Transaction) SetFee(fee uint32) {
-	if fee < 10 {
-		transaction.tx_json.Fee = errors.New("Fee should be great than or equal 10.")
-		return
-	}
-
-	transaction.tx_json.Fee = fee
-}
-
-func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
-	if mt, ok := amount.(string); ok {
-		if utils.IsNumberString(mt) {
-			f, err := strconv.ParseFloat(mt, 32)
-			if err != nil {
-				return errors.New("invalid amount to max")
-			}
-
-			return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
-		}
-	}
-
-	if at, ok := amount.(constant.Amount); ok && utils.IsValidAmount(at) {
-		f, err := strconv.ParseFloat(at.Value, 32)
-		if err != nil {
-			return errors.New("invalid amount to max")
-		}
-		return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
-	}
-
-	return errors.New("invalid amount to max")
-}
-
-/**
- * set a path to payment
- * this path is repesented as a key, which is computed in path find
- * so if one path you computed self is not allowed
- * when path set, sendmax is also set.
- * @param path
- */
-func (transaction *Transaction) setPath(key string) (err error) {
-	if key == "" || (strings.Count(key, "")-1) != 40 {
-		err = errors.New("invalid path key")
-		return
-	}
-
-	item, ok := transaction.remote.Paths.Get(key)
-
-	if !ok {
-		err = errors.New("non exists path key")
-		return
-	}
-
-	//沒有支付路径，不需要传下面的参数
-	if item.(jtSerz.PathData).PathsComputed == nil || len(item.(jtSerz.PathData).PathsComputed) == 0 {
-		return
-	}
-	//var path [][]interface{}
-	//err = json.Unmarshal(item.(jtSerz.PathData).Pathcomputed, &path)
-	//if err != nil {
-	//err = errors.New("invalid path.")
-	//return
-	//}
-
-	transaction.tx_json.Paths = item.(jtSerz.PathData).PathsComputed
-	amount := transaction.MaxAmount(item.(jtSerz.PathData).Choice)
-	transaction.tx_json.SendMax = amount
-	return
-}
-
-/**
- * limit send max amount
- */
-func (transaction *Transaction) setSendMax(amount constant.Amount) {
-	if !utils.IsValidAmount(amount) {
-		transaction.tx_json.SendMax = errors.New("invalid send max amount")
-		return
-	}
-
-	transaction.tx_json.SendMax = amount
-}
-
-/**
- * transfer rate
- * between 0 and 1, type is number
- * @param rate
- */
-func (transaction *Transaction) setTransferRate(rate float32) (err error) {
-	if rate < 0 || rate > 1 {
-		err = errors.New("invalid transfer rate")
-		return
-	}
-
-	transaction.tx_json.TransferRate = uint32((rate + 1) * 1000000000)
-	return
-}
-
-/**
- * set transaction flags
- *
- */
-func (transaction *Transaction) setFlags(flags interface{}) (err error) {
-	if fv, ok := flags.(uint32); ok {
-		transaction.tx_json.Flags = fv
-		return
-	}
-
-	if transType, isString := transaction.tx_json.TransactionType.(string); isString {
-		var transaction_flags = TransactionFlags[transType]
-		if transaction_flags != nil {
-			if flag_set, isArray := flags.([]string); isArray {
-				for i := 0; i < len(flag_set); i++ {
-					flag := flag_set[i]
-					transaction.tx_json.Flags += transaction_flags[flag]
-				}
-			}
-		}
-	}
-	err = errors.New("invalid flags")
-	return
-}
+//func (transaction *Transaction) ParseJson(jsonStr string) error {
+//
+//	err := json.Unmarshal([]byte(jsonStr), &transaction.tx_json)
+//	return err
+//}
+//
+//func (transaction *Transaction) GetAccount() string {
+//	return transaction.tx_json.Account
+//}
+//
+//func (transaction *Transaction) GetTransactionType() interface{} {
+//	return transaction.tx_json.TransactionType
+//}
+//
+//func (transaction *Transaction) SetSecret(secret string) {
+//	transaction.secret = secret
+//}
+//
+//
+//func (transaction *Transaction) SetFee(fee uint32) {
+//	if fee < 10 {
+//		transaction.tx_json.Fee = errors.New("Fee should be great than or equal 10.")
+//		return
+//	}
+//
+//	transaction.tx_json.Fee = fee
+//}
+//
+//func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
+//	if mt, ok := amount.(string); ok {
+//		if utils.IsNumberString(mt) {
+//			f, err := strconv.ParseFloat(mt, 32)
+//			if err != nil {
+//				return errors.New("invalid amount to max")
+//			}
+//
+//			return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
+//		}
+//	}
+//
+//	if at, ok := amount.(constant.Amount); ok && utils.IsValidAmount(at) {
+//		f, err := strconv.ParseFloat(at.Value, 32)
+//		if err != nil {
+//			return errors.New("invalid amount to max")
+//		}
+//		return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
+//	}
+//
+//	return errors.New("invalid amount to max")
+//}
+//
+///**
+// * set a path to payment
+// * this path is repesented as a key, which is computed in path find
+// * so if one path you computed self is not allowed
+// * when path set, sendmax is also set.
+// * @param path
+// */
+//func (transaction *Transaction) setPath(key string) (err error) {
+//	if key == "" || (strings.Count(key, "")-1) != 40 {
+//		err = errors.New("invalid path key")
+//		return
+//	}
+//
+//	item, ok := transaction.remote.Paths.Get(key)
+//
+//	if !ok {
+//		err = errors.New("non exists path key")
+//		return
+//	}
+//
+//	//沒有支付路径，不需要传下面的参数
+//	if item.(jtSerz.PathData).PathsComputed == nil || len(item.(jtSerz.PathData).PathsComputed) == 0 {
+//		return
+//	}
+//	//var path [][]interface{}
+//	//err = json.Unmarshal(item.(jtSerz.PathData).Pathcomputed, &path)
+//	//if err != nil {
+//	//err = errors.New("invalid path.")
+//	//return
+//	//}
+//
+//	transaction.tx_json.Paths = item.(jtSerz.PathData).PathsComputed
+//	amount := transaction.MaxAmount(item.(jtSerz.PathData).Choice)
+//	transaction.tx_json.SendMax = amount
+//	return
+//}
+//
+///**
+// * limit send max amount
+// */
+//func (transaction *Transaction) setSendMax(amount constant.Amount) {
+//	if !utils.IsValidAmount(amount) {
+//		transaction.tx_json.SendMax = errors.New("invalid send max amount")
+//		return
+//	}
+//
+//	transaction.tx_json.SendMax = amount
+//}
+//
+///**
+// * transfer rate
+// * between 0 and 1, type is number
+// * @param rate
+// */
+//func (transaction *Transaction) setTransferRate(rate float32) (err error) {
+//	if rate < 0 || rate > 1 {
+//		err = errors.New("invalid transfer rate")
+//		return
+//	}
+//
+//	transaction.tx_json.TransferRate = uint32((rate + 1) * 1000000000)
+//	return
+//}
+//
+///**
+// * set transaction flags
+// *
+// */
+//func (transaction *Transaction) setFlags(flags interface{}) (err error) {
+//	if fv, ok := flags.(uint32); ok {
+//		transaction.tx_json.Flags = fv
+//		return
+//	}
+//
+//	if transType, isString := transaction.tx_json.TransactionType.(string); isString {
+//		var transaction_flags = TransactionFlags[transType]
+//		if transaction_flags != nil {
+//			if flag_set, isArray := flags.([]string); isArray {
+//				for i := 0; i < len(flag_set); i++ {
+//					flag := flag_set[i]
+//					transaction.tx_json.Flags += transaction_flags[flag]
+//				}
+//			}
+//		}
+//	}
+//	err = errors.New("invalid flags")
+//	return
+//}
 
 func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 	/*err, remote := NewRemote()

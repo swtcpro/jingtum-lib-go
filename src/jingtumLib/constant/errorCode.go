@@ -20,4 +20,17 @@ var (
 	ERR_EMPTY_PARAM = errors.New("Parameters cannot be empty.")
 
 	ERR_INVALID_PARAM = errors.New("Invalid input")
+
+	//支付相关错误码
+	ERR_PAYMENT_INVALID_SRC_ADDR = errors.New("invalid source address")
+
+	ERR_PAYMENT_INVALID_DST_ADDR = errors.New("invalid destination address")
+
+	ERR_PAYMENT_INVALID_AMOUNT = errors.New("invalid amount")
+
+	ERR_PAYMENT_OUT_OF_AMOUNT = errors.New("invalid amount: amount's maximum value is 100000000000")
+
+	ERR_PAYMENT_MEMO_EMPTY = errors.New("Memo is empty.")
+
+	ERR_PAYMENT_OUT_OF_MEMO_LEN = errors.New("The length of Memo shoule be less than or equal 2048.")
 )

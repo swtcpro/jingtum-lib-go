@@ -5,7 +5,9 @@ import (
 	"golang.org/x/net/websocket"
 	"time"
 
+	"jingtumLib/constant"
 	jtLRU "jingtumLib/lruCache"
+	"jingtumLib/utils"
 )
 
 //接收最长报文
@@ -68,6 +70,9 @@ type Remoter interface {
 	RequestAccountTx(account string, limit int) (error, string)
 	//获得市场挂单列表
 	RequestOrderBook(account string, gets string, pays string) (error, string)
+
+	//创建支付对象
+	BuildPaymentTx(account string, to string, amount constant.Amount) (Transaction, error)
 }
 
 /*
@@ -508,6 +513,42 @@ func (remote *Remote) RequestOrderBook(account string, gets string, pays string)
 
 func (remote *Remote) Submit(command string, message map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
 
+}
+
+/**
+ * 创建支付对象
+ */
+func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (Transaction, error) {
+	tx, err := NewTransaction(remote)
+	if err != nil {
+		return nil, err
+	}
+
+	if !utils.IsValidAddress(account) {
+		return nil, constant.ERR_PAYMENT_INVALID_SRC_ADDR
+	}
+
+	if !utils.IsValidAddress(to) {
+		return nil, constant.ERR_PAYMENT_INVALID_DST_ADDR
+	}
+
+	if !utils.IsValidAmount(amount) {
+		return nil, constant.ERR_PAYMENT_INVALID_AMOUNT
+	}
+
+	tx.AddTxJson("TransactionType", "Payment")
+	tx.AddTxJson("Account", account)
+
+	toamount, err := utils.ToAmount(amount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tx.AddTxJson("Amount", toamount)
+	tx.AddTxJson("Destination", to)
+
+	return tx, nil
 }
 
 /*

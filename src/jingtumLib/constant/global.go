@@ -16,13 +16,21 @@ type KeyValuePair struct {
 	Value uint8
 }
 
+//支付金额
 type Amount struct {
-	Currency string
-	Issuer   string
-	Value    string
+	//货币种类，三到六个字母或20字节的自定义货币
+	Currency string `json:"currency"`
+	//货币发行方
+	Issuer string `json:"issuer"`
+	//支付数量
+	Value string `json:"value"`
 }
 
 var (
+	//command var
+	COMMAND_SUBMIT = "submit"
+
+	//配置货币
 	CFG_CURRENCY string
 
 	LEDGER_STATES = map[string]string{"current": "current", "closed": "closed", "validated": "validated"}

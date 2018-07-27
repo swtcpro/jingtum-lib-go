@@ -25,8 +25,6 @@ import (
 	jtEncode "jingtumLib/encoding"
 )
 
-const REGEX_CURRENCY = "^([a-zA-Z0-9]{3,6}|[A-F0-9]{40})$"
-
 /**
  * concat an item and a buffer
  * @param {integer} item1, should be an integer
@@ -99,7 +97,7 @@ func BytesToBigInt(b []byte) *big.Int {
 }
 
 func IsValidCurrency(currency string) bool {
-	ok, _ := regexp.MatchString(REGEX_CURRENCY, currency)
+	ok, _ := regexp.MatchString(jtConst.REGEX_CURRENCY, currency)
 	return ok
 }
 
@@ -113,6 +111,10 @@ func DecodeAddress(address string) []byte {
 }
 
 func IsValidAddress(address string) bool {
+	if address == "" {
+		return false
+	}
+
 	_, err := DecodeB58(jtConst.ACCOUNT_PREFIX, address)
 	if err != nil {
 		return false
@@ -198,6 +200,31 @@ func IsHexString(str string) bool {
 }
 
 /**
+ * 根据货币类型转换成相应的金额对象。如果是SWT则返回基本数据类型
+ */
+func ToAmount(amount constant.Amount) (interface{}, error) {
+	if amount.Value != "" {
+		return nil, jtConst.ERR_EMPTY_PARAM
+	}
+
+	value, err := strconv.ParseFloat(amount.Value, 64)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if value > 100000000000 {
+		return nil, jtConst.ERR_PAYMENT_OUT_OF_AMOUNT
+	}
+
+	if amount.Currency == CFG_CURRENCY {
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
+	}
+
+	return amount
+}
+
+/**
  *  获取对象字段存储的值
  */
 func GetFieldValue(obj interface{}, fieldName string) interface{} {
@@ -246,6 +273,9 @@ func HexToString(hexStr string) (string, error) {
 }
 
 func IsValidAmount(amount jtConst.Amount) bool {
+	if nil == amount {
+		return false
+	}
 
 	if amount.Value == "" {
 		return false
