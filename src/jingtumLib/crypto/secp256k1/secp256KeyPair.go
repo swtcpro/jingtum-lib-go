@@ -18,11 +18,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"golang.org/x/crypto/ripemd160"
+	"math/big"
+	"strings"
+
 	jtConst "jingtumLib/constant"
 	jtEncode "jingtumLib/encoding"
 	jtUtils "jingtumLib/utils"
-	"math/big"
+
+	"golang.org/x/crypto/ripemd160"
 )
 
 /******************************************************************************/
@@ -133,7 +136,7 @@ func (priv *PrivateKey) ToBytes() (b []byte) {
 }
 
 func (pub *PublicKey) BytesToHex() string {
-	return hex.EncodeToString(pub.ToBytes())
+	return strings.ToUpper(hex.EncodeToString(pub.ToBytes()))
 }
 
 /**
