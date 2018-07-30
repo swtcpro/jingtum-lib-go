@@ -33,4 +33,6 @@ var (
 	ERR_PAYMENT_MEMO_EMPTY = errors.New("Memo is empty.")
 
 	ERR_PAYMENT_OUT_OF_MEMO_LEN = errors.New("The length of Memo shoule be less than or equal 2048.")
+
+	ERR_PAYMENT_INVALID_SECRET = errors.New("invalid secret.")
 )

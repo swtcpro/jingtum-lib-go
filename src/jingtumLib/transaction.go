@@ -18,6 +18,7 @@ import (
 	//	"errors"
 	//	"strconv"
 	//	"strings"
+	"container/list"
 
 	"jingtumLib/constant"
 	"jingtumLib/serializer"
@@ -34,7 +35,6 @@ import (
 
 type Transaction struct {
 	remote     *Remote
-	secret     string
 	tx_json    map[string]interface{}
 	local_sign bool
 }
@@ -44,16 +44,6 @@ type FlagClass map[string]uint32
 var (
 	TransactionFlags = map[string]FlagClass{"Universal": {"FullyCanonicalSig": 0x00010000}, "AccountSet": {"RequireDestTag": 0x00010000, "OptionalDestTag": 0x00020000, "RequireAuth": 0x00040000, "OptionalAuth": 0x00080000, "DisallowSWT": 0x00100000, "AllowSWT": 0x00200000}, "TrustSet": {"SetAuth": 0x00010000, "NoSkywell": 0x00020000, "SetNoSkywell": 0x00020000, "ClearNoSkywell": 0x00040000, "SetFreeze": 0x00100000, "ClearFreeze": 0x00200000}, "OfferCreate": {"Passive": 0x00010000, "ImmediateOrCancel": 0x00020000, "FillOrKill": 0x00040000, "Sell": 0x00080000}, "Payment": {"NoSkywellDirect": 0x00010000, "PartialPayment": 0x00020000, "LimitQuality": 0x00040000}, "RelationSet": {"Authorize": 0x00000001, "Freeze": 0x00000011}}
 )
-
-//func NewTransaction2(remote *Remote, filter Filter) (transaction *Transaction, err error) {
-//	transaction := new(Transaction)
-//	transaction.remote = remote
-//	transaction.tx_json = new(jtSerz.TxData)
-//	transaction.tx_json.Flags = 0
-//	transaction.tx_json.Fee = JTConfig.ReadInt("Config", "fee", 10000)
-//	transaction.filter = filter
-//	return transaction, nil
-//}
 
 /**
  * 构造Transaction对象
@@ -65,8 +55,12 @@ func NewTransaction(remote *Remote) (*Transaction, error) {
 	tx := new(Transaction)
 	tx.remote = remote
 	tx.tx_json = make(map[string]interface{})
+	tx.AddTxJson("Flags", 0)
+	tx.AddTxJson("Fee", JTConfig.ReadInt("Config", "fee", 10000))
 	return tx, nil
 }
+
+//func (tx *Transaction)
 
 /**
  * 添加交易参数
@@ -80,6 +74,22 @@ func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
 	return true
 }
 
+func (tx *Transaction) GetTxJson(key string) interface{} {
+	return tx.tx_json[key]
+}
+
+/**
+ * 本地签名时需要设置私钥
+ */
+func (tx *Transaction) SetSecret(secret string) {
+	if !IsValidSecret(secret) {
+		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_INVALID_SECRET)
+		return
+	}
+
+	tx.AddTxJson("secret", secret)
+}
+
 /**
  * 设置备注
  */
@@ -89,8 +99,7 @@ func (tx *Transaction) AddMemo(memo string) {
 		return
 	}
 
-	//if len([]rune(memo)) > 2048 {
-	if len(memo) > 2048 {
+	if len([]rune(memo)) > 2048 {
 		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
 	}
 
@@ -99,13 +108,22 @@ func (tx *Transaction) AddMemo(memo string) {
 	mdi.MemoData = utils.StringToHex(memo)
 	mi.Memo = mdi
 
-	memos := tx.tx_json["Memos"].([]serializer.MemoInfo)
-
-	if memos == nil {
-		memos = make([]serializer.MemoInfo, 0) //[]MemoInfo
+	if nil == tx.tx_json["Memos"] {
+		memos := list.New()
+		memos.PushBack(mi)
 		tx.AddTxJson("Memos", memos)
-		memos = append(memos, *mi)
+	} else {
+		memos := tx.tx_json["Memos"].(*list.List)
+		memos.PushBack(mi)
 	}
+
+	//	memos := tx.tx_json["Memos"].([]serializer.MemoInfo)
+	//
+	//	if memos == nil {
+	//		memos = make([]serializer.MemoInfo, 0) //[]MemoInfo
+	//		tx.AddTxJson("Memos", memos)
+	//		memos = append(memos, *mi)
+	//	}
 }
 
 //func (transaction *Transaction) ParseJson(jsonStr string) error {
@@ -336,7 +354,7 @@ func (transaction *Transaction) Sign(callback func(param ...interface{})) {
 
 			transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
 			var prefix uint32 = 0x53545800
-			hash, _ := jtSerz.FromJson(transaction.tx_json).Hash(prefix)
+			hash, _ := jtSerz.(transaction.tx_json).Hash(prefix)
 			transaction.tx_json.TxnSignature = wt.signTx(hash)
 			transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
 			transaction.local_sign = true

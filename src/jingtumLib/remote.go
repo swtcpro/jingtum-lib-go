@@ -123,14 +123,15 @@ func NewRemote() (error, *Remote) {
 	return nil, remote
 }
 
-func NewRemoteByURL(url string) (*Remote, error) {
+func NewRemoteByURL(url string, port string, localSign bool) (*Remote, error) {
 	err, remote := NewRemote()
 	if err != nil {
 		return nil, err
 	}
 
 	remote.Wsconn.Host = url
-
+	remote.Wsconn.Port = port
+	remote.LocalSign = localSign
 	return remote, nil
 }
 
