@@ -1,8 +1,11 @@
 package jingtumLib
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"golang.org/x/net/websocket"
+	"strconv"
 	"time"
 
 	"jingtumLib/constant"
@@ -27,11 +30,19 @@ type WsConn struct {
  */
 
 type Remote struct {
-	Wsconn    *WsConn
-	Params    map[string]string
-	Status    bool
+	//	Wsconn   *WsConn
+	requests map[uint64]*ReqCtx
+	//	Status    bool
 	LocalSign bool
 	Paths     *jtLRU.LRU
+	server    *Server
+}
+
+type ReqCtx struct {
+	command  string
+	data     map[string]interface{}
+	callback func(err error, data interface{})
+	cid      uint64
 }
 
 /*
@@ -100,60 +111,76 @@ func NewRemote(host string, port string) (*Remote) {
 *           Service|Host
 *           Service|Port
  */
-func NewRemote() (error, *Remote) {
+func NewRemote(url string, localSign bool) (*Remote, error) {
 	remote := new(Remote)
-	remote.Wsconn = new(WsConn)
-	remote.Wsconn.Host = JTConfig.Read("Service", "Host")
-	if remote.Wsconn.Host == "" {
-		Error("Config Service:Host is null.")
-		return errors.New("Config|service:Host setting error"), remote
+
+	if url == "" {
+		url = JTConfig.Read("Service", "Host")
+
+		if url == "" {
+			Error("Config Service:Host is null.")
+			return remote, errors.New("Config|service:Host setting error")
+		}
+
+		port := JTConfig.Read("Service", "Port")
+
+		if port == "" {
+			Error("Config Service:Port is null.")
+			return remote, errors.New("Config|service:Port setting error")
+		}
+
+		url += ":" + port
 	}
-	remote.Wsconn.Port = JTConfig.Read("Service", "Port")
-	if remote.Wsconn.Port == "" {
-		Error("Config Service:Port is null.")
-		return errors.New("Config|service:Port setting error"), remote
-	}
-	remote.Params = make(map[string]string)
-	remote.Status = false
-	lru, err := jtLRU.NewLRU(100, 1000*60*5, nil)
+
+	remote.requests = make(map[uint64]*ReqCtx)
+	//	remote.Status = false
+	lru, err := jtLRU.NewLRU(100, time.Duration(5)*time.Minute, nil)
 	if err != nil {
-		return err, remote
+		return remote, err
 	}
 	remote.Paths = lru
-	return nil, remote
-}
-
-func NewRemoteByURL(url string, port string, localSign bool) (*Remote, error) {
-	err, remote := NewRemote()
+	remote.LocalSign = localSign
+	server, err := NewServer(remote, url)
 	if err != nil {
-		return nil, err
+		return remote, err
 	}
 
-	remote.Wsconn.Host = url
-	remote.Wsconn.Port = port
-	remote.LocalSign = localSign
+	remote.server = server
+
 	return remote, nil
 }
+
+//func NewRemoteByURL(url string, localSign bool) (*Remote, error) {
+//	err, remote := NewRemote()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	remote.Wsconn.Host = url
+//	remote.Wsconn.Port = port
+//	remote.LocalSign = localSign
+//	return remote, nil
+//}
 
 /*
 * 连接函数
  */
-func (remote *Remote) Connect() error {
-	if remote.Status {
-		return nil
-	}
-	host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-	origin := "http://localhost/"
-	ws, err := websocket.Dial(host_port, "", origin)
-	if err != nil {
-		Error("Connect ", host_port, "fail! errno = ", err)
-	} else {
-		Info("Connect ", host_port, " succ. ")
-		remote.Status = true
-	}
-	remote.Wsconn.Ws = ws
-	return err
-}
+//func (remote *Remote) Connect() error {
+//	if remote.Status {
+//		return nil
+//	}
+//	host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//	origin := "http://localhost/"
+//	ws, err := websocket.Dial(host_port, "", origin)
+//	if err != nil {
+//		Error("Connect ", host_port, "fail! errno = ", err)
+//	} else {
+//		Info("Connect ", host_port, " succ. ")
+//		remote.Status = true
+//	}
+//	remote.Wsconn.Ws = ws
+//	return err
+//}
 
 /*
 *   获取当前时间
@@ -171,26 +198,26 @@ func (remote *Remote) Get_now_time() string {
 *     params:
              request 待发送的报文
 */
-func (remote *Remote) send(request string) error {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err
-		}
-	}
-	if request == "" {
-		return errors.New("Nothing to send")
-	}
-	_, err := remote.Wsconn.Ws.Write([]byte(request))
-	if err != nil {
-		Error("Send ", request, "fail!", "errno:", err)
-	} else {
-		Info("Send: ", request, "succ.")
-	}
-	return err
-}
+//func (remote *Remote) send(request string) error {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err
+//		}
+//	}
+//	if request == "" {
+//		return errors.New("Nothing to send")
+//	}
+//	_, err := remote.Wsconn.Ws.Write([]byte(request))
+//	if err != nil {
+//		Error("Send ", request, "fail!", "errno:", err)
+//	} else {
+//		Info("Send: ", request, "succ.")
+//	}
+//	return err
+//}
 
 /*
 * 接收
@@ -199,321 +226,470 @@ func (remote *Remote) send(request string) error {
            接收的报文
 */
 
-func (remote *Remote) read() (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	var msg = make([]byte, MAX_RECIVE_LEN)
-	var n int
-	n, err := remote.Wsconn.Ws.Read(msg)
-	if err != nil {
-		Error("Received data fail!", "errno:", err)
-	} else {
-		Info("Received: data succ. Len= ", n)
-	}
-	return err, string(msg[:n])
-}
+//func (remote *Remote) read() (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	var msg = make([]byte, MAX_RECIVE_LEN)
+//	var n int
+//	n, err := remote.Wsconn.Ws.Read(msg)
+//	if err != nil {
+//		Error("Received data fail!", "errno:", err)
+//	} else {
+//		Info("Received: data succ. Len= ", n)
+//	}
+//	return err, string(msg[:n])
+//}
 
 /*
 *  断开连接
  */
-func (remote *Remote) Disconnect() {
-	remote.Wsconn.Ws.Close()
-	remote.Status = false
-}
+//func (remote *Remote) Disconnect() {
+//	remote.Wsconn.Ws.Close()
+//	remote.Status = false
+//}
 
 /*
 * 请求底层服务器信息
     return:
            response  返回结果
 */
-func (remote *Remote) RequestServerInfo() (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-
-	request := Pack_RequestServerInfo()
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Server Info succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestServerInfo() (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//
+//	request := Pack_RequestServerInfo()
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Server Info succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获取最新账本信息
 * return
  */
-func (remote *Remote) RequestLedgerClosed() (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-
-	request := Pack_RequestLedgerClosed()
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Ledger Closed succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestLedgerClosed() (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//
+//	request := Pack_RequestLedgerClosed()
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Ledger Closed succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获取某一账本具体信息
  */
-func (remote *Remote) RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-
-	if ledger_index == "" && ledger_hash == "" {
-		return errors.New("ledger_index|ledger_hash value error"), ""
-	}
-	request := Pack_RequestLedger(ledger_index, ledger_hash, transactions)
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Ledger succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//
+//	if ledger_index == "" && ledger_hash == "" {
+//		return errors.New("ledger_index|ledger_hash value error"), ""
+//	}
+//	request := Pack_RequestLedger(ledger_index, ledger_hash, transactions)
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Ledger succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 查询某一交易具体信息
  */
-func (remote *Remote) RequestTx(hash string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
+//func (remote *Remote) RequestTx(hash string) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestTx(hash)
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Tx succ: ", response)
+//	return nil, response
+//}
+
+func getRelationType(relationType string) *constant.Integer {
+	switch relationType {
+	case "trustline":
+		return constant.NewInteger(0)
+	case "authorize":
+		return constant.NewInteger(1)
+	case "freeze":
+		return constant.NewInteger(3)
+
 	}
-	request := Pack_RequestTx(hash)
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Tx succ: ", response)
-	return nil, response
+	return nil
 }
 
 /*
 * 请求账号信息
  */
-func (remote *Remote) RequestAccountInfo(options map[string]string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
+func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote)
+	req.command = "account_info"
+	account := options["account"]
+	peer := options["peer"].(string)
+	req.message["relation_type"] = getRelationType(options["type"].(string))
+	limit := options["limit"]
+	marker := options["marker"]
+
+	if account != nil {
+		req.message["account"] = account.(string)
+	}
+
+	req.SelectLedger(options["ledger"])
+
+	if utils.IsValidAddress(peer) {
+		req.message["peer"] = peer
+	}
+
+	var checkedLimit interface{}
+
+	if utils.IsNumberType(limit) {
+		if limit.(float64) < 0 {
+			checkedLimit = 0
+		}
+
+		if limit.(float64) > 1000000000 {
+			checkedLimit = 1000000000
+		}
+
+	} else {
+		if v, ok := limit.(string); ok {
+			if utils.IsNumberString(v) {
+				lv, err := strconv.ParseFloat(v, 64)
+				if err == nil {
+					if lv < 0 {
+						checkedLimit = 0
+					}
+
+					if lv > 1000000000 {
+						checkedLimit = 1000000000
+					}
+				}
+			}
 		}
 	}
-	request := Pack_RequestAccountInfo(options["account"])
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
+
+	if checkedLimit != nil {
+		req.message["limit"] = checkedLimit
 	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
+
+	if marker != nil {
+		req.message["marker"] = marker
 	}
-	Info("Get Reqonse Account Info succ: ", response)
-	return nil, response
+
+	return req, nil
 }
 
 /*
 * 获得账号可接收和发送的货币
  */
-func (remote *Remote) RequestAccountTums(account string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	request := Pack_RequestAccountTums(account)
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Account Tums succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestAccountTums(account string) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestAccountTums(account)
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Account Tums succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获得账号关系
  */
-func (remote *Remote) RequestAccountRelations(account string, atype string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	request := Pack_RequestAccountRelations(account, atype)
-	if request == "" {
-		return errors.New("RequestAccountRelations type value error"), ""
-	}
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Account Relations succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestAccountRelations(account string, atype string) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestAccountRelations(account, atype)
+//	if request == "" {
+//		return errors.New("RequestAccountRelations type value error"), ""
+//	}
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Account Relations succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获得账号挂单
  */
-func (remote *Remote) RequestAccountOffers(account string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	request := Pack_RequestAccountOffers(account)
-	if request == "" {
-		return errors.New("RequestAccountRelations type value error"), ""
-	}
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Account Offers succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestAccountOffers(account string) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestAccountOffers(account)
+//	if request == "" {
+//		return errors.New("RequestAccountRelations type value error"), ""
+//	}
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Account Offers succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获得账号交易列表
  */
-func (remote *Remote) RequestAccountTx(account string, limit int) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	request := Pack_RequestAccountTx(account, limit)
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Account Tx succ: ", response)
-	return nil, response
-}
+//func (remote *Remote) RequestAccountTx(account string, limit int) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestAccountTx(account, limit)
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Account Tx succ: ", response)
+//	return nil, response
+//}
 
 /*
 * 获得市场挂单列表
  */
-func (remote *Remote) RequestOrderBook(account string, gets string, pays string) (error, string) {
-	if !remote.Status {
-		err := remote.Connect()
-		if err != nil {
-			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-			Error("Connect ", host_port, "fail! errno = ", err)
-			return err, ""
-		}
-	}
-	request := Pack_RequestOrderBook(account, gets, pays)
-	err := remote.send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := remote.read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Account Tx succ: ", response)
-	return nil, response
+//func (remote *Remote) RequestOrderBook(account string, gets string, pays string) (error, string) {
+//	if !remote.Status {
+//		err := remote.Connect()
+//		if err != nil {
+//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+//			Error("Connect ", host_port, "fail! errno = ", err)
+//			return err, ""
+//		}
+//	}
+//	request := Pack_RequestOrderBook(account, gets, pays)
+//	err := remote.send(request)
+//	if err != nil {
+//		Error("Send data fail!")
+//		return err, ""
+//	}
+//	err, response := remote.read()
+//	if err != nil {
+//		Error("Received data fail!")
+//		return err, ""
+//	}
+//	Info("Get Reqonse Account Tx succ: ", response)
+//	return nil, response
+//}
+
+/**
+ * 提交请求
+ */
+func (remote *Remote) Submit(command string, data map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
+	rc := new(ReqCtx)
+	rc.command = command
+	rc.data = data
+	rc.callback = callback
+	rc.cid = remote.server.GetCid()
+	remote.requests[rc.cid] = rc
+
+	remote.server.sendMessage(rc)
 }
 
-func (remote *Remote) Submit(command string, message map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
+func (remote *Remote) handleResponse(data map[string]interface{}) {
+	fmt.Printf("Handle response --> %v \n", data)
+	//    var req_id = data.id;
+	//    if (typeof req_id !== 'number'
+	//        || req_id < 0 || req_id > this._requests.length) {
+	//        return;
+	//    }
+	//    var request = this._requests[req_id];
+	//    // pass process it when null callback
+	//    delete this._requests[req_id];
+	//    delete data.id;
+	//
+	//    // check if data contain server info
+	//    if (data.result && data.status === 'success'
+	//            && data.result.server_status) {
+	//        this._updateServerStatus(data.result);
+	//    }
+	//
+	//    // return to callback
+	//    if (data.status === 'success') {
+	//        var result = request.filter(data.result);
+	//        request.callback(null, result);
+	//    } else if (data.status === 'error') {
+	//        request.callback(data.error_message || data.error_exception);
+	//    }
+}
 
+func (remote *Remote) handlePathFind(data map[string]interface{}) {
+	//    this.emit('path_find', data);
+}
+
+func (remote *Remote) handleTransaction(data map[string]interface{}) {
+	//    var self = this;
+	//    var tx = data.transaction.hash;
+	//    if (self._cache.get(tx)) return;
+	//    self._cache.set(tx, 1);
+	//    this.emit('transactions', data);
+}
+
+func (remote *Remote) handleServerStatus(data map[string]interface{}) {
+	// TODO check data format
+	//    this._updateServerStatus(data);
+	//    this.emit('server_status', data);
+}
+
+func (remote *Remote) handleLedgerClosed(data map[string]interface{}) {
+	//    var self = this;
+	//    if (data.ledger_index > self._status.ledger_index) {
+	//        self._status.ledger_index = data.ledger_index;
+	//        self._status.ledger_time = data.ledger_time;
+	//        self._status.reserve_base = data.reserve_base;
+	//        self._status.reserve_inc = data.reserve_inc;
+	//        self._status.fee_base = data.fee_base;
+	//        self._status.fee_ref = data.fee_ref;
+	//        self.emit('ledger_closed', data);
+	//    }
+}
+
+//消息处理方法
+func (remote *Remote) handleMessage(msg []byte) {
+	var data map[string]interface{}
+	err := json.Unmarshal(msg, &data)
+	if err != nil {
+		Errorf("Received msg json Unmarshal error : %v", err)
+		return
+	}
+
+	resErr := data["error"]
+	if resErr != nil {
+		cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
+		if err != nil {
+			Errorf("Received msg parse id error : %v", err)
+			return
+		}
+		remote.requests[cid].callback(errors.New(resErr.(string)), nil)
+	} else {
+		resType := data["type"].(string)
+		switch resType {
+		case "ledgerClosed":
+			remote.handleLedgerClosed(data)
+		case "serverStatus":
+			remote.handleServerStatus(data)
+		case "response":
+			remote.handleResponse(data)
+		case "transaction":
+			remote.handleTransaction(data)
+		case "path_find":
+			remote.handlePathFind(data)
+		}
+	}
 }
 
 /**

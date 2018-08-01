@@ -26,30 +26,23 @@ type Request struct {
 	remote  *Remote
 	message map[string]interface{}
 	command string
-	filter  Filter
 }
 
-func NewRequest(remote *Remote, command string, filter Filter) (request *Request, err error) {
-
-	request = new(Request)
+func NewRequest(remote *Remote) *Request {
+	request := new(Request)
 	request.remote = remote
-	request.command = command
-	request.filter = filter
 	request.message = make(map[string]interface{})
-	return request, nil
+	return request
 }
 
 //提交请求
-func (request *Request) Submit(callback func(err error, data interface{})) {
-	for _, v := range request.message {
-		if ve, ok := v.(error); ok {
-			callback(ve, nil)
-			return
-		}
+func (req *Request) Submit(callback func(err error, data interface{})) {
+	if err, ok := req.message[constant.TXJSON_ERROR_KEY].(error); ok {
+		callback(err, nil)
+		return
 	}
 
-	request.remote.Submit(request.command, request.message, request.filter, callback)
-
+	req.remote.Submit(req.command, req.message, nil, callback)
 }
 
 func (request *Request) SelectLedger(ledger interface{}) {
@@ -64,7 +57,7 @@ func (request *Request) SelectLedger(ledger interface{}) {
 		if ok {
 			request.message["ledger_index"] = ledger
 		} else if utils.MatchString("^[A-F0-9]+$", ledger.(string)) {
-			request.message["ledger_hash"] = ledger
+			request.message["ledger_hash"] = ledger.(string)
 		} else {
 			request.message["ledger_index"] = "validated"
 		}

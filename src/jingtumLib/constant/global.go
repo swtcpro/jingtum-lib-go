@@ -9,7 +9,9 @@
  */
 package constant
 
-import ()
+import (
+	"strconv"
+)
 
 type KeyValuePair struct {
 	Key   uint8
@@ -164,3 +166,21 @@ var (
 		"Hashes":              &KeyValuePair{19, 2},
 		"Amendments":          &KeyValuePair{19, 3}}
 )
+
+type Integer struct {
+	intv int
+}
+
+func (integer *Integer) IntValue() int {
+	return integer.intv
+}
+
+func (integer *Integer) String() string {
+	return strconv.Itoa(integer.intv)
+}
+
+func NewInteger(intv int) *Integer {
+	integer := new(Integer)
+	integer.intv = intv
+	return integer
+}
