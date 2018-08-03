@@ -203,7 +203,7 @@ func IsHexString(str string) bool {
  * 根据货币类型转换成相应的金额对象。如果是SWT则返回基本数据类型
  */
 func ToAmount(amount jtConst.Amount) (interface{}, error) {
-	if amount.Value != "" {
+	if amount.Value == "" {
 		return nil, jtConst.ERR_EMPTY_PARAM
 	}
 
@@ -218,7 +218,7 @@ func ToAmount(amount jtConst.Amount) (interface{}, error) {
 	}
 
 	if amount.Currency == jtConst.CFG_CURRENCY {
-		return strconv.FormatFloat(value, 'f', -1, 64), nil
+		return value * float64(1000000) //strconv.FormatFloat(value*float64(1000000), 'f', -1, 64), nil
 	}
 
 	return amount, nil

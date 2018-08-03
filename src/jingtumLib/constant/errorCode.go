@@ -28,6 +28,8 @@ var (
 
 	ERR_SERVER_PORT_OUT_OF_RANGE = errors.New("server port out of range.")
 
+	ERR_SERVER_NOT_READY = errors.New("server not ready")
+
 	//支付相关错误码
 	ERR_PAYMENT_INVALID_SRC_ADDR = errors.New("invalid source address.")
 

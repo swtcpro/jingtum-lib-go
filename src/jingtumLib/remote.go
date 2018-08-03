@@ -133,7 +133,6 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 	}
 
 	remote.requests = make(map[uint64]*ReqCtx)
-	//	remote.Status = false
 	lru, err := jtLRU.NewLRU(100, time.Duration(5)*time.Minute, nil)
 	if err != nil {
 		return remote, err
@@ -165,22 +164,14 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 /*
 * 连接函数
  */
-//func (remote *Remote) Connect() error {
-//	if remote.Status {
-//		return nil
-//	}
-//	host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//	origin := "http://localhost/"
-//	ws, err := websocket.Dial(host_port, "", origin)
-//	if err != nil {
-//		Error("Connect ", host_port, "fail! errno = ", err)
-//	} else {
-//		Info("Connect ", host_port, " succ. ")
-//		remote.Status = true
-//	}
-//	remote.Wsconn.Ws = ws
-//	return err
-//}
+func (remote *Remote) Connect(callback func(err error, result interface{})) error {
+	if remote.server == nil {
+		callback(constant.ERR_SERVER_NOT_READY, nil)
+		return constant.ERR_SERVER_NOT_READY
+	}
+
+	return remote.server.connect(callback)
+}
 
 /*
 *   获取当前时间
@@ -390,20 +381,28 @@ func getRelationType(relationType string) *constant.Integer {
 func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
 	req := NewRequest(remote)
 	req.command = "account_info"
-	account := options["account"]
-	peer := options["peer"].(string)
-	req.message["relation_type"] = getRelationType(options["type"].(string))
-	limit := options["limit"]
-	marker := options["marker"]
+	account, ok := options["account"]
+	peer, ok := options["peer"]
+	retype, ok := options["type"]
+	if ok {
+		req.message["relation_type"] = getRelationType(retype.(string))
+	}
+
+	limit, ok := options["limit"]
+	marker, ok := options["marker"]
 
 	if account != nil {
 		req.message["account"] = account.(string)
 	}
+	ledger, ok := options["ledger"]
+	if ok {
+		req.SelectLedger(ledger)
+	}
 
-	req.SelectLedger(options["ledger"])
-
-	if utils.IsValidAddress(peer) {
-		req.message["peer"] = peer
+	if peer != nil {
+		if utils.IsValidAddress(peer.(string)) {
+			req.message["peer"] = peer
+		}
 	}
 
 	var checkedLimit interface{}
@@ -418,16 +417,18 @@ func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Reque
 		}
 
 	} else {
-		if v, ok := limit.(string); ok {
-			if utils.IsNumberString(v) {
-				lv, err := strconv.ParseFloat(v, 64)
-				if err == nil {
-					if lv < 0 {
-						checkedLimit = 0
-					}
+		if limit != nil {
+			if v, ok := limit.(string); ok {
+				if utils.IsNumberString(v) {
+					lv, err := strconv.ParseFloat(v, 64)
+					if err == nil {
+						if lv < 0 {
+							checkedLimit = 0
+						}
 
-					if lv > 1000000000 {
-						checkedLimit = 1000000000
+						if lv > 1000000000 {
+							checkedLimit = 1000000000
+						}
 					}
 				}
 			}
@@ -602,6 +603,17 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 
 func (remote *Remote) handleResponse(data map[string]interface{}) {
 	fmt.Printf("Handle response --> %v \n", data)
+	cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
+	if err != nil {
+		Errorf("Received msg parse id error : %v", err)
+		return
+	}
+
+	fmt.Printf("requests value : %v", remote.requests)
+
+	delete(remote.requests, cid)
+
+	fmt.Printf("requests value : %v", remote.requests)
 	//    var req_id = data.id;
 	//    if (typeof req_id !== 'number'
 	//        || req_id < 0 || req_id > this._requests.length) {
@@ -667,14 +679,14 @@ func (remote *Remote) handleMessage(msg []byte) {
 		return
 	}
 
-	resErr := data["error"]
-	if resErr != nil {
+	_, ok := data["error"]
+	if ok {
 		cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
 		if err != nil {
 			Errorf("Received msg parse id error : %v", err)
 			return
 		}
-		remote.requests[cid].callback(errors.New(resErr.(string)), nil)
+		remote.requests[cid].callback(errors.New(data["error_message"].(string)), nil)
 	} else {
 		resType := data["type"].(string)
 		switch resType {

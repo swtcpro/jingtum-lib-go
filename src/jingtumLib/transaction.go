@@ -37,6 +37,7 @@ type Transaction struct {
 	remote     *Remote
 	tx_json    map[string]interface{}
 	local_sign bool
+	secret     string
 }
 
 type FlagClass map[string]uint32
@@ -75,7 +76,12 @@ func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
 }
 
 func (tx *Transaction) GetTxJson(key string) interface{} {
-	return tx.tx_json[key]
+	v, ok := tx.tx_json[key]
+	if ok {
+		return v
+	}
+
+	return nil
 }
 
 /**
@@ -87,7 +93,7 @@ func (tx *Transaction) SetSecret(secret string) {
 		return
 	}
 
-	tx.AddTxJson("secret", secret)
+	tx.secret = secret
 }
 
 /**
@@ -116,14 +122,6 @@ func (tx *Transaction) AddMemo(memo string) {
 		memos := tx.tx_json["Memos"].(*list.List)
 		memos.PushBack(mi)
 	}
-
-	//	memos := tx.tx_json["Memos"].([]serializer.MemoInfo)
-	//
-	//	if memos == nil {
-	//		memos = make([]serializer.MemoInfo, 0) //[]MemoInfo
-	//		tx.AddTxJson("Memos", memos)
-	//		memos = append(memos, *mi)
-	//	}
 }
 
 //func (transaction *Transaction) ParseJson(jsonStr string) error {
@@ -265,113 +263,136 @@ func (tx *Transaction) AddMemo(memo string) {
 //	err = errors.New("invalid flags")
 //	return
 //}
+/**
+ * 签名方法
+ */
+func signing(tx *Transaction) (string, error) {
 
-func (transaction *Transaction) Sign(callback func(param ...interface{})) {
-	/*err, remote := NewRemote()
+	tx.AddTxJson("Fee", tx.GetTxJson("Fee").(int)/1000000)
+
+	amount := tx.GetTxJson("Amount")
+	if amount == nil {
+		return "", errors.New("Amount not be empty.")
+	}
+
+	if amt64, ok := amount.(float64); ok {
+		tx.AddTxJson("Amount", amt64/1000000)
+	}
+
+	if tx.GetTxJson("Memos") != nil {
+		memos := tx.GetTxJson("Memos").(*list.List)
+		for e := memos.Front(); e != nil; e = e.Next() {
+			e.Value.(*serializer.MemoInfo).Memo.MemoData, _ = utils.HexToString(e.Value.(*serializer.MemoInfo).Memo.MemoData)
+		}
+	}
+
+	if tx.GetTxJson("SendMax") != nil {
+		if sendMax, ok := tx.GetTxJson("SendMax").(float64); ok {
+			tx.AddTxJson("SendMax", sendMax/1000000)
+		}
+	}
+
+	if tx.GetTxJson("TakerPays") != nil {
+		if takerPays, ok := tx.GetTxJson("TakerPays").(float64); ok {
+			tx.AddTxJson("TakerPays", takerPays/1000000)
+		}
+	}
+
+	if tx.GetTxJson("TakerGets") != nil {
+		if takerGets, ok := tx.GetTxJson("TakerGets").(float64); ok {
+			tx.AddTxJson("TakerGets", takerGets/1000000)
+		}
+	}
+
+	wt, err := FromSecret(tx.secret)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	defer remote.Disconnect()
+	transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
+	var prefix uint32 = 0x53545800
+	so, err := serializer.FromJson(tx.tx_json)
+	if err != nil {
+		return "", errors.New()
+	}
+	hash := so.Hash(prefix)
 
-	remote.Connect(func(err error, result interface{}) {
-		if err != nil {
-			callback(err)
-			return
-		}
-
-		errReq, req := transaction.remote.RequestAccountInfo(map[string]string{"account": transaction.tx_json.Account, "type": "trust"})
-
-		if errReq != nil {
-			panic(errReq.Error())
-		}
-
-		req.Submit(func(err error, data interface{}) {
-			if nil != err {
-				callback(err)
-				return
-			}
-			//transaction.tx_json.Sequence = data.account_data.Sequence
-			transaction.tx_json.Fee = transaction.tx_json.Fee.(float64) / 1000000
-
-			//payment
-			if nil != transaction.tx_json.TxAmount {
-				if amount, ok := transaction.tx_json.TxAmount.(string); ok {
-					//基础货币
-					if number(amount) {
-						f, err := strconv.ParseFloat(amount, 32)
-						if err == nil {
-							transaction.tx_json.TxAmount = f / 1000000
-						}
-					}
-				}
-			}
-
-			if len(transaction.tx_json.Memos) > 0 {
-				mdStr, errMd := hexToString(transaction.tx_json.Memos[0].Memo.MemoData)
-				transaction.tx_json.Memos[0].Memo.MemoData = mdStr
-			}
-			if nil != transaction.tx_json.SendMax {
-				if sendMax, ok := transaction.tx_json.SendMax.(string); ok {
-					if number(sendMax) {
-						f, err := strconv.ParseFloat(sendMax, 32)
-						if err == nil {
-							transaction.tx_json.SendMax = f / 1000000
-						}
-					}
-				}
-			}
-
-			//order
-			if nil != transaction.tx_json.TakerPays {
-				//基础货币
-				if takerPays, ok := transaction.tx_json.TakerPays.(string); ok {
-					if number(takerPays) {
-						f, err := strconv.ParseFloat(takerPays, 32)
-						if err == nil {
-							transaction.tx_json.TakerPays = f / 1000000
-						}
-					}
-				}
-			}
-
-			if nil != transaction.tx_json.TakerGets {
-				//基础货币
-				if takerGets, ok := transaction.tx_json.TakerGets.(string); ok {
-					if number(takerGets) {
-						f, err := strconv.ParseFloat(takerGets, 32)
-						if err == nil {
-							transaction.tx_json.TakerGets = f / 1000000
-						}
-					}
-				}
-			}
-
-			wt, err := jtbLib.FromSecret(transaction.secret)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
-			var prefix uint32 = 0x53545800
-			hash, _ := jtSerz.(transaction.tx_json).Hash(prefix)
-			transaction.tx_json.TxnSignature = wt.signTx(hash)
-			transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
-			transaction.local_sign = true
-			callback(nil, transaction.tx_json.Blob)
-		})
-	})*/
+	transaction.tx_json.TxnSignature = wt.signTx(hash)
+	transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
+	transaction.local_sign = true
+	//
+	//    var wt = new base(self._secret);
+	//    self.tx_json.SigningPubKey = wt.getPublicKey();
+	//    var prefix = 0x53545800;
+	//    var hash = jser.from_json(self.tx_json).hash(prefix);
+	//    self.tx_json.TxnSignature = wt.signTx(hash);
+	//    self.tx_json.blob =  jser.from_json(self.tx_json).to_hex();
+	//    self._local_sign = true;
+	//    return self.tx_json.blob;
 }
 
-func (transaction *Transaction) Submit(callback func(param ...interface{})) {
-	/*err := checkTxError(transaction.tx_json)
-	if err != nil {
-		callback(err)
+func (tx *Transaction) sign(callback func(err error, result interface{})) {
+
+	if tx.GetTxJson("Sequence") == nil {
+		//从服务端获取 Sequence 后再签名
+		options := make(map[string]interface{})
+		options["account"] = tx.GetTxJson("Account")
+		options["type"] = "trust"
+		req, err := tx.remote.RequestAccountInfo(options)
+		if err != nil {
+			callback(err, nil)
+			return
+		}
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				callback(err, nil)
+				return
+			}
+
+			if ret, ok := result.(map[string]interface{}); ok {
+				blob, err := signing(tx)
+				if err != nil {
+					callback(err, nil)
+				} else {
+					callback(nil, blob)
+				}
+			} else {
+				callback(errors.New("Request account info fail."), nil)
+			}
+
+		})
+	} else {
+		blob, err := signing(tx)
+		if err != nil {
+			callback(err, nil)
+		} else {
+			callback(nil, blob)
+		}
+	}
+
+	//			transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
+	//			var prefix uint32 = 0x53545800
+	//			hash, _ := jtSerz.(transaction.tx_json).Hash(prefix)
+	//			transaction.tx_json.TxnSignature = wt.signTx(hash)
+	//			transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
+	//			transaction.local_sign = true
+	//			callback(nil, transaction.tx_json.Blob)
+	//		})
+	//	})
+}
+
+/**
+ * 提交交易数据
+ */
+func (tx *Transaction) Submit(callback func(param ...interface{})) {
+	if tx.checkTxError() {
+		callback(tx.GetTxJson(constant.TXJSON_ERROR_KEY).(error), nil)
 		return
 	}
 
-	if transaction.remote.LocalSign {
-		transaction.Sign(func(err error, blob string) {
+	if tx.remote.LocalSign {
+		//本地签名
+		tx.sign(func(blob string, err error) {
 			if nil != err {
 				callback(errors.New("sig error. " + err.Error()))
 			} else {
@@ -380,7 +401,7 @@ func (transaction *Transaction) Submit(callback func(param ...interface{})) {
 				transaction.remote.Submit("submit", data, transaction.filter, callback)
 			}
 		})
-	} else if transaction.tx_json.TransactionType == "Signer" {
+	} /*else if transaction.tx_json.TransactionType == "Signer" {
 		//直接将blob传给底层
 		var data struct{ tx_blob string }
 		data.tx_blob = transaction.tx_json.Blob
@@ -397,13 +418,16 @@ func (transaction *Transaction) Submit(callback func(param ...interface{})) {
 	}*/
 }
 
-//func checkTxError(txJson *jtSerz.TxData) error {
-//	fields := utils.GetFieldNames(txJson)
-//	for _, fn := range fields {
-//		v := utils.GetFieldValue(txJson, fn)
-//		if err, ok := v.(error); ok {
-//			return err
-//		}
-//	}
-//	return nil
-//}
+func (tx *Transaction) checkTxError() bool {
+	if tx.GetTxJson(constant.TXJSON_ERROR_KEY) != nil {
+		return true
+	}
+	return false
+	//	fields := utils.GetFieldNames(txJson)
+	//	for _, fn := range fields {
+	//		v := utils.GetFieldValue(txJson, fn)
+	//		if err, ok := v.(error); ok {
+	//			return err
+	//		}
+	//	}
+}

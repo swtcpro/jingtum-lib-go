@@ -39,7 +39,7 @@ type Server struct {
 
 var (
 	onlineStates = []string{"syncing", "tracking", "proposing", "validating", "full", "connected"}
-	domainRE     = "^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?)*\\.?$"
+	domainRE     = "[A-Za-z0-9]+(\\.[A-Za-z0-9]){1,5}" //"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?)*\\.?$"
 )
 
 func NewServer(remote *Remote, urlStr string) (*Server, error) {
@@ -135,18 +135,18 @@ func (server *Server) listeningSend() {
 	for {
 		req := <-server.reqs
 
-		m, err := json.Marshal(req.data)
+		_, err := json.Marshal(req.data)
 		if err != nil {
 			req.callback(err, nil)
 			continue
 		}
-
-		cmd := fmt.Sprintf("{\"id\":\"%d\",\"command\":\"%s\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\": %d, \"marker\":%s}", req.cid, req.command, req.data["account"].(string), req.data["limit"].(float64), m)
-
+		//, \"marker\":%s
+		cmd := fmt.Sprintf("{\"id\":\"%d\",\"command\":\"%s\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\": %d}", req.cid, req.command, req.data["account"].(string), 1000)
+		fmt.Printf("Request info %s\n", cmd)
 		bm := evtwebsocket.Msg{
 			Body: []byte(cmd),
 			Callback: func(msg []byte, w *evtwebsocket.Conn) {
-				Infof("Response message : %s\n", msg)
+				fmt.Printf("Response message : %s\n", msg)
 			},
 		}
 
@@ -159,23 +159,32 @@ func (server *Server) listeningSend() {
 	}
 }
 
-func (server *Server) connect(callback func(err error, result interface{})) {
+func (server *Server) connect(callback func(err error, result interface{})) error {
 	if server.connected {
-		return
+		return nil
 	}
 
 	if server.conn != nil {
 		server.Disconnect()
 	}
 
+	var once sync.Once
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
 	server.conn = &evtwebsocket.Conn{
 
 		OnConnected: func(w *evtwebsocket.Conn) {
 			server.connected = true
 			server.opened = true
+			server.state = "online"
+			connectMsg := fmt.Sprintf("Connect to [%s] success.", server.url)
+			once.Do(wg.Done)
+			callback(nil, connectMsg)
 		},
 
 		OnMessage: func(msg []byte, w *evtwebsocket.Conn) {
+			fmt.Printf("On message %s\n", msg)
 			server.remote.handleMessage(msg)
 		},
 
@@ -184,7 +193,15 @@ func (server *Server) connect(callback func(err error, result interface{})) {
 		},
 
 		OnError: func(err error) {
-			callback(err, nil)
+			Errorf("On error error : %v", err)
+			//自动重连
+			server.Disconnect()
+			server.connect(func(err error, result interface{}) {
+				if err != nil {
+					Errorf("ReConnect fail. error : %v", err)
+					server.Disconnect()
+				}
+			})
 		},
 
 		Reconnect: true,
@@ -192,8 +209,12 @@ func (server *Server) connect(callback func(err error, result interface{})) {
 	err := server.conn.Dial(server.url, "")
 	if err != nil {
 		callback(err, nil)
-		return
+		return err
 	}
 
 	go server.listeningSend()
+
+	wg.Wait()
+
+	return nil
 }
