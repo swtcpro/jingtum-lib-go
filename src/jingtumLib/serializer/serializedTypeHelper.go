@@ -13,6 +13,7 @@
 package serializer
 
 import (
+	"errors"
 	"fmt"
 
 	"jingtumLib/constant"
@@ -52,7 +53,8 @@ func SerializeHex(so *Serializer, val string, noLength bool) {
 
 func SerializeVarint(so *Serializer, val uint) {
 	if val < 0 {
-		panic(fmt.Sprintf("Variable integers are unsigned %d", val))
+		so.err = errors.New(fmt.Sprintf("Variable integers are unsigned %d", val))
+		return
 	}
 
 	if val <= 192 {
@@ -64,7 +66,7 @@ func SerializeVarint(so *Serializer, val uint) {
 		val -= 12481
 		so.Append([]byte{byte(241 + (val >> 16)), byte(val >> 8 & 0xff), byte(val & 0xff)})
 	} else {
-		panic(fmt.Sprintf("Variable integer overflow %d", val))
+		so.err = errors.New(fmt.Sprintf("Variable integer overflow %d", val))
 	}
 }
 
@@ -188,7 +190,12 @@ func getTransactionType(structure interface{}) interface{} {
 }
 
 func Serialize(so *Serializer, fieldName string, value interface{}) {
-	fieldCoordinates := constant.INVERSE_FIELDS_MAP[fieldName]
+	fieldCoordinates, ok := constant.INVERSE_FIELDS_MAP[fieldName]
+	if !ok {
+		so.err = errors.New(fmt.Sprintf("Not fund field name %s.", fieldName))
+		return
+	}
+
 	typeBits := fieldCoordinates.Key
 	fieldBits := fieldCoordinates.Value
 	var temp uint8
@@ -226,7 +233,7 @@ func Serialize(so *Serializer, fieldName string, value interface{}) {
 
 	var serializedType ISerializedType
 
-	if _, ok := value.(MemoDataInfo); ok && fieldName == "Memo" {
+	if _, ok := value.(*MemoInfo); ok && fieldName == "Memo" {
 		serializedType = STMemo
 	} else {
 		serializedType = TYPES_MAP[typeBits]

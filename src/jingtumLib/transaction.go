@@ -15,7 +15,8 @@ package jingtumLib
 
 import (
 	//	"encoding/json"
-	//	"errors"
+	"errors"
+	"fmt"
 	//	"strconv"
 	//	"strings"
 	"container/list"
@@ -306,20 +307,21 @@ func signing(tx *Transaction) (string, error) {
 
 	wt, err := FromSecret(tx.secret)
 	if err != nil {
-		panic(err.Error())
+		return "", err
 	}
 
-	transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
+	tx.AddTxJson("SigningPubKey", wt.GetPublicKey())
 	var prefix uint32 = 0x53545800
 	so, err := serializer.FromJson(tx.tx_json)
 	if err != nil {
-		return "", errors.New()
+		return "", err
 	}
 	hash := so.Hash(prefix)
+	fmt.Println(hash)
 
-	transaction.tx_json.TxnSignature = wt.signTx(hash)
-	transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
-	transaction.local_sign = true
+	//transaction.tx_json.TxnSignature = wt.signTx(hash)
+	//transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
+	tx.local_sign = true
 	//
 	//    var wt = new base(self._secret);
 	//    self.tx_json.SigningPubKey = wt.getPublicKey();
@@ -329,9 +331,10 @@ func signing(tx *Transaction) (string, error) {
 	//    self.tx_json.blob =  jser.from_json(self.tx_json).to_hex();
 	//    self._local_sign = true;
 	//    return self.tx_json.blob;
+	return "----", nil
 }
 
-func (tx *Transaction) sign(callback func(err error, result interface{})) {
+func (tx *Transaction) sign(callback func(err error, blob string)) {
 
 	if tx.GetTxJson("Sequence") == nil {
 		//从服务端获取 Sequence 后再签名
@@ -340,31 +343,52 @@ func (tx *Transaction) sign(callback func(err error, result interface{})) {
 		options["type"] = "trust"
 		req, err := tx.remote.RequestAccountInfo(options)
 		if err != nil {
-			callback(err, nil)
+			callback(err, "")
 			return
 		}
 		req.Submit(func(err error, result interface{}) {
 			if err != nil {
-				callback(err, nil)
+				callback(err, "")
 				return
 			}
 
+			fmt.Printf("Account info %v\n", result)
+
 			if ret, ok := result.(map[string]interface{}); ok {
+				fmt.Printf("Account info %v\n", ret)
+				actData, ok := ret["account_data"]
+				if !ok {
+					callback(errors.New("account_data is null."), "")
+					return
+				}
+
+				actDataMap, ok := actData.(map[string]interface{})
+				if !ok {
+					callback(errors.New(fmt.Sprintf("account_data type %T error.", actData)), "")
+					return
+				}
+				seq, ok := actDataMap["Sequence"]
+				if !ok {
+					callback(errors.New("Get Sequence is null from server."), "")
+					return
+				}
+				fmt.Printf("Sequence type %T.", seq)
+				tx.AddTxJson("Sequence", seq)
 				blob, err := signing(tx)
 				if err != nil {
-					callback(err, nil)
+					callback(err, "")
 				} else {
 					callback(nil, blob)
 				}
 			} else {
-				callback(errors.New("Request account info fail."), nil)
+				callback(errors.New("Request account info fail."), "")
 			}
 
 		})
 	} else {
 		blob, err := signing(tx)
 		if err != nil {
-			callback(err, nil)
+			callback(err, "")
 		} else {
 			callback(nil, blob)
 		}
@@ -384,7 +408,7 @@ func (tx *Transaction) sign(callback func(err error, result interface{})) {
 /**
  * 提交交易数据
  */
-func (tx *Transaction) Submit(callback func(param ...interface{})) {
+func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 	if tx.checkTxError() {
 		callback(tx.GetTxJson(constant.TXJSON_ERROR_KEY).(error), nil)
 		return
@@ -392,13 +416,14 @@ func (tx *Transaction) Submit(callback func(param ...interface{})) {
 
 	if tx.remote.LocalSign {
 		//本地签名
-		tx.sign(func(blob string, err error) {
+		tx.sign(func(err error, blob string) {
 			if nil != err {
-				callback(errors.New("sig error. " + err.Error()))
+				callback(errors.New("sig error. "+err.Error()), nil)
 			} else {
-				var data struct{ tx_blob string }
-				data.tx_blob = transaction.tx_json.Blob
-				transaction.remote.Submit("submit", data, transaction.filter, callback)
+				//var data struct{ tx_blob string }
+				//data.tx_blob = transaction.tx_json.Blob
+				//transaction.remote.Submit("submit", data, transaction.filter, callback)
+				fmt.Printf("blob %s\n", blob)
 			}
 		})
 	} /*else if transaction.tx_json.TransactionType == "Signer" {
@@ -423,11 +448,4 @@ func (tx *Transaction) checkTxError() bool {
 		return true
 	}
 	return false
-	//	fields := utils.GetFieldNames(txJson)
-	//	for _, fn := range fields {
-	//		v := utils.GetFieldValue(txJson, fn)
-	//		if err, ok := v.(error); ok {
-	//			return err
-	//		}
-	//	}
 }

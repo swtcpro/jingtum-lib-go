@@ -23,6 +23,8 @@ import (
 
 	jtConst "jingtumLib/constant"
 	jtEncode "jingtumLib/encoding"
+
+	"github.com/yangxuebo-138/decimal"
 )
 
 /**
@@ -207,18 +209,36 @@ func ToAmount(amount jtConst.Amount) (interface{}, error) {
 		return nil, jtConst.ERR_EMPTY_PARAM
 	}
 
-	value, err := strconv.ParseFloat(amount.Value, 64)
+	//	value, err := strconv.ParseFloat(amount.Value, 64)
+
+	value, err := decimal.NewFromString(amount.Value)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if value > 100000000000 {
+	vf64, ok := value.Float64()
+
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("Parse float %s error.", amount.Value))
+	}
+
+	if vf64 > 100000000000 {
 		return nil, jtConst.ERR_PAYMENT_OUT_OF_AMOUNT
 	}
 
 	if amount.Currency == jtConst.CFG_CURRENCY {
-		return value * float64(1000000) //strconv.FormatFloat(value*float64(1000000), 'f', -1, 64), nil
+		mul, err := decimal.NewFromString("1000000")
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("Parse float %s error.", "1000000"))
+		}
+
+		retf64, ok := value.Mul(mul).Float64()
+
+		if !ok {
+			return nil, errors.New(fmt.Sprintf("Parse float %s error.", value.Mul(mul).String()))
+		}
+		return retf64, nil
 	}
 
 	return amount, nil

@@ -15,6 +15,7 @@ package serializer
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
 
 	jtUtils "jingtumLib/utils"
@@ -22,6 +23,7 @@ import (
 
 type Serializer struct {
 	Buffer []byte
+	err    error
 }
 
 type SerializedInt8 struct {
@@ -101,7 +103,7 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 
 	txType, ok := txData["TransactionType"]
 	if ok {
-		if txTypeNumber, ok := txType.(uint8); ok {
+		if _, ok := txType.(uint8); ok {
 
 		} else if txTypeStr, ok := txType.(string); ok {
 			typeInt, ok := TX_TYPE_STR_MAP_NUMBER[txTypeStr]
@@ -111,7 +113,7 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 
 			typedef = TRANSACTION_TYPES[typeInt]
 
-			txData["TransactionType"] = strconv.Itoa(int(txytpe))
+			txData["TransactionType"] = strconv.Itoa(int(typeInt))
 		}
 	}
 
@@ -121,6 +123,11 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 
 	so := new(Serializer)
 	so.Serialize(typedef, txData)
+
+	if so.err != nil {
+		return nil, so.err
+	}
+
 	return so, nil
 }
 

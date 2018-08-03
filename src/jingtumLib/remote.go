@@ -609,34 +609,41 @@ func (remote *Remote) handleResponse(data map[string]interface{}) {
 		return
 	}
 
-	fmt.Printf("requests value : %v", remote.requests)
+	request, ok := remote.requests[cid]
+
+	if !ok {
+		Errorf("Request id error %v", cid)
+		return
+	}
 
 	delete(remote.requests, cid)
 
-	fmt.Printf("requests value : %v", remote.requests)
-	//    var req_id = data.id;
-	//    if (typeof req_id !== 'number'
-	//        || req_id < 0 || req_id > this._requests.length) {
-	//        return;
-	//    }
-	//    var request = this._requests[req_id];
-	//    // pass process it when null callback
-	//    delete this._requests[req_id];
-	//    delete data.id;
-	//
-	//    // check if data contain server info
-	//    if (data.result && data.status === 'success'
+	//	 if (data.result && data.status === 'success'
 	//            && data.result.server_status) {
 	//        this._updateServerStatus(data.result);
 	//    }
-	//
-	//    // return to callback
-	//    if (data.status === 'success') {
-	//        var result = request.filter(data.result);
-	//        request.callback(null, result);
-	//    } else if (data.status === 'error') {
-	//        request.callback(data.error_message || data.error_exception);
-	//    }
+
+	status, ok := data["status"]
+	if ok {
+		if status == "success" {
+			//				 var result = request.filter(data.result)
+			result, ok := data["result"]
+			if ok {
+				request.callback(nil, result)
+			} else {
+				request.callback(errors.New("Response result is null."), nil)
+			}
+
+		} else if status == "error" {
+			errMsg, ok := data["error_message"]
+			errException, oke := data["error_exception"]
+			if ok {
+				request.callback(errors.New(errMsg.(string)), nil)
+			} else if oke {
+				request.callback(errors.New(errException.(string)), nil)
+			}
+		}
+	}
 }
 
 func (remote *Remote) handlePathFind(data map[string]interface{}) {
