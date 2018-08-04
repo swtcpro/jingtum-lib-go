@@ -14,7 +14,6 @@ package serializer
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -95,10 +94,8 @@ type TxData struct {
 	SigningPubKey   string
 }
 
-/**
- *  对象转字节序列化
- */
-func FromJson(txData map[string]interface{}) (*Serializer, error) {
+//FromJSON 交易数据序列化。
+func FromJSON(txData map[string]interface{}) (*Serializer, error) {
 	var typedef [][]interface{}
 
 	txType, ok := txData["TransactionType"]
@@ -108,7 +105,7 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 		} else if txTypeStr, ok := txType.(string); ok {
 			typeInt, ok := TX_TYPE_STR_MAP_NUMBER[txTypeStr]
 			if !ok {
-				return nil, errors.New(fmt.Sprintf("TransactionType (%s) invalid.", txTypeStr))
+				return nil, fmt.Errorf("TransactionType (%s) invalid", txTypeStr)
 			}
 
 			typedef = TRANSACTION_TYPES[typeInt]
@@ -118,7 +115,7 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 	}
 
 	if len(typedef) == 0 {
-		return nil, errors.New("Object to be serialized must contain either TransactionType, LedgerEntryType or AffectedNodes.")
+		return nil, fmt.Errorf("Object to be serialized must contain either TransactionType, LedgerEntryType or AffectedNodes")
 	}
 
 	so := new(Serializer)
@@ -131,14 +128,17 @@ func FromJson(txData map[string]interface{}) (*Serializer, error) {
 	return so, nil
 }
 
+//Serialize Object 序列化。
 func (so *Serializer) Serialize(typedef [][]interface{}, txData map[string]interface{}) {
 	STObject.Serialize(so, txData, true)
 }
 
+//Append Buffer append
 func (so *Serializer) Append(v []byte) {
 	so.Buffer = append(so.Buffer, v...)
 }
 
+//Hash 序列化哈希。
 func (so *Serializer) Hash(prefix uint32) []byte {
 	sotemp := new(Serializer)
 	STInt32.Serialize(sotemp, prefix, false)
@@ -148,6 +148,7 @@ func (so *Serializer) Hash(prefix uint32) []byte {
 	return sh512.Finish256()
 }
 
+//ToHex 序列化转 16 进制。
 func (so *Serializer) ToHex() string {
 	return hex.EncodeToString(so.Buffer)
 }

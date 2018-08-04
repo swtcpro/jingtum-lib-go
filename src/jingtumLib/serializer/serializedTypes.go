@@ -26,6 +26,9 @@ import (
 )
 
 var (
+	//CurrencyNameLen var
+	CurrencyNameLen = 3
+	//CURRENCY_NAME_LEN CURRENCY_NAME_LEN
 	CURRENCY_NAME_LEN  int = 3
 	CURRENCY_NAME_LEN2 int = 6
 	typeBoundary       int = 0xff
@@ -35,12 +38,13 @@ var (
 	typeIssuer         int = 0x20
 )
 
+// ISerializedType 是一个序列化接口。
 type ISerializedType interface {
-	//Serialize( val interface{}, noMarker bool)
 	Serialize(so *Serializer, val interface{}, noMarker bool)
 	Parse(so *Serializer) interface{}
 }
 
+// PathComputed 结构体。
 type PathComputed struct {
 	Currency string `json:"currency"`
 	Issuer   string `json:"issuer"`
@@ -50,6 +54,7 @@ type PathComputed struct {
 	TypeHex  string `json:"type_hex"`
 }
 
+// PathData 结构体。
 type PathData struct {
 	PathsComputed [][]PathComputed
 	Choice        interface{}
@@ -246,7 +251,7 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 }
 
 func (serArg SerializedArg) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
 func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker bool) {
@@ -272,10 +277,12 @@ func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker 
 	}
 }
 
+//Parse Hash128反序列化。
 func (serHash128 SerializedHash128) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize Hash128序列化。
 func (serHash128 SerializedHash128) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if v, ok := val.(string); ok && jtUtils.MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 32 {
 		SerializeHex(so, v, true)
@@ -283,10 +290,12 @@ func (serHash128 SerializedHash128) Serialize(so *Serializer, val interface{}, n
 	}
 }
 
+//Parse Hash256反序列化。
 func (serHash256 SerializedHash256) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize Hash256序列化。
 func (serHash256 SerializedHash256) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if v, ok := val.(string); ok && jtUtils.MatchString("^[0-9A-F]{0,32}$", v) && len(v) <= 64 {
 		SerializeHex(so, v, true)
@@ -294,21 +303,28 @@ func (serHash256 SerializedHash256) Serialize(so *Serializer, val interface{}, n
 	}
 }
 
+//Parse 金额反序列化。
 func (serAmount SerializedAmount) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize 金额序列化。
 func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	amount := val.(TumAmount)
-	if !amount.IsValid {
-		panic("Not a valid Amount object.")
+	tumAmount, err := fromJSON(val)
+	if err != nil {
+		so.err = err
+		return
+	}
+	if !tumAmount.IsValid() {
+		so.err = fmt.Errorf("Not a valid Amount object")
+		return
 	}
 
-	if amount.IsNative {
-		valueHex := hex.EncodeToString(amount.Value.Bytes())
+	if tumAmount.IsNative {
+		valueHex := hex.EncodeToString(tumAmount.Value.Bytes())
 
 		if len(valueHex) > 16 {
-			panic("Amount value out of bounds.")
+			so.err = fmt.Errorf("Amount value out of bounds")
 		}
 		b := bytes.NewBufferString("")
 		for b.Len() < 16 {
@@ -318,15 +334,15 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 
 		valueBytes, err := jtUtils.HexToBytes(b.String())
 		if err != nil {
-			panic("Hex to bytes error.")
+			so.err = fmt.Errorf("Hex to bytes error %s", b.String())
+			return
 		}
 
 		valueBytes[0] &= 0x3f
 
-		if amount.IsNegative {
+		if tumAmount.IsNegative {
 			valueBytes[0] |= 0x40
 		}
-
 		so.Append(valueBytes)
 	} else {
 		//For other non-native currency
@@ -334,16 +350,16 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		//Put offset
 		var hi, lo int64 = 0, 0
 		hi |= 1 << 31
-		if !amount.IsZeroM() {
+		if !tumAmount.IsZeroM() {
 			// Second bit: non-negative?
-			if amount.IsNegative {
+			if tumAmount.IsNegative {
 				hi |= 1 << 30
 			}
 			// Next eight bits: offset/exponent
-			hi |= ((int64(97) + int64(amount.Offset)) & 0xff) << 22
+			hi |= ((int64(97) + int64(tumAmount.Offset)) & 0xff) << 22
 			// Remaining 54 bits: mantissa
-			hi |= (amount.Value.Int64() >> 32) & 0x3fffff
-			lo = amount.Value.Int64() & 0xffffffff
+			hi |= (tumAmount.Value.Int64() >> 32) & 0x3fffff
+			lo = tumAmount.Value.Int64() & 0xffffffff
 		}
 
 		// Convert from a bitArray to an array of bytes.
@@ -373,13 +389,23 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		}
 
 		if len(tmparray) > 8 {
-			panic("Invalid byte array length in AMOUNT value representation")
+			so.err = fmt.Errorf("Invalid byte array length in AMOUNT value representation")
+			return
 		}
 
 		so.Append(tmparray)
-		tumBytes := amount.TumToBytes()
+		tumBytes, err := tumAmount.TumToBytes()
+		if err != nil {
+			so.err = err
+			return
+		}
 		so.Append(tumBytes)
-		so.Append(jtUtils.DecodeAddress(amount.Issuer))
+		addrByte, err := jtUtils.DecodeAddress(tumAmount.Issuer)
+		if err != nil {
+			so.err = err
+			return
+		}
+		so.Append(addrByte)
 	}
 }
 
@@ -526,7 +552,12 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 			STInt8.Serialize(so, typev, false)
 
 			if entry.Account != "" {
-				so.Append(jtUtils.DecodeAddress(entry.Account))
+				addrByte, err := jtUtils.DecodeAddress(entry.Account)
+				if err != nil {
+					so.err = err
+					return
+				}
+				so.Append(addrByte)
 			}
 
 			if entry.Currency != "" {
@@ -535,7 +566,12 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 			}
 
 			if entry.Issuer != "" {
-				so.Append(jtUtils.DecodeAddress(entry.Issuer))
+				addrByte, err := jtUtils.DecodeAddress(entry.Issuer)
+				if err != nil {
+					so.err = err
+					return
+				}
+				so.Append(addrByte)
 			}
 		}
 	}
@@ -543,10 +579,12 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 	STInt8.Serialize(so, typeEnd, false)
 }
 
+//Parse Vector 256 反序列化。
 func (serVector256 SerializedVector256) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize Vector 256 序列化。
 func (serVector256 SerializedVector256) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	array := val.([]string)
 	SerializeVarint(so, uint(len(array)*32))
@@ -556,25 +594,38 @@ func (serVector256 SerializedVector256) Serialize(so *Serializer, val interface{
 	}
 }
 
+//Parse variable length 反序列化。
 func (serVL SerializedVariableLength) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize variable length 序列化。
 func (serVL SerializedVariableLength) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	vl, ok := val.(string)
 	if !ok {
-		so.err = errors.New(fmt.Sprintf("Serialized Variable type error %T.", val))
+		so.err = fmt.Errorf("Serialized Variable type error %T", val)
 		return
 	}
 	SerializeHex(so, vl, false)
 }
 
+//Parse 账号反序列化。
 func (serAccount SerializedAccount) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize 账号序列化。
 func (serAccount SerializedAccount) Serialize(so *Serializer, val interface{}, noMarker bool) {
-	bytes := jtUtils.DecodeAddress(val.(string))
-	SerializeVarint(so, uint(len(bytes)))
-	so.Append(bytes)
+	account, ok := val.(string)
+	if !ok {
+		so.err = fmt.Errorf("Account type error %T", val)
+		return
+	}
+	addrByte, err := jtUtils.DecodeAddress(account)
+	if err != nil {
+		so.err = err
+		return
+	}
+	SerializeVarint(so, uint(len(addrByte)))
+	so.Append(addrByte)
 }

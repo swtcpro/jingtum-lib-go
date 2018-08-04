@@ -9,7 +9,7 @@ import (
 )
 
 func Test_AddMemo(t *testing.T) {
-	err, remote := NewRemote()
+	remote, err := NewRemote("",false)
 	if err != nil {
 		t.Fatalf("New remote error : %v.", err)
 	}

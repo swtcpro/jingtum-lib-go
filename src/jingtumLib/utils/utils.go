@@ -103,13 +103,14 @@ func IsValidCurrency(currency string) bool {
 	return ok
 }
 
-func DecodeAddress(address string) []byte {
+//DecodeAddress 地址解码。
+func DecodeAddress(address string) ([]byte, error) {
 	decodedBytes, err := DecodeB58(jtConst.ACCOUNT_PREFIX, address)
 	if err != nil {
-		panic(fmt.Sprintf("Issuer invalid issuer info %v", address))
+		return nil, fmt.Errorf("Issuer invalid issuer info %s", address)
 	}
 
-	return decodedBytes
+	return decodedBytes, nil
 }
 
 func IsValidAddress(address string) bool {
@@ -327,17 +328,16 @@ func SortByFieldName(fields []string) {
 		yMap := jtConst.INVERSE_FIELDS_MAP[q]
 		yTypeBits := yMap.Key
 		yFieldBits := yMap.Value
-
 		if xTypeBits != yTypeBits {
 			ret := xTypeBits - yTypeBits
-			if ret > 0 || ret == 0 {
+			if ret > 0 {
 				return true
 			} else {
 				return false
 			}
 		} else {
 			ret := xFieldBits - yFieldBits
-			if ret > 0 || ret == 0 {
+			if ret > 0 {
 				return true
 			} else {
 				return false

@@ -17,6 +17,7 @@ import (
 	//	"encoding/json"
 	"errors"
 	"fmt"
+
 	//	"strconv"
 	//	"strings"
 	"container/list"
@@ -312,7 +313,7 @@ func signing(tx *Transaction) (string, error) {
 
 	tx.AddTxJson("SigningPubKey", wt.GetPublicKey())
 	var prefix uint32 = 0x53545800
-	so, err := serializer.FromJson(tx.tx_json)
+	so, err := serializer.FromJSON(tx.tx_json)
 	if err != nil {
 		return "", err
 	}
@@ -372,7 +373,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 					callback(errors.New("Get Sequence is null from server."), "")
 					return
 				}
-				fmt.Printf("Sequence type %T.", seq)
+
 				tx.AddTxJson("Sequence", seq)
 				blob, err := signing(tx)
 				if err != nil {
