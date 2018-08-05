@@ -140,13 +140,14 @@ func (so *Serializer) Append(v []byte) {
 }
 
 //Hash 序列化哈希。
-func (so *Serializer) Hash(prefix uint32) []byte {
+func (so *Serializer) Hash(prefix uint32) string {
 	sotemp := new(Serializer)
 	STInt32.Serialize(sotemp, prefix, false)
 	sotemp.Buffer = append(sotemp.Buffer, so.Buffer...)
 	sh512 := jtUtils.NewSha512()
 	sh512.Add(sotemp.Buffer)
-	return sh512.Finish256()
+
+	return jtUtils.ByteToHexString(sh512.Finish256())
 }
 
 //ToHex 序列化转 16 进制。

@@ -60,7 +60,7 @@ func NewTransaction(remote *Remote) (*Transaction, error) {
 	tx.remote = remote
 	tx.tx_json = make(map[string]interface{})
 	tx.AddTxJson("Flags", uint32(0))
-	tx.AddTxJson("Fee", JTConfig.ReadInt("Config", "fee", 10000))
+	tx.AddTxJson("Fee", float32(JTConfig.ReadInt("Config", "fee", 10000)))
 	return tx, nil
 }
 
@@ -271,11 +271,11 @@ func (tx *Transaction) AddMemo(memo string) {
  */
 func signing(tx *Transaction) (string, error) {
 
-	tx.AddTxJson("Fee", tx.GetTxJson("Fee").(int)/1000000)
+	tx.AddTxJson("Fee", tx.GetTxJson("Fee").(float32)/1000000)
 
 	amount := tx.GetTxJson("Amount")
 	if amount == nil {
-		return "", errors.New("Amount not be empty.")
+		return "", fmt.Errorf("Amount not be empty")
 	}
 
 	if amt64, ok := amount.(float64); ok {
@@ -320,6 +320,7 @@ func signing(tx *Transaction) (string, error) {
 	}
 	hash := so.Hash(prefix)
 	fmt.Println(hash)
+	//3045022100FAF5E34E8477B2A729D81A3B85E7C7DF22C4360DCBFEEDA52C71F1F5D2B412D002203405C155E2BDE0CC804F13A4A5EDC0FC7D95C113D1A56487CB0A957B1D04A972
 
 	//transaction.tx_json.TxnSignature = wt.signTx(hash)
 	//transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()

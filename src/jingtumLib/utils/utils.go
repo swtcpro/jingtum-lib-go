@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
 	jtConst "jingtumLib/constant"
 	jtEncode "jingtumLib/encoding"
@@ -175,7 +176,7 @@ func IsNumberString(s string) bool {
 func NumberToString(obj interface{}) string {
 	switch v := obj.(type) {
 	case float32:
-		return strconv.FormatFloat(float64(v), 'f', -1, 64)
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
 	case float64:
 		return strconv.FormatFloat(v, 'f', -1, 64)
 	case int:
@@ -286,6 +287,10 @@ func HexToBytes(hexStr string) ([]byte, error) {
 
 func StringToHex(str string) string {
 	return hex.EncodeToString([]byte(str))
+}
+
+func ByteToHexString(bytes []byte) string {
+	return strings.ToUpper(hex.EncodeToString(bytes))
 }
 
 func HexToString(hexStr string) (string, error) {

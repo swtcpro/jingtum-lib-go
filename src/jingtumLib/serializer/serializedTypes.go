@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 
 	"jingtumLib/constant"
 	jtUtils "jingtumLib/utils"
@@ -129,8 +130,7 @@ func (serInt8 SerializedInt8) Serialize(so *Serializer, val interface{}, noMarke
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-
-		so.Append(jtUtils.GetBytes(val))
+		so.err = fmt.Errorf("Serialize int8 type error %T, %v", val, val)
 	} else {
 		so.err = fmt.Errorf("Serialize int8 type error %T, %v", val, val)
 		return
@@ -151,8 +151,7 @@ func (serInt16 SerializedInt16) Serialize(so *Serializer, val interface{}, noMar
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-
-		so.Append(jtUtils.GetBytes(val))
+		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 	} else {
 		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 		return
@@ -173,7 +172,7 @@ func (serInt32 SerializedInt32) Serialize(so *Serializer, val interface{}, noMar
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-		so.Append(jtUtils.GetBytes(val))
+		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 	} else {
 		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 		return
@@ -251,6 +250,9 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 
 	for _, fn := range fileds {
 		value := jtUtils.GetFieldValue(val, fn)
+		if value == nil || value == "" {
+			continue
+		}
 		switch fn {
 		case "MemoType", "MemoFormat":
 			value = jtUtils.StringToHex(value.(string))
@@ -272,7 +274,7 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 	}
 
 	if !noMarker {
-		STInt8.Serialize(so, 0xe1, false)
+		STInt8.Serialize(so, uint8(0xe1), false)
 	}
 }
 
@@ -302,7 +304,7 @@ func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker 
 	}
 
 	if !noMarker {
-		STInt8.Serialize(so, 0xe1, false)
+		STInt8.Serialize(so, uint8(0xe1), false)
 	}
 }
 
@@ -356,7 +358,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 			so.err = fmt.Errorf("Amount value out of bounds")
 		}
 		b := bytes.NewBufferString("")
-		for b.Len() < 16 {
+		for b.Len() < 16-len(valueHex) {
 			b.WriteString("0")
 		}
 		b.WriteString(valueHex)
@@ -369,7 +371,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 
 		valueBytes[0] &= 0x3f
 
-		if tumAmount.IsNegative {
+		if !tumAmount.IsNegative {
 			valueBytes[0] |= 0x40
 		}
 		so.Append(valueBytes)
@@ -491,19 +493,19 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 		return
 	}
 
-	var fieldNames []string
+	fieldNames := []string{"TransactionType", "Flags", "Sequence", "Amount", "Fee", "SigningPubKey", "Account", "Destination", "Memos"}
+	// var fieldNames []string
+	// for k := range txData {
+	// 	_, ok := constant.INVERSE_FIELDS_MAP[k]
+	// 	if !ok {
+	// 		so.err = fmt.Errorf("Not fund field name %s", k)
+	// 		return
+	// 	}
 
-	for k := range txData {
-		_, ok := constant.INVERSE_FIELDS_MAP[k]
-		if !ok {
-			so.err = fmt.Errorf("Not fund field name %s", k)
-			return
-		}
+	// 	fieldNames = append(fieldNames, k)
+	// }
 
-		fieldNames = append(fieldNames, k)
-	}
-
-	jtUtils.SortByFieldName(fieldNames)
+	// jtUtils.SortByFieldName(fieldNames)
 
 	for _, field := range fieldNames {
 		value := txData[field]
@@ -511,11 +513,24 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 			continue
 		}
 
-		Serialize(so, field, value)
+		if txType, ok := value.(string); ok && field == "TransactionType" {
+			txint, err := strconv.ParseUint(txType, 10, 16)
+			if err != nil {
+				so.err = err
+				return
+			}
+			Serialize(so, field, uint16(txint))
+		} else {
+			Serialize(so, field, value)
+		}
+
+		if so.err != nil {
+			return
+		}
 	}
 
 	if !noMarker {
-		STInt8.Serialize(so, 0xe1, false)
+		STInt8.Serialize(so, uint8(0xe1), false)
 	}
 }
 
@@ -545,7 +560,7 @@ func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMar
 		Serialize(so, fields[0], value)
 	}
 
-	STInt8.Serialize(so, 0xf1, false)
+	STInt8.Serialize(so, uint8(0xf1), false)
 }
 
 //Parse hash 160
@@ -588,7 +603,7 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 				typev |= typeIssuer
 			}
 
-			STInt8.Serialize(so, typev, false)
+			STInt8.Serialize(so, uint8(typev), false)
 
 			if entry.Account != "" {
 				addrByte, err := jtUtils.DecodeAddress(entry.Account)
@@ -615,7 +630,7 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 		}
 	}
 
-	STInt8.Serialize(so, typeEnd, false)
+	STInt8.Serialize(so, uint8(typeEnd), false)
 }
 
 //Parse Vector 256 反序列化。
