@@ -13,7 +13,6 @@
 package serializer
 
 import (
-	"errors"
 	"fmt"
 
 	"jingtumLib/constant"
@@ -21,18 +20,28 @@ import (
 )
 
 var (
-	STInt8    = new(SerializedInt8)
-	STInt16   = new(SerializedInt16)
-	STInt32   = new(SerializedInt32)
-	STInt64   = new(SerializedInt64)
-	STMemo    = new(SerializedMemo)
-	STArg     = new(SerializedArg)
+	//STInt8 初始化
+	STInt8 = new(SerializedInt8)
+	//STInt16 初始化
+	STInt16 = new(SerializedInt16)
+	//STInt32 初始化
+	STInt32 = new(SerializedInt32)
+	//STInt64 初始化
+	STInt64 = new(SerializedInt64)
+	//STMemo 初始化
+	STMemo = new(SerializedMemo)
+	//STArg 初始化
+	STArg = new(SerializedArg)
+	//STHash256 初始化
 	STHash256 = new(SerializedHash256)
-	STObject  = new(SerializedObject)
+	//STObject 初始化
+	STObject = new(SerializedObject)
 
-	TYPES_MAP = map[uint8]ISerializedType{1: new(SerializedInt16), 2: STInt32, 3: new(SerializedInt64), 4: new(SerializedHash128), 5: STHash256, 6: new(SerializedAmount), 7: new(SerializedVariableLength), 8: new(SerializedAccount), 14: STObject, 15: new(SerializedArray), 16: STInt8, 17: new(SerializedHash160), 18: new(SerializedPathSet), 19: new(SerializedVector256)}
+	//TYPES_MAP 序列化类型初始化
+	typesMap = map[uint8]ISerializedType{1: new(SerializedInt16), 2: STInt32, 3: new(SerializedInt64), 4: new(SerializedHash128), 5: STHash256, 6: new(SerializedAmount), 7: new(SerializedVariableLength), 8: new(SerializedAccount), 14: STObject, 15: new(SerializedArray), 16: STInt8, 17: new(SerializedHash160), 18: new(SerializedPathSet), 19: new(SerializedVector256)}
 )
 
+//SerializeHex 16进制序列化
 func SerializeHex(so *Serializer, val string, noLength bool) {
 	bytes, err := utils.HexToBytes(val)
 
@@ -51,9 +60,10 @@ func SerializeHex(so *Serializer, val string, noLength bool) {
 	so.Append(bytes)
 }
 
+//SerializeVarint int序列化。
 func SerializeVarint(so *Serializer, val uint) {
 	if val < 0 {
-		so.err = errors.New(fmt.Sprintf("Variable integers are unsigned %d", val))
+		so.err = fmt.Errorf("Variable integers are unsigned %d", val)
 		return
 	}
 
@@ -66,11 +76,11 @@ func SerializeVarint(so *Serializer, val uint) {
 		val -= 12481
 		so.Append([]byte{byte(241 + (val >> 16)), byte(val >> 8 & 0xff), byte(val & 0xff)})
 	} else {
-		so.err = errors.New(fmt.Sprintf("Variable integer overflow %d", val))
+		so.err = fmt.Errorf("Variable integer overflow %d", val)
 	}
 }
 
-func getLedgerEntryType(structure interface{}) interface{} {
+func getLedgerEntryType(structure interface{}) (interface{}, error) {
 	var output interface{}
 	switch v := structure.(type) {
 	case uint8:
@@ -96,7 +106,7 @@ func getLedgerEntryType(structure interface{}) interface{} {
 		case 114:
 			output = "SkywellState"
 		default:
-			panic(fmt.Sprintf("Invalid input type for ransaction result %v", v))
+			return nil, fmt.Errorf("Invalid input type for ransaction result %d", v)
 		}
 	case string:
 		switch v {
@@ -126,10 +136,10 @@ func getLedgerEntryType(structure interface{}) interface{} {
 	default:
 		output = "UndefinedLedgerEntry"
 	}
-	return output
+	return output, nil
 }
 
-func getTransactionType(structure interface{}) interface{} {
+func getTransactionType(structure interface{}) (interface{}, error) {
 	var output interface{}
 	switch v := structure.(type) {
 	case uint8:
@@ -155,7 +165,8 @@ func getTransactionType(structure interface{}) interface{} {
 		case 101:
 			output = "SetFee"
 		default:
-			panic(fmt.Sprintf("Invalid transaction type %v", v))
+			return nil, fmt.Errorf("Invalid transaction type %d", v)
+
 		}
 	case string:
 		switch v {
@@ -180,19 +191,20 @@ func getTransactionType(structure interface{}) interface{} {
 		case "SetFee":
 			output = 101
 		default:
-			panic(fmt.Sprintf("Invalid transaction type %v", v))
+			return nil, fmt.Errorf("Invalid transaction type %s", v)
 		}
 		break
 	default:
-		panic(fmt.Sprintf("Invalid input type for transaction type %v", v))
+		return nil, fmt.Errorf("Invalid input type for transaction type %v. Type %T", v, v)
 	}
-	return output
+	return output, nil
 }
 
+//Serialize 序列化属性
 func Serialize(so *Serializer, fieldName string, value interface{}) {
 	fieldCoordinates, ok := constant.INVERSE_FIELDS_MAP[fieldName]
 	if !ok {
-		so.err = errors.New(fmt.Sprintf("Not fund field name %s.", fieldName))
+		so.err = fmt.Errorf("Not fund field name %s", fieldName)
 		return
 	}
 
@@ -215,9 +227,19 @@ func Serialize(so *Serializer, fieldName string, value interface{}) {
 
 	if v, ok := value.(string); ok {
 		if fieldName == "LedgerEntryType" {
-			value = getLedgerEntryType(v)
+			v, err := getLedgerEntryType(v)
+			if err != nil {
+				so.err = err
+				return
+			}
+			value = v
 		} else if fieldName == "TransactionResult" {
-			value = getTransactionType(v)
+			v, err := getTransactionType(v)
+			if err != nil {
+				so.err = err
+				return
+			}
+			value = v
 		}
 	}
 
@@ -233,10 +255,10 @@ func Serialize(so *Serializer, fieldName string, value interface{}) {
 
 	var serializedType ISerializedType
 
-	if _, ok := value.(*MemoInfo); ok && fieldName == "Memo" {
+	if _, ok := value.(*MemoDataInfo); ok && fieldName == "Memo" {
 		serializedType = STMemo
 	} else {
-		serializedType = TYPES_MAP[typeBits]
+		serializedType = typesMap[typeBits]
 	}
 
 	serializedType.Serialize(so, value, false)

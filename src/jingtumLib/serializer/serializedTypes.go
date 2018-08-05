@@ -17,7 +17,6 @@ import (
 	"container/list"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 
@@ -26,16 +25,13 @@ import (
 )
 
 var (
-	//CurrencyNameLen var
-	CurrencyNameLen = 3
-	//CURRENCY_NAME_LEN CURRENCY_NAME_LEN
-	CURRENCY_NAME_LEN  int = 3
-	CURRENCY_NAME_LEN2 int = 6
-	typeBoundary       int = 0xff
-	typeEnd            int = 0x00
-	typeAccount        int = 0x01
-	typeCurrency       int = 0x10
-	typeIssuer         int = 0x20
+	currencyNameLen  = 3
+	currencyNameLen2 = 6
+	typeBoundary     = 0xff
+	typeEnd          = 0x00
+	typeAccount      = 0x01
+	typeCurrency     = 0x10
+	typeIssuer       = 0x20
 )
 
 // ISerializedType 是一个序列化接口。
@@ -60,110 +56,136 @@ type PathData struct {
 	Choice        interface{}
 }
 
+//SerializedInt16 int16
 type SerializedInt16 struct {
 }
 
+//SerializedInt32 int32
 type SerializedInt32 struct {
 }
 
+//SerializedInt64 int64
 type SerializedInt64 struct {
 }
 
+//SerializedMemo memo
 type SerializedMemo struct {
 }
 
+//SerializedArg args
 type SerializedArg struct {
 }
 
+//SerializedHash128 hash 128
 type SerializedHash128 struct {
 }
 
+//SerializedHash256 hash 256
 type SerializedHash256 struct {
 }
 
+//SerializedAmount amount
 type SerializedAmount struct {
 }
 
+//SerializedCurrency currency
 type SerializedCurrency struct {
 }
 
+//SerializedObject object
 type SerializedObject struct {
 }
 
+//SerializedArray array
 type SerializedArray struct {
 }
 
+//SerializedHash160 hash 160
 type SerializedHash160 struct {
 }
 
+//SerializedPathSet pathset
 type SerializedPathSet struct {
 }
 
+//SerializedVector256 vector 256
 type SerializedVector256 struct {
 }
 
+//SerializedVariableLength variable length
 type SerializedVariableLength struct {
 }
 
+//SerializedAccount account
 type SerializedAccount struct {
 }
 
+//Serialize int8
 func (serInt8 SerializedInt8) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if vuit8, ok := val.(uint8); ok {
 		so.Append(jtUtils.GetBytes(vuit8))
 	} else if vint, ok := val.(int); ok {
 		if vint >= math.MaxUint8 || vint < 0 {
-			so.err = errors.New(fmt.Sprintf("Value out of bounds %d.", vint))
+			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
 
 		so.Append(jtUtils.GetBytes(val))
 	} else {
-		so.err = errors.New(fmt.Sprintf("Serialize int8 type error %T, %v.", val, val))
+		so.err = fmt.Errorf("Serialize int8 type error %T, %v", val, val)
+		return
 	}
 }
 
+//Parse int8
 func (serInt8 SerializedInt8) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize int16
 func (serInt16 SerializedInt16) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if vuint16, ok := val.(uint16); ok {
 		so.Append(jtUtils.GetBytes(vuint16))
 	} else if vint, ok := val.(int); ok {
 		if vint >= math.MaxUint16 || vint < 0 {
-			so.err = errors.New(fmt.Sprintf("Value out of bounds %d.", vint))
+			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
 
 		so.Append(jtUtils.GetBytes(val))
 	} else {
-		so.err = errors.New(fmt.Sprintf("Serialize int16 type error %T, %v.", val, val))
+		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
+		return
 	}
 }
 
+//Parse int16
 func (serInt16 SerializedInt16) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize int32
 func (serInt32 SerializedInt32) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if vuint32, ok := val.(uint32); ok {
 		so.Append(jtUtils.GetBytes(vuint32))
 	} else if vint, ok := val.(int); ok {
 		if vint >= math.MaxUint32 || vint < 0 {
-			so.err = errors.New(fmt.Sprintf("Value out of bounds %d.", vint))
+			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
 		so.Append(jtUtils.GetBytes(val))
 	} else {
-		so.err = errors.New(fmt.Sprintf("Serialize int16 type error %T, %v.", val, val))
+		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
+		return
 	}
 }
 
+//Parse int32
 func (serInt32 SerializedInt32) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize int64
 func (serInt64 SerializedInt64) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	if number, ok := val.(uint64); ok {
 		so.Append(jtUtils.GetBytes(number))
@@ -172,12 +194,13 @@ func (serInt64 SerializedInt64) Serialize(so *Serializer, val interface{}, noMar
 
 	if str, ok := val.(string); ok {
 		if !jtUtils.IsHexString(str) {
-			so.err = errors.New(fmt.Sprintf("Invalid hex string %s", str))
+			so.err = fmt.Errorf("Invalid hex string %s", str)
 			return
 		}
 
 		if len(str) > 16 {
-			panic(fmt.Sprintf("Int64 is too large %v", str))
+			so.err = fmt.Errorf("Int64 is too large %s", str)
+			return
 		}
 
 		b := bytes.NewBufferString("")
@@ -192,21 +215,24 @@ func (serInt64 SerializedInt64) Serialize(so *Serializer, val interface{}, noMar
 		return
 	}
 
-	so.err = errors.New(fmt.Sprintf("Invalid type for Int64 %T, %v", val, val))
+	so.err = fmt.Errorf("Invalid type for Int64 %T, %v", val, val)
 }
 
+//Parse int64
 func (serInt64 SerializedInt64) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Parse memo
 func (serMemo SerializedMemo) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize memo
 func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	memo, ok := val.(*MemoDataInfo)
 	if !ok {
-		so.err = errors.New(fmt.Sprintf("Serialize Memo type error %T.", val))
+		so.err = fmt.Errorf("Serialize Memo type error %T", val)
 		return
 	}
 
@@ -214,14 +240,14 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 	for i := 0; i < len(fileds); i++ {
 		_, ok := constant.INVERSE_FIELDS_MAP[fileds[i]]
 		if !ok {
-			so.err = errors.New(fmt.Sprintf("JSON contains unknown field : %s.", fileds[i]))
+			so.err = fmt.Errorf("JSON contains unknown field : %s", fileds[i])
 			return
 		}
 	}
 
 	jtUtils.SortByFieldName(fileds)
 
-	isJson := memo.MemoFormat == "json"
+	isJSON := memo.MemoFormat == "json"
 
 	for _, fn := range fileds {
 		value := jtUtils.GetFieldValue(val, fn)
@@ -233,12 +259,12 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 				value = jtUtils.StringToHex(value.(string))
 				break
 			}
-			if isJson {
+			if isJSON {
 				mjson, _ := json.Marshal(value)
 				value = jtUtils.StringToHex(string(mjson))
 				break
 			}
-			so.err = errors.New(fmt.Sprintf("MemoData can only be a JSON object with a valid json MemoFormat. %v", value))
+			so.err = fmt.Errorf("MemoData can only be a JSON object with a valid json MemoFormat. %v. %T", value, value)
 			return
 		}
 
@@ -250,16 +276,19 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 	}
 }
 
+//Parse arg
 func (serArg SerializedArg) Parse(so *Serializer) interface{} {
 	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize arg
 func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
 		kvp := constant.INVERSE_FIELDS_MAP[fileds[i]]
 		if kvp == nil {
-			panic(fmt.Sprintf("JSON contains unknown field: %v", fileds[i]))
+			so.err = fmt.Errorf("JSON contains unknown field %s", fileds[i])
+			return
 		}
 	}
 	jtUtils.SortByFieldName(fileds)
@@ -378,7 +407,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		}
 
 		var tmparray []byte
-		var tmp int64 = 0
+		var tmp int64
 		for i := 0; int64(i) < int64(bl/8); i++ {
 			if (i & 3) == 0 {
 				tmp = arr[i/4]
@@ -409,16 +438,18 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 	}
 }
 
+//Parse currency
 func (serCurrency SerializedCurrency) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize currency
 func (serCurrency SerializedCurrency) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	currencty := val.(string)
-	so.Append(serCurrency.fromJsonToBytes(currencty))
+	so.Append(serCurrency.fromJSONToBytes(currencty))
 }
 
-func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
+func (serCurrency SerializedCurrency) fromJSONToBytes(currencty string) []byte {
 	var result []byte
 	if currencty != "" {
 		if jtUtils.IsHexString(currencty) && len(currencty) == 40 {
@@ -430,7 +461,7 @@ func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
 			}
 
 		} else if jtUtils.IsValidCurrency(currencty) {
-			if len(currencty) >= CURRENCY_NAME_LEN && len(currencty) <= CURRENCY_NAME_LEN2 {
+			if len(currencty) >= currencyNameLen && len(currencty) <= currencyNameLen2 {
 				var end = 14
 				var clen = len(currencty) - 1
 				for x := clen; x >= 0; x-- {
@@ -447,23 +478,25 @@ func (serCurrency SerializedCurrency) fromJsonToBytes(currencty string) []byte {
 	return result
 }
 
+//Parse object
 func (serObject SerializedObject) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize object
 func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	txData, ok := val.(map[string]interface{})
 	if !ok {
-		so.err = errors.New("Serialive object type must be map[string]interface{}.")
+		so.err = fmt.Errorf("Serialive object type must be map[string]interface{}. Actual type : %T. Value : %v", val, val)
 		return
 	}
 
 	var fieldNames []string
 
-	for k, _ := range txData {
+	for k := range txData {
 		_, ok := constant.INVERSE_FIELDS_MAP[k]
 		if !ok {
-			so.err = errors.New(fmt.Sprintf("Not fund field name %s.", k))
+			so.err = fmt.Errorf("Not fund field name %s", k)
 			return
 		}
 
@@ -486,14 +519,16 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 	}
 }
 
+//Parse array
 func (serArray SerializedArray) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize array
 func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	array, ok := val.(*list.List)
 	if !ok {
-		so.err = errors.New(fmt.Sprintf("Serialize array type error %T", val))
+		so.err = fmt.Errorf("Serialize array type error %T. Value : %v", val, val)
 		return
 	}
 
@@ -501,7 +536,7 @@ func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMar
 		fields := jtUtils.GetFieldNames(e.Value)
 
 		if len(fields) != 1 {
-			so.err = errors.New("Cannot serialize an array containing non-single-key objects.")
+			so.err = fmt.Errorf("Cannot serialize an array containing non-single-key objects")
 			return
 		}
 
@@ -513,19 +548,23 @@ func (serArray SerializedArray) Serialize(so *Serializer, val interface{}, noMar
 	STInt8.Serialize(so, 0xf1, false)
 }
 
+//Parse hash 160
 func (serHash160 SerializedHash160) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize hash 160
 func (serHash160 SerializedHash160) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	valStr := val.(string)
 	SerializeHex(so, valStr, true)
 }
 
+//Parse path set
 func (serPathSet SerializedPathSet) Parse(so *Serializer) interface{} {
-	return errors.New("Not implemented error.")
+	return fmt.Errorf("Not implemented error")
 }
 
+//Serialize path set
 func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	path := val.([][]PathComputed)
 	for i := 0; i < len(path); i++ {
@@ -562,7 +601,7 @@ func (serPathSet SerializedPathSet) Serialize(so *Serializer, val interface{}, n
 
 			if entry.Currency != "" {
 				sc := new(SerializedCurrency)
-				so.Append(sc.fromJsonToBytes(entry.Currency))
+				so.Append(sc.fromJSONToBytes(entry.Currency))
 			}
 
 			if entry.Issuer != "" {

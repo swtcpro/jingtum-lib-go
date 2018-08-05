@@ -97,29 +97,29 @@ func (amount *TumAmount) parseJSON(inJSON interface{}) error {
 			amount.IsNative = false
 			if jsonAmount.Issuer == "" || !jtUtils.IsValidAddress(jsonAmount.Issuer) {
 				return fmt.Errorf("Input Amount has invalid issuer info %s", jsonAmount.Issuer)
-			} else {
-				amount.Issuer = jsonAmount.Issuer
-				value, err := strconv.ParseFloat(jsonAmount.Value, 64)
-				if err != nil {
-					return fmt.Errorf("Input JSON swt value invalid %s", jsonAmount.Value)
-				}
-
-				valueStr := fmt.Sprintf("%.16e", value)
-				powStr := valueStr[strings.LastIndex(valueStr, "e")+1:]
-				vpow, pintErr := strconv.ParseInt(powStr, 10, 64)
-				if pintErr != nil {
-					return fmt.Errorf("pow parse int value invalid %s", powStr)
-				}
-				offset := 15 - vpow
-				value = value * math.Pow10(int(15-vpow))
-
-				bIntV, ok := big.NewInt(0).SetString(fmt.Sprintf("%0.0f", value), 10)
-				if !ok {
-					return fmt.Errorf("Input JSON swt value invalid %v", value)
-				}
-				amount.Value = bIntV
-				amount.Offset = int(-offset)
 			}
+			amount.Issuer = jsonAmount.Issuer
+			value, err := strconv.ParseFloat(jsonAmount.Value, 64)
+			if err != nil {
+				return fmt.Errorf("Input JSON swt value invalid %s", jsonAmount.Value)
+			}
+
+			valueStr := fmt.Sprintf("%.16e", value)
+			powStr := valueStr[strings.LastIndex(valueStr, "e")+1:]
+			vpow, pintErr := strconv.ParseInt(powStr, 10, 64)
+			if pintErr != nil {
+				return fmt.Errorf("pow parse int value invalid %s", powStr)
+			}
+			offset := 15 - vpow
+			value = value * math.Pow10(int(15-vpow))
+
+			bIntV, ok := big.NewInt(0).SetString(fmt.Sprintf("%0.0f", value), 10)
+			if !ok {
+				return fmt.Errorf("Input JSON swt value invalid %v", value)
+			}
+			amount.Value = bIntV
+			amount.Offset = int(-offset)
+			return nil
 		}
 	}
 
@@ -129,7 +129,7 @@ func (amount *TumAmount) parseJSON(inJSON interface{}) error {
 //TumToBytes 金额转字节
 func (amount *TumAmount) TumToBytes() ([]byte, error) {
 	var currencyData []byte
-	if len([]rune(amount.Currency)) >= CURRENCY_NAME_LEN && len([]rune(amount.Currency)) <= CURRENCY_NAME_LEN2 {
+	if len([]rune(amount.Currency)) >= currencyNameLen && len([]rune(amount.Currency)) <= currencyNameLen2 {
 		currencyCode := amount.Currency //区分大小写
 		end := 14
 		cclen := len([]rune(currencyCode))

@@ -20,79 +20,80 @@ import (
 	jtUtils "jingtumLib/utils"
 )
 
+//Serializer struct
 type Serializer struct {
 	Buffer []byte
 	err    error
 }
 
+//SerializedInt8 int8
 type SerializedInt8 struct {
 }
 
 var (
-	REQUIRED = 0
-	OPTIONAL = 1
-	DEFAULT  = 2
+	required = 0
+	optional = 1
+	defaultv = 2
 
 	//交易类型
-	TRANSACTION_TYPE_ACCOUNT_SET     = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"EmailHash", OPTIONAL}, {"WalletLocator", OPTIONAL}, {"WalletSize", OPTIONAL}, {"MessageKey", OPTIONAL}, {"Domain", OPTIONAL}, {"TransferRate", OPTIONAL}}
-	TRANSACTION_TYPE_TRUST_SET       = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"LimitAmount", OPTIONAL}, {"QualityIn", OPTIONAL}, {"QualityOut", OPTIONAL}}
-	TRANSACTION_TYPE_OFFER_CREATE    = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"TakerPays", REQUIRED}, {"TakerGets", REQUIRED}, {"Expiration", OPTIONAL}}
-	TRANSACTION_TYPE_OFFER_CANCEL    = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"OfferSequence", REQUIRED}}
-	TRANSACTION_TYPE_SET_REGULARKEY  = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"RegularKey", REQUIRED}}
-	TRANSACTION_TYPE_PAYMENT         = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Destination", REQUIRED}, {"Amount", REQUIRED}, {"SendMax", OPTIONAL}, {"Paths", DEFAULT}, {"InvoiceID", OPTIONAL}, {"DestinationTag", OPTIONAL}}
-	TRANSACTION_TYPE_CONTRACT        = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Expiration", REQUIRED}, {"BondAmount", REQUIRED}, {"StampEscrow", REQUIRED}, {"JingtumEscrow", REQUIRED}, {"CreateCode", OPTIONAL}, {"FundCode", OPTIONAL}, {"RemoveCode", OPTIONAL}, {"ExpireCode", OPTIONAL}}
-	TRANSACTION_TYPE_REMOVE_CONTRACT = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Target", REQUIRED}}
-	TRANSACTION_TYPE_ENABLE_FEATURE  = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Feature", REQUIRED}}
-	TRANSACTION_TYPE_SET_FEE         = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Features", REQUIRED}, {"BaseFee", REQUIRED}, {"ReferenceFeeUnits", REQUIRED}, {"ReserveBase", REQUIRED}, {"ReserveIncrement", REQUIRED}}
-	TRANSACTION_TYPE_CONFIG_CONTRACT = [][]interface{}{{"TransactionType", REQUIRED}, {"Flags", OPTIONAL}, {"SourceTag", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"Account", REQUIRED}, {"Sequence", OPTIONAL}, {"Fee", REQUIRED}, {"OperationLimit", OPTIONAL}, {"SigningPubKey", OPTIONAL}, {"TxnSignature", OPTIONAL}, {"Method", REQUIRED}, {"Payload", OPTIONAL}, {"Destination", OPTIONAL}, {"Amount", OPTIONAL}, {"Contracttype", OPTIONAL}, {"ContractMethod", OPTIONAL}, {"Args", OPTIONAL}}
-	TRANSACTION_TYPES                = map[uint8][][]interface{}{3: TRANSACTION_TYPE_ACCOUNT_SET, 20: TRANSACTION_TYPE_TRUST_SET, 7: TRANSACTION_TYPE_OFFER_CREATE, 8: TRANSACTION_TYPE_OFFER_CANCEL, 5: TRANSACTION_TYPE_SET_REGULARKEY, 0: TRANSACTION_TYPE_PAYMENT, 9: TRANSACTION_TYPE_CONTRACT, 10: TRANSACTION_TYPE_REMOVE_CONTRACT, 100: TRANSACTION_TYPE_ENABLE_FEATURE, 101: TRANSACTION_TYPE_SET_FEE, 30: TRANSACTION_TYPE_CONFIG_CONTRACT}
-	//交易类型和数字映射
-	TX_TYPE_STR_MAP_NUMBER = map[string]uint8{"AccountSet": 3, "TrustSet": 20, "OfferCreate": 7, "OfferCancel": 8, "SetRegularKey": 5, "Payment": 0, "Contract": 9, "RemoveContract": 10, "EnableFeature": 100, "SetFee": 101, "ConfigContract": 30}
+	transactionTypeAccountSet     = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"EmailHash", optional}, {"WalletLocator", optional}, {"WalletSize", optional}, {"MessageKey", optional}, {"Domain", optional}, {"TransferRate", optional}}
+	transactionTypeTrustSet       = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"LimitAmount", optional}, {"QualityIn", optional}, {"QualityOut", optional}}
+	transactionTypeOfferCreate    = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"TakerPays", required}, {"TakerGets", required}, {"Expiration", optional}}
+	transactionTypeOfferCancel    = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"OfferSequence", required}}
+	transactionTypeSetRegularKey  = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"RegularKey", required}}
+	transactionTypePayment        = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Destination", required}, {"Amount", required}, {"SendMax", optional}, {"Paths", defaultv}, {"InvoiceID", optional}, {"DestinationTag", optional}}
+	transactionTypeContract       = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Expiration", required}, {"BondAmount", required}, {"StampEscrow", required}, {"JingtumEscrow", required}, {"CreateCode", optional}, {"FundCode", optional}, {"RemoveCode", optional}, {"ExpireCode", optional}}
+	transactionTypeRemoveContract = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Target", required}}
+	transactionTypeEnableFeature  = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Feature", required}}
+	transactionTypeSetFee         = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Features", required}, {"BaseFee", required}, {"ReferenceFeeUnits", required}, {"ReserveBase", required}, {"ReserveIncrement", required}}
+	transactionTypeConfigContract = [][]interface{}{{"TransactionType", required}, {"Flags", optional}, {"SourceTag", optional}, {"LastLedgerSequence", optional}, {"Account", required}, {"Sequence", optional}, {"Fee", required}, {"OperationLimit", optional}, {"SigningPubKey", optional}, {"TxnSignature", optional}, {"Method", required}, {"Payload", optional}, {"Destination", optional}, {"Amount", optional}, {"Contracttype", optional}, {"ContractMethod", optional}, {"Args", optional}}
+	transactionTypes              = map[uint8][][]interface{}{3: transactionTypeAccountSet, 20: transactionTypeTrustSet, 7: transactionTypeOfferCreate, 8: transactionTypeOfferCancel, 5: transactionTypeSetRegularKey, 0: transactionTypePayment, 9: transactionTypeContract, 10: transactionTypeRemoveContract, 100: transactionTypeEnableFeature, 101: transactionTypeSetFee, 30: transactionTypeConfigContract}
+	txTypeStrMapNumber            = map[string]uint8{"AccountSet": 3, "TrustSet": 20, "OfferCreate": 7, "OfferCancel": 8, "SetRegularKey": 5, "Payment": 0, "Contract": 9, "RemoveContract": 10, "EnableFeature": 100, "SetFee": 101, "ConfigContract": 30}
 
-	//账本类
-	LEDGER_ENTRY_TYPE_ACCOUNT_ROOT     = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"Sequence", REQUIRED}, {"PreviousTxnLgrSeq", REQUIRED}, {"TransferRate", OPTIONAL}, {"WalletSize", OPTIONAL}, {"OwnerCount", REQUIRED}, {"EmailHash", OPTIONAL}, {"PreviousTxnID", REQUIRED}, {"AccountTxnID", OPTIONAL}, {"WalletLocator", OPTIONAL}, {"Balance", REQUIRED}, {"MessageKey", OPTIONAL}, {"Domain", OPTIONAL}, {"Account", REQUIRED}, {"RegularKey", OPTIONAL}}
-	LEDGER_ENTRY_TYPE_CONTRACT         = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"PreviousTxnLgrSeq", REQUIRED}, {"Expiration", REQUIRED}, {"BondAmount", REQUIRED}, {"PreviousTxnID", REQUIRED}, {"Balance", REQUIRED}, {"FundCode", OPTIONAL}, {"RemoveCode", OPTIONAL}, {"ExpireCode", OPTIONAL}, {"CreateCode", OPTIONAL}, {"Account", REQUIRED}, {"Owner", REQUIRED}, {"Issuer", REQUIRED}}
-	LEDGER_ENTRY_TYPE_DIRECTORY_NODE   = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"IndexNext", OPTIONAL}, {"IndexPrevious", OPTIONAL}, {"ExchangeRate", OPTIONAL}, {"RootIndex", REQUIRED}, {"Owner", OPTIONAL}, {"TakerPaysCurrency", OPTIONAL}, {"TakerPaysIssuer", OPTIONAL}, {"TakerGetsCurrency", OPTIONAL}, {"TakerGetsIssuer", OPTIONAL}, {"Indexes", REQUIRED}}
-	LEDGER_ENTRY_TYPE_ENABLED_FEATURES = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"Features", REQUIRED}}
-	LEDGER_ENTRY_TYPE_FEE_SETTINGS     = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"ReferenceFeeUnits", REQUIRED}, {"ReserveBase", REQUIRED}, {"ReserveIncrement", REQUIRED}, {"BaseFee", REQUIRED}, {"LedgerIndex", OPTIONAL}}
-	LEDGER_ENTRY_TYPE_GENERATOR_MAP    = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"Generator", REQUIRED}}
-	LEDGER_ENTRY_TYPE_LEDGER_HASHES    = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"FirstLedgerSequence", OPTIONAL}, {"LastLedgerSequence", OPTIONAL}, {"LedgerIndex", OPTIONAL}, {"Hashes", REQUIRED}}
-	LEDGER_ENTRY_TYPE_NICKNAME         = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"LedgerIndex", OPTIONAL}, {"MinimumOffer", OPTIONAL}, {"Account", REQUIRED}}
-	LEDGER_ENTRY_TYPE_OFFER            = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"Sequence", REQUIRED}, {"PreviousTxnLgrSeq", REQUIRED}, {"Expiration", OPTIONAL}, {"BookNode", REQUIRED}, {"OwnerNode", REQUIRED}, {"PreviousTxnID", REQUIRED}, {"LedgerIndex", OPTIONAL}, {"BookDirectory", REQUIRED}, {"TakerPays", REQUIRED}, {"TakerGets", REQUIRED}, {"Account", REQUIRED}}
-	LEDGER_ENTRY_TYPE_SKYWELL_STATE    = [][]interface{}{{"LedgerIndex", OPTIONAL}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"LedgerEntryType", REQUIRED}, {"Flags", REQUIRED}, {"PreviousTxnLgrSeq", REQUIRED}, {"HighQualityIn", OPTIONAL}, {"HighQualityOut", OPTIONAL}, {"LowQualityIn", OPTIONAL}, {"LowQualityOut", OPTIONAL}, {"LowNode", OPTIONAL}, {"HighNode", OPTIONAL}, {"PreviousTxnID", REQUIRED}, {"LedgerIndex", OPTIONAL}, {"Balance", REQUIRED}, {"LowLimit", REQUIRED}, {"HighLimit", REQUIRED}}
-	LEDGER_ENTRY_TYPES                 = map[uint8][][]interface{}{97: LEDGER_ENTRY_TYPE_ACCOUNT_ROOT, 99: LEDGER_ENTRY_TYPE_CONTRACT, 100: LEDGER_ENTRY_TYPE_DIRECTORY_NODE, 102: LEDGER_ENTRY_TYPE_ENABLED_FEATURES, 115: LEDGER_ENTRY_TYPE_FEE_SETTINGS, 103: LEDGER_ENTRY_TYPE_GENERATOR_MAP, 104: LEDGER_ENTRY_TYPE_LEDGER_HASHES, 110: LEDGER_ENTRY_TYPE_NICKNAME, 111: LEDGER_ENTRY_TYPE_OFFER, 114: LEDGER_ENTRY_TYPE_SKYWELL_STATE}
+	ledgerEntryTypeAccountRoot     = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"Sequence", required}, {"PreviousTxnLgrSeq", required}, {"TransferRate", optional}, {"WalletSize", optional}, {"OwnerCount", required}, {"EmailHash", optional}, {"PreviousTxnID", required}, {"AccountTxnID", optional}, {"WalletLocator", optional}, {"Balance", required}, {"MessageKey", optional}, {"Domain", optional}, {"Account", required}, {"RegularKey", optional}}
+	ledgerEntryTypeContract        = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"PreviousTxnLgrSeq", required}, {"Expiration", required}, {"BondAmount", required}, {"PreviousTxnID", required}, {"Balance", required}, {"FundCode", optional}, {"RemoveCode", optional}, {"ExpireCode", optional}, {"CreateCode", optional}, {"Account", required}, {"Owner", required}, {"Issuer", required}}
+	ledgerEntryTypeDirectoryNode   = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"IndexNext", optional}, {"IndexPrevious", optional}, {"ExchangeRate", optional}, {"RootIndex", required}, {"Owner", optional}, {"TakerPaysCurrency", optional}, {"TakerPaysIssuer", optional}, {"TakerGetsCurrency", optional}, {"TakerGetsIssuer", optional}, {"Indexes", required}}
+	ledgerEntryTypeEnabledFeatures = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"Features", required}}
+	ledgerEntryTypeFeeSettings     = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"ReferenceFeeUnits", required}, {"ReserveBase", required}, {"ReserveIncrement", required}, {"BaseFee", required}, {"LedgerIndex", optional}}
+	ledgerEntryTypeGeneratorMap    = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"Generator", required}}
+	ledgerEntryTypeLedgerHashes    = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"LedgerEntryType", required}, {"Flags", required}, {"FirstLedgerSequence", optional}, {"LastLedgerSequence", optional}, {"LedgerIndex", optional}, {"Hashes", required}}
+	ledgerEntryTypeNickName        = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"LedgerEntryType", required}, {"Flags", required}, {"LedgerIndex", optional}, {"MinimumOffer", optional}, {"Account", required}}
+	ledgerEntryTypeOffer           = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"LedgerEntryType", required}, {"Flags", required}, {"Sequence", required}, {"PreviousTxnLgrSeq", required}, {"Expiration", optional}, {"BookNode", required}, {"OwnerNode", required}, {"PreviousTxnID", required}, {"LedgerIndex", optional}, {"BookDirectory", required}, {"TakerPays", required}, {"TakerGets", required}, {"Account", required}}
+	ledgerEntryTypeSkyWellState    = [][]interface{}{{"LedgerIndex", optional}, {"LedgerEntryType", required}, {"Flags", required}, {"LedgerEntryType", required}, {"Flags", required}, {"PreviousTxnLgrSeq", required}, {"HighQualityIn", optional}, {"HighQualityOut", optional}, {"LowQualityIn", optional}, {"LowQualityOut", optional}, {"LowNode", optional}, {"HighNode", optional}, {"PreviousTxnID", required}, {"LedgerIndex", optional}, {"Balance", required}, {"LowLimit", required}, {"HighLimit", required}}
+	ledgerEntryTypes               = map[uint8][][]interface{}{97: ledgerEntryTypeAccountRoot, 99: ledgerEntryTypeContract, 100: ledgerEntryTypeDirectoryNode, 102: ledgerEntryTypeEnabledFeatures, 115: ledgerEntryTypeFeeSettings, 103: ledgerEntryTypeGeneratorMap, 104: ledgerEntryTypeLedgerHashes, 110: ledgerEntryTypeNickName, 111: ledgerEntryTypeOffer, 114: ledgerEntryTypeSkyWellState}
 
-	//元数据
-	METADATA = [][]interface{}{{"TransactionIndex", REQUIRED}, {"TransactionResult", REQUIRED}, {"AffectedNodes", REQUIRED}}
+	metaData = [][]interface{}{{"TransactionIndex", required}, {"TransactionResult", required}, {"AffectedNodes", required}}
 )
 
+//MemoInfo 备注
 type MemoInfo struct {
 	Memo *MemoDataInfo
 }
 
+//MemoDataInfo 备注
 type MemoDataInfo struct {
 	MemoData   string
 	MemoFormat string
 	MemoType   string
 }
 
-type TxData struct {
-	Flags           uint32
-	Fee             interface{}
-	Account         string
-	TransactionType interface{}
-	SendMax         interface{}
-	Memos           []MemoInfo
-	Paths           [][]PathComputed
-	TransferRate    uint32
-	MemoLen         interface{}
-	Sequence        uint32
-	Blob            string
-	TxAmount        interface{}
-	TakerPays       interface{}
-	TakerGets       interface{}
-	SigningPubKey   string
-}
+// type TxData struct {
+// 	Flags           uint32
+// 	Fee             interface{}
+// 	Account         string
+// 	TransactionType interface{}
+// 	SendMax         interface{}
+// 	Memos           []MemoInfo
+// 	Paths           [][]PathComputed
+// 	TransferRate    uint32
+// 	MemoLen         interface{}
+// 	Sequence        uint32
+// 	Blob            string
+// 	TxAmount        interface{}
+// 	TakerPays       interface{}
+// 	TakerGets       interface{}
+// 	SigningPubKey   string
+// }
 
 //FromJSON 交易数据序列化。
 func FromJSON(txData map[string]interface{}) (*Serializer, error) {
@@ -103,12 +104,12 @@ func FromJSON(txData map[string]interface{}) (*Serializer, error) {
 		if _, ok := txType.(uint8); ok {
 
 		} else if txTypeStr, ok := txType.(string); ok {
-			typeInt, ok := TX_TYPE_STR_MAP_NUMBER[txTypeStr]
+			typeInt, ok := txTypeStrMapNumber[txTypeStr]
 			if !ok {
 				return nil, fmt.Errorf("TransactionType (%s) invalid", txTypeStr)
 			}
 
-			typedef = TRANSACTION_TYPES[typeInt]
+			typedef = transactionTypes[typeInt]
 
 			txData["TransactionType"] = strconv.Itoa(int(typeInt))
 		}

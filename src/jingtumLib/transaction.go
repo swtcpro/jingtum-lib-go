@@ -14,6 +14,7 @@
 package jingtumLib
 
 import (
+	"github.com/yangxuebo-138/decimal"
 	//	"encoding/json"
 	"errors"
 	"fmt"
@@ -58,7 +59,7 @@ func NewTransaction(remote *Remote) (*Transaction, error) {
 	tx := new(Transaction)
 	tx.remote = remote
 	tx.tx_json = make(map[string]interface{})
-	tx.AddTxJson("Flags", 0)
+	tx.AddTxJson("Flags", uint32(0))
 	tx.AddTxJson("Fee", JTConfig.ReadInt("Config", "fee", 10000))
 	return tx, nil
 }
@@ -374,7 +375,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 					return
 				}
 
-				tx.AddTxJson("Sequence", seq)
+				tx.AddTxJson("Sequence", uint32(decimal.NewFromFloat(seq.(float64)).IntPart()))
 				blob, err := signing(tx)
 				if err != nil {
 					callback(err, "")
