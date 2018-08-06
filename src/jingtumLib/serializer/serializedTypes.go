@@ -126,11 +126,11 @@ func (serInt8 SerializedInt8) Serialize(so *Serializer, val interface{}, noMarke
 	if vuit8, ok := val.(uint8); ok {
 		so.Append(jtUtils.GetBytes(vuit8))
 	} else if vint, ok := val.(int); ok {
-		if vint >= math.MaxUint8 || vint < 0 {
+		if vint > math.MaxUint8 || vint < 0 {
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-		so.err = fmt.Errorf("Serialize int8 type error %T, %v", val, val)
+		so.Append(jtUtils.GetBytes(uint8(vint)))
 	} else {
 		so.err = fmt.Errorf("Serialize int8 type error %T, %v", val, val)
 		return
@@ -147,11 +147,11 @@ func (serInt16 SerializedInt16) Serialize(so *Serializer, val interface{}, noMar
 	if vuint16, ok := val.(uint16); ok {
 		so.Append(jtUtils.GetBytes(vuint16))
 	} else if vint, ok := val.(int); ok {
-		if vint >= math.MaxUint16 || vint < 0 {
+		if vint > math.MaxUint16 || vint < 0 {
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
+		so.Append(jtUtils.GetBytes(uint16(vint)))
 	} else {
 		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 		return
@@ -168,11 +168,11 @@ func (serInt32 SerializedInt32) Serialize(so *Serializer, val interface{}, noMar
 	if vuint32, ok := val.(uint32); ok {
 		so.Append(jtUtils.GetBytes(vuint32))
 	} else if vint, ok := val.(int); ok {
-		if vint >= math.MaxUint32 || vint < 0 {
+		if vint > math.MaxUint32 || vint < 0 {
 			so.err = fmt.Errorf("Value out of bounds %d", vint)
 			return
 		}
-		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
+		so.Append(jtUtils.GetBytes(uint32(vint)))
 	} else {
 		so.err = fmt.Errorf("Serialize int16 type error %T, %v", val, val)
 		return
