@@ -54,9 +54,12 @@ func IsValidSecret(secret string) bool {
 	return true
 }
 
-/**
- * 根据井通私钥创建钱包
- */
+//Generate 生成钱包
+func Generate() (*Wallet, error) {
+	return nil, nil
+}
+
+//FromSecret 根据井通私钥创建钱包
 func FromSecret(secret string) (*Wallet, error) {
 	if secret == "" {
 		return nil, constant.ERR_EMPTY_PARAM

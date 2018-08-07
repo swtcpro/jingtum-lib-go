@@ -30,29 +30,6 @@ func main() {
 	// fmt.Printf("%v", fields)
 	// return
 
-	// privKey, pubKey := secp256k1.PrivKeyFromBytes(btcec.S256(), "ss2QPCgioAmWoFSub4xdScnSBY7zq")
-
-	// message := "test message"
-	// messageHash := chainhash.DoubleHashB([]byte(message))
-	// fmt.Println("Message hash ", messageHash)
-
-	// hashS := "CFA67A2B09D9E0D4450F82C2E36FB55D976EC3B2A10D85992A5833464C33AA22"
-	// hashByte, err9 := utils.HexToBytes(hashS)
-
-	// fmt.Println(err9)
-
-	// signature, err := privKey.Sign(hashByte)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// // Serialize and display the signature.
-	// fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
-
-	// // Verify the signature for the message using the public key.
-	// verified := signature.Verify(hashByte, pubKey)
-	// fmt.Printf("Signature Verified? %v\n", verified)
 
 	remote, err := jingtum.NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {

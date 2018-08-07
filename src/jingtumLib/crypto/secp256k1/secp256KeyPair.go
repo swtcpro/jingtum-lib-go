@@ -14,21 +14,23 @@ package secp256k1
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"strings"
-	"crypto/ecdsa"
-	"crypto/elliptic"
 
 	jtConst "jingtumLib/constant"
 	jtEncode "jingtumLib/encoding"
 	jtUtils "jingtumLib/utils"
 
-	"golang.org/x/crypto/ripemd160"
 	"github.com/btcsuite/btcd/btcec"
+	"golang.org/x/crypto/ripemd160"
 )
 
 /******************************************************************************/
@@ -98,6 +100,17 @@ func (secp256k1 *Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, erro
 	return &priv, nil
 }
 
+//GenerateSeed 生成私钥
+func (secp256k1 *Secp256KeyPair) GenerateSeed() (string, error) {
+	seedBytes := make([]byte, ec.N.BitLen()/8+8)
+	_, err := io.ReadFull(rand.Reader, seedBytes)
+	if err != nil {
+		return "", fmt.Errorf("Reading random reader: %v", err)
+	}
+	return jtUtils.EncodeB58(jtConst.SEED_PREFIX, seedBytes), nil
+}
+
+//CheckAddress 验证地址
 func (secp256k1 *Secp256KeyPair) CheckAddress(address string) bool {
 	_, err := jtUtils.DecodeB58(jtConst.ACCOUNT_PREFIX, address)
 

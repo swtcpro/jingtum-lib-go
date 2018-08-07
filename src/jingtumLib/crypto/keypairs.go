@@ -25,4 +25,6 @@ type KeyPair interface {
 
 	//地址格式验证
 	CheckAddress(address string) bool
+	//生成私钥
+	GenerateSeed() (string, error)
 }
