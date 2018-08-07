@@ -7,30 +7,26 @@ import (
 	"strconv"
 	"time"
 
-	"golang.org/x/net/websocket"
-
 	"jingtumLib/constant"
 	jtLRU "jingtumLib/lruCache"
 	"jingtumLib/utils"
 )
 
-//接收最长报文
 var (
-	MAX_RECIVE_LEN = 4096000
+	//MaxReciveLen 接收最长报文
+	MaxReciveLen = 4096000
 )
 
-//websocket 连接类
-type WsConn struct {
-	Ws   *websocket.Conn
-	Host string
-	Port string
-}
+//WsConn 连接类
+// type WsConn struct {
+// 	Ws   *websocket.Conn
+// 	Host string
+// 	Port string
+// }
 
 //Remote 是跟井通底层交互最主要的类，它可以组装交易发送到底层、订阅事件及从底层拉取数据。
 type Remote struct {
-	//	Wsconn   *WsConn
-	requests map[uint64]*ReqCtx
-	//	Status    bool
+	requests  map[uint64]*ReqCtx
 	LocalSign bool
 	Paths     *jtLRU.LRU
 	server    *Server
