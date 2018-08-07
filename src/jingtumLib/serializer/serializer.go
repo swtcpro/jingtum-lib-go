@@ -137,17 +137,18 @@ func (so *Serializer) Serialize(typedef [][]interface{}, txData map[string]inter
 //Append Buffer append
 func (so *Serializer) Append(v []byte) {
 	so.Buffer = append(so.Buffer, v...)
+	//fmt.Println(so.Buffer)
 }
 
 //Hash 序列化哈希。
-func (so *Serializer) Hash(prefix uint32) string {
+func (so *Serializer) Hash(prefix uint32) []byte {
 	sotemp := new(Serializer)
 	STInt32.Serialize(sotemp, prefix, false)
 	sotemp.Buffer = append(sotemp.Buffer, so.Buffer...)
 	sh512 := jtUtils.NewSha512()
 	sh512.Add(sotemp.Buffer)
 
-	return jtUtils.ByteToHexString(sh512.Finish256())
+	return sh512.Finish256() //jtUtils.ByteToHexString(sh512.Finish256())
 }
 
 //ToHex 序列化转 16 进制。

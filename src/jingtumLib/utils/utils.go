@@ -229,7 +229,7 @@ func ToAmount(amount jtConst.Amount) (interface{}, error) {
 		return nil, jtConst.ERR_PAYMENT_OUT_OF_AMOUNT
 	}
 
-	if amount.Currency == jtConst.CFG_CURRENCY {
+	if amount.Currency == jtConst.CFGCurrency {
 		mul, err := decimal.NewFromString("1000000")
 		if err != nil {
 			return nil, errors.New(fmt.Sprintf("Parse float %s error.", "1000000"))
@@ -313,24 +313,25 @@ func IsValidAmount(amount *jtConst.Amount) bool {
 	}
 
 	// native currency issuer is empty
-	if amount.Currency == jtConst.CFG_CURRENCY && amount.Issuer != "" {
+	if amount.Currency == jtConst.CFGCurrency && amount.Issuer != "" {
 		return false
 	}
 
 	// non native currency issuer is not allowed to be empty
-	if amount.Currency != jtConst.CFG_CURRENCY && !IsValidAddress(amount.Issuer) {
+	if amount.Currency != jtConst.CFGCurrency && !IsValidAddress(amount.Issuer) {
 		return false
 	}
 
 	return true
 }
 
+//SortByFieldName SortByFieldName
 func SortByFieldName(fields []string) {
 	sortField(fields, func(p, q string) bool {
-		xMap := jtConst.INVERSE_FIELDS_MAP[p]
+		xMap := jtConst.InverseFieldsMap[p]
 		xTypeBits := xMap.Key
 		xFieldBits := xMap.Value
-		yMap := jtConst.INVERSE_FIELDS_MAP[q]
+		yMap := jtConst.InverseFieldsMap[q]
 		yTypeBits := yMap.Key
 		yFieldBits := yMap.Value
 		if xTypeBits != yTypeBits {

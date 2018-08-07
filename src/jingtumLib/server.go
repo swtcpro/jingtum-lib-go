@@ -24,6 +24,7 @@ import (
 	"github.com/caivega/evtwebsocket"
 )
 
+//Server 区块链网络通信服务结构体。
 type Server struct {
 	id        uint64
 	remote    *Remote
@@ -42,6 +43,7 @@ var (
 	domainRE     = "[A-Za-z0-9]+(\\.[A-Za-z0-9]){1,5}" //"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?)*\\.?$"
 )
 
+//NewServer 创建区块链网络通信服务。
 func NewServer(remote *Remote, urlStr string) (*Server, error) {
 	if urlStr == "" || remote == nil {
 		return nil, constant.ERR_EMPTY_PARAM
@@ -116,10 +118,12 @@ func (server *Server) Disconnect() bool {
 	return true
 }
 
+//IsConnected true已连接。
 func (server *Server) IsConnected() bool {
 	return server.connected
 }
 
+//GetCid 每次请求序列递增。
 func (server *Server) GetCid() uint64 {
 	server.l.Lock()
 	defer server.l.Unlock()
@@ -134,19 +138,20 @@ func (server *Server) sendMessage(reqCtx *ReqCtx) {
 func (server *Server) listeningSend() {
 	for {
 		req := <-server.reqs
-
-		_, err := json.Marshal(req.data)
+		req.data["id"] = req.cid
+		req.data["command"] = req.command
+		jsonData, err := json.Marshal(req.data)
 		if err != nil {
 			req.callback(err, nil)
 			continue
 		}
 		//, \"marker\":%s
-		cmd := fmt.Sprintf("{\"id\":\"%d\",\"command\":\"%s\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\": %d}", req.cid, req.command, req.data["account"].(string), 1000)
-		fmt.Printf("Request info %s\n", cmd)
+		// cmd := fmt.Sprintf("{\"id\":\"%d\",\"command\":\"%s\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\": %d}", req.cid, req.command, req.data["account"].(string), 1000)
+		fmt.Printf("Request info %s\n", jsonData)
 		bm := evtwebsocket.Msg{
-			Body: []byte(cmd),
+			Body: jsonData,
 			Callback: func(msg []byte, w *evtwebsocket.Conn) {
-				fmt.Printf("Response message : %s\n", msg)
+				// fmt.Printf("Response message : %s\n", msg)
 			},
 		}
 

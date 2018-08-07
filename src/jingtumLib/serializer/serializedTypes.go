@@ -237,7 +237,7 @@ func (serMemo SerializedMemo) Serialize(so *Serializer, val interface{}, noMarke
 
 	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
-		_, ok := constant.INVERSE_FIELDS_MAP[fileds[i]]
+		_, ok := constant.InverseFieldsMap[fileds[i]]
 		if !ok {
 			so.err = fmt.Errorf("JSON contains unknown field : %s", fileds[i])
 			return
@@ -287,7 +287,7 @@ func (serArg SerializedArg) Parse(so *Serializer) interface{} {
 func (serArg SerializedArg) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	fileds := jtUtils.GetFieldNames(val)
 	for i := 0; i < len(fileds); i++ {
-		kvp := constant.INVERSE_FIELDS_MAP[fileds[i]]
+		kvp := constant.InverseFieldsMap[fileds[i]]
 		if kvp == nil {
 			so.err = fmt.Errorf("JSON contains unknown field %s", fileds[i])
 			return
@@ -494,6 +494,7 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 	}
 
 	fieldNames := []string{"TransactionType", "Flags", "Sequence", "Amount", "Fee", "SigningPubKey", "Account", "Destination", "Memos"}
+	fieldNames2 := []string{"TransactionType", "Flags", "Sequence", "Amount", "Fee", "SigningPubKey", "TxnSignature", "Account", "Destination", "Memos"}
 	// var fieldNames []string
 	// for k := range txData {
 	// 	_, ok := constant.INVERSE_FIELDS_MAP[k]
@@ -506,6 +507,11 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 	// }
 
 	// jtUtils.SortByFieldName(fieldNames)
+
+	_, okSign := txData["TxnSignature"]
+	if okSign {
+		fieldNames = fieldNames2
+	}
 
 	for _, field := range fieldNames {
 		value := txData[field]

@@ -14,7 +14,10 @@
 package jingtumLib
 
 import (
+	"strings"
+
 	"github.com/yangxuebo-138/decimal"
+
 	//	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,37 +31,30 @@ import (
 	"jingtumLib/utils"
 )
 
-//type Transaction1 struct {
-//	remote     *Remote
-//	filter     Filter
-//	secret     string
-//	tx_json    *serializer.TxData
-//	local_sign bool
-//}
-
+//Transaction 交易结构体
 type Transaction struct {
-	remote     *Remote
-	tx_json    map[string]interface{}
-	local_sign bool
-	secret     string
+	remote    *Remote
+	txJSON    map[string]interface{}
+	localSign bool
+	secret    string
 }
 
+//FlagClass FlagClass
 type FlagClass map[string]uint32
 
 var (
+	//TransactionFlags 交易标识
 	TransactionFlags = map[string]FlagClass{"Universal": {"FullyCanonicalSig": 0x00010000}, "AccountSet": {"RequireDestTag": 0x00010000, "OptionalDestTag": 0x00020000, "RequireAuth": 0x00040000, "OptionalAuth": 0x00080000, "DisallowSWT": 0x00100000, "AllowSWT": 0x00200000}, "TrustSet": {"SetAuth": 0x00010000, "NoSkywell": 0x00020000, "SetNoSkywell": 0x00020000, "ClearNoSkywell": 0x00040000, "SetFreeze": 0x00100000, "ClearFreeze": 0x00200000}, "OfferCreate": {"Passive": 0x00010000, "ImmediateOrCancel": 0x00020000, "FillOrKill": 0x00040000, "Sell": 0x00080000}, "Payment": {"NoSkywellDirect": 0x00010000, "PartialPayment": 0x00020000, "LimitQuality": 0x00040000}, "RelationSet": {"Authorize": 0x00000001, "Freeze": 0x00000011}}
 )
 
-/**
- * 构造Transaction对象
- */
+//NewTransaction 构造Transaction对象
 func NewTransaction(remote *Remote) (*Transaction, error) {
 	if nil == remote {
 		return nil, constant.ERR_EMPTY_PARAM
 	}
 	tx := new(Transaction)
 	tx.remote = remote
-	tx.tx_json = make(map[string]interface{})
+	tx.txJSON = make(map[string]interface{})
 	tx.AddTxJson("Flags", uint32(0))
 	tx.AddTxJson("Fee", float32(JTConfig.ReadInt("Config", "fee", 10000)))
 	return tx, nil
@@ -66,20 +62,19 @@ func NewTransaction(remote *Remote) (*Transaction, error) {
 
 //func (tx *Transaction)
 
-/**
- * 添加交易参数
- */
+//AddTxJson 添加交易参数
 func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
-	if key == "" || tx.tx_json == nil {
+	if key == "" || tx.txJSON == nil {
 		return false
 	}
 
-	tx.tx_json[key] = value
+	tx.txJSON[key] = value
 	return true
 }
 
+//GetTxJson 获取交易参数
 func (tx *Transaction) GetTxJson(key string) interface{} {
-	v, ok := tx.tx_json[key]
+	v, ok := tx.txJSON[key]
 	if ok {
 		return v
 	}
@@ -117,12 +112,12 @@ func (tx *Transaction) AddMemo(memo string) {
 	mdi.MemoData = utils.StringToHex(memo)
 	mi.Memo = mdi
 
-	if nil == tx.tx_json["Memos"] {
+	if nil == tx.txJSON["Memos"] {
 		memos := list.New()
 		memos.PushBack(mi)
 		tx.AddTxJson("Memos", memos)
 	} else {
-		memos := tx.tx_json["Memos"].(*list.List)
+		memos := tx.txJSON["Memos"].(*list.List)
 		memos.PushBack(mi)
 	}
 }
@@ -314,27 +309,30 @@ func signing(tx *Transaction) (string, error) {
 
 	tx.AddTxJson("SigningPubKey", wt.GetPublicKey())
 	var prefix uint32 = 0x53545800
-	so, err := serializer.FromJSON(tx.tx_json)
+	so, err := serializer.FromJSON(tx.txJSON)
 	if err != nil {
 		return "", err
 	}
 	hash := so.Hash(prefix)
-	fmt.Println(hash)
+	signTx, err := wt.signTx(hash)
+	if err != nil {
+		return "", err
+	}
+	fmt.Printf("hash -- > %x. %s\n", hash, strings.ToUpper(signTx))
+	tx.AddTxJson("TxnSignature", strings.ToUpper(signTx))
+	tx.AddTxJson("TransactionType", "Payment")
+	soBlog, err := serializer.FromJSON(tx.txJSON)
+	if err != nil {
+		return "", err
+	}
+	tx.AddTxJson("TransactionType", "Payment")
+	tx.AddTxJson("Blob", strings.ToUpper(soBlog.ToHex()))
+	fmt.Println(tx.GetTxJson("Blob"))
 	//3045022100FAF5E34E8477B2A729D81A3B85E7C7DF22C4360DCBFEEDA52C71F1F5D2B412D002203405C155E2BDE0CC804F13A4A5EDC0FC7D95C113D1A56487CB0A957B1D04A972
+	//304402206893B92E4109E36D92D8435E652ABCB1140C23C439E843FE6FCBF44CD46C50FB0220408C2D44C28AED277D116436259B3B973CDB71C9C80451C09B22E94D3CBC47E2
 
-	//transaction.tx_json.TxnSignature = wt.signTx(hash)
-	//transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
-	tx.local_sign = true
-	//
-	//    var wt = new base(self._secret);
-	//    self.tx_json.SigningPubKey = wt.getPublicKey();
-	//    var prefix = 0x53545800;
-	//    var hash = jser.from_json(self.tx_json).hash(prefix);
-	//    self.tx_json.TxnSignature = wt.signTx(hash);
-	//    self.tx_json.blob =  jser.from_json(self.tx_json).to_hex();
-	//    self._local_sign = true;
-	//    return self.tx_json.blob;
-	return "----", nil
+	tx.localSign = true
+	return tx.GetTxJson("Blob").(string), nil
 }
 
 func (tx *Transaction) sign(callback func(err error, blob string)) {
@@ -408,9 +406,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 	//	})
 }
 
-/**
- * 提交交易数据
- */
+//Submit 提交交易数据
 func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 	if tx.checkTxError() {
 		callback(tx.GetTxJson(constant.TXJSON_ERROR_KEY).(error), nil)
@@ -423,10 +419,8 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 			if nil != err {
 				callback(errors.New("sig error. "+err.Error()), nil)
 			} else {
-				//var data struct{ tx_blob string }
-				//data.tx_blob = transaction.tx_json.Blob
-				//transaction.remote.Submit("submit", data, transaction.filter, callback)
-				fmt.Printf("blob %s\n", blob)
+				data := map[string]interface{}{"tx_blob": blob}
+				tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
 			}
 		})
 	} /*else if transaction.tx_json.TransactionType == "Signer" {

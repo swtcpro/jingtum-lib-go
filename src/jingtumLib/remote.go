@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/net/websocket"
 	"strconv"
 	"time"
+
+	"golang.org/x/net/websocket"
 
 	"jingtumLib/constant"
 	jtLRU "jingtumLib/lruCache"
@@ -25,10 +26,7 @@ type WsConn struct {
 	Port string
 }
 
-/*
-* remote是跟井通底层交互最主要的类，它可以组装交易发送到底层、订阅事件及从底层拉取数据。
- */
-
+//Remote 是跟井通底层交互最主要的类，它可以组装交易发送到底层、订阅事件及从底层拉取数据。
 type Remote struct {
 	//	Wsconn   *WsConn
 	requests map[uint64]*ReqCtx
@@ -38,6 +36,7 @@ type Remote struct {
 	server    *Server
 }
 
+//ReqCtx 请求包装类
 type ReqCtx struct {
 	command  string
 	data     map[string]interface{}
@@ -385,7 +384,10 @@ func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Reque
 	peer, ok := options["peer"]
 	retype, ok := options["type"]
 	if ok {
-		req.message["relation_type"] = getRelationType(retype.(string))
+		relationType := getRelationType(retype.(string))
+		if relationType != nil {
+			req.message["relation_type"] = relationType.IntValue()
+		}
 	}
 
 	limit, ok := options["limit"]
@@ -395,9 +397,7 @@ func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Reque
 		req.message["account"] = account.(string)
 	}
 	ledger, ok := options["ledger"]
-	if ok {
-		req.SelectLedger(ledger)
-	}
+	req.SelectLedger(ledger)
 
 	if peer != nil {
 		if utils.IsValidAddress(peer.(string)) {
@@ -601,56 +601,35 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 	remote.server.sendMessage(rc)
 }
 
-func (remote *Remote) handleResponse(data map[string]interface{}) {
+func (remote *Remote) handleResponse(data *constant.ResponseData) {
 	fmt.Printf("Handle response --> %v \n", data)
-	cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
-	if err != nil {
-		Errorf("Received msg parse id error : %v", err)
-		return
-	}
 
-	request, ok := remote.requests[cid]
+	request, ok := remote.requests[data.ID]
 
 	if !ok {
-		Errorf("Request id error %v", cid)
+		Errorf("Request id error %d", data.ID)
 		return
 	}
 
-	delete(remote.requests, cid)
+	delete(remote.requests, data.ID)
 
-	//	 if (data.result && data.status === 'success'
-	//            && data.result.server_status) {
-	//        this._updateServerStatus(data.result);
-	//    }
+	if data.Status == "success" {
+		//				 var result = request.filter(data.result)
 
-	status, ok := data["status"]
-	if ok {
-		if status == "success" {
-			//				 var result = request.filter(data.result)
-			result, ok := data["result"]
-			if ok {
-				request.callback(nil, result)
-			} else {
-				request.callback(errors.New("Response result is null."), nil)
-			}
-
-		} else if status == "error" {
-			errMsg, ok := data["error_message"]
-			errException, oke := data["error_exception"]
-			if ok {
-				request.callback(errors.New(errMsg.(string)), nil)
-			} else if oke {
-				request.callback(errors.New(errException.(string)), nil)
-			}
+		request.callback(nil, data.Result)
+	} else if data.Status == "error" {
+		errMsg := data.ErrorMessage
+		if errMsg != "" {
+			request.callback(errors.New(errMsg), nil)
 		}
 	}
 }
 
-func (remote *Remote) handlePathFind(data map[string]interface{}) {
+func (remote *Remote) handlePathFind(data *constant.ResponseData) {
 	//    this.emit('path_find', data);
 }
 
-func (remote *Remote) handleTransaction(data map[string]interface{}) {
+func (remote *Remote) handleTransaction(data *constant.ResponseData) {
 	//    var self = this;
 	//    var tx = data.transaction.hash;
 	//    if (self._cache.get(tx)) return;
@@ -658,13 +637,13 @@ func (remote *Remote) handleTransaction(data map[string]interface{}) {
 	//    this.emit('transactions', data);
 }
 
-func (remote *Remote) handleServerStatus(data map[string]interface{}) {
+func (remote *Remote) handleServerStatus(data *constant.ResponseData) {
 	// TODO check data format
 	//    this._updateServerStatus(data);
 	//    this.emit('server_status', data);
 }
 
-func (remote *Remote) handleLedgerClosed(data map[string]interface{}) {
+func (remote *Remote) handleLedgerClosed(data *constant.ResponseData) {
 	//    var self = this;
 	//    if (data.ledger_index > self._status.ledger_index) {
 	//        self._status.ledger_index = data.ledger_index;
@@ -679,34 +658,33 @@ func (remote *Remote) handleLedgerClosed(data map[string]interface{}) {
 
 //消息处理方法
 func (remote *Remote) handleMessage(msg []byte) {
-	var data map[string]interface{}
+	var data constant.ResponseData
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
 		Errorf("Received msg json Unmarshal error : %v", err)
 		return
 	}
 
-	_, ok := data["error"]
-	if ok {
-		cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
-		if err != nil {
-			Errorf("Received msg parse id error : %v", err)
-			return
-		}
-		remote.requests[cid].callback(errors.New(data["error_message"].(string)), nil)
+	if data.Error != "" {
+		// cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
+		// if err != nil {
+		// 	Errorf("Received msg parse id error : %v", err)
+		// 	return
+		// }
+		remote.requests[data.ID].callback(errors.New(data.ErrorMessage), nil)
 	} else {
-		resType := data["type"].(string)
+		resType := data.Type
 		switch resType {
 		case "ledgerClosed":
-			remote.handleLedgerClosed(data)
+			remote.handleLedgerClosed(&data)
 		case "serverStatus":
-			remote.handleServerStatus(data)
+			remote.handleServerStatus(&data)
 		case "response":
-			remote.handleResponse(data)
+			remote.handleResponse(&data)
 		case "transaction":
-			remote.handleTransaction(data)
+			remote.handleTransaction(&data)
 		case "path_find":
-			remote.handlePathFind(data)
+			remote.handlePathFind(&data)
 		}
 	}
 }

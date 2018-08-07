@@ -202,7 +202,7 @@ func getTransactionType(structure interface{}) (interface{}, error) {
 
 //Serialize 序列化属性
 func Serialize(so *Serializer, fieldName string, value interface{}) {
-	fieldCoordinates, ok := constant.INVERSE_FIELDS_MAP[fieldName]
+	fieldCoordinates, ok := constant.InverseFieldsMap[fieldName]
 	if !ok {
 		so.err = fmt.Errorf("Not fund field name %s", fieldName)
 		return

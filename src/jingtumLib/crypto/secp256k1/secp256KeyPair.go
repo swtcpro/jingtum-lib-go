@@ -20,12 +20,15 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 
 	jtConst "jingtumLib/constant"
 	jtEncode "jingtumLib/encoding"
 	jtUtils "jingtumLib/utils"
 
 	"golang.org/x/crypto/ripemd160"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 /******************************************************************************/
@@ -198,4 +201,20 @@ func scalarMultiple(bytes []byte) *big.Int {
 		}
 	}
 	return privateGen
+}
+
+func PrivKeyFromBytes(curve elliptic.Curve, secret string) (*btcec.PrivateKey,
+	*btcec.PublicKey) {
+	keyPair := &Secp256KeyPair{}
+	pri, _ := keyPair.DeriveKeyPair(secret)
+	priv := &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: curve,
+			X:     pri.X,
+			Y:     pri.Y,
+		},
+		D: pri.D,
+	}
+
+	return (*btcec.PrivateKey)(priv), (*btcec.PublicKey)(&priv.PublicKey)
 }

@@ -15,9 +15,10 @@ package jingtumLib
 import (
 	_ "errors"
 
-	_ "common/github.com/blog4go"
 	"jingtumLib/constant"
 	"jingtumLib/utils"
+
+	_ "common/github.com/blog4go"
 )
 
 type Filter func(interface{}) interface{}
@@ -45,23 +46,27 @@ func (req *Request) Submit(callback func(err error, data interface{})) {
 	req.remote.Submit(req.command, req.message, nil, callback)
 }
 
-func (request *Request) SelectLedger(ledger interface{}) {
+//SelectLedger 选择账本
+func (req *Request) SelectLedger(ledger interface{}) {
 
+	if ledger == nil {
+		req.message["ledger_index"] = "validated"
+		return
+	}
 	switch ledger.(type) {
-
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		request.message["ledger_index"] = ledger
+		req.message["ledger_index"] = ledger
 	case string:
-		_, ok := constant.LEDGER_STATES[ledger.(string)]
+		_, ok := constant.LedgerStates[ledger.(string)]
 
 		if ok {
-			request.message["ledger_index"] = ledger
+			req.message["ledger_index"] = ledger
 		} else if utils.MatchString("^[A-F0-9]+$", ledger.(string)) {
-			request.message["ledger_hash"] = ledger.(string)
+			req.message["ledger_hash"] = ledger.(string)
 		} else {
-			request.message["ledger_index"] = "validated"
+			req.message["ledger_index"] = "validated"
 		}
 	default:
-		request.message["ledger_index"] = "validated"
+		req.message["ledger_index"] = "validated"
 	}
 }

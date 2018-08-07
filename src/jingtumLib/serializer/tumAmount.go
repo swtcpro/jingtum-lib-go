@@ -87,7 +87,7 @@ func (amount *TumAmount) parseJSON(inJSON interface{}) error {
 			return err
 		}
 	} else if jsonAmount, ok := inJSON.(constant.Amount); ok {
-		if jsonAmount.Currency == constant.CFG_CURRENCY {
+		if jsonAmount.Currency == constant.CFGCurrency {
 			err := amount.parseSwtValue(jsonAmount.Value)
 			if err != nil {
 				return err

@@ -10,9 +10,14 @@
 package jingtumLib
 
 import (
+	"fmt"
 	"jingtumLib/constant"
 	"jingtumLib/crypto/secp256k1"
 	"jingtumLib/utils"
+
+	"crypto/ecdsa"
+
+	"github.com/btcsuite/btcd/btcec"
 )
 
 //钱包结构体
@@ -86,4 +91,23 @@ func (wallet *Wallet) GetSecret() string {
  */
 func (wallet *Wallet) GetAddress() string {
 	return wallet.priv.PublicKey.ToAddress()
+}
+
+//signTx 对交易数据签名
+func (wallet *Wallet) signTx(hash []byte) (string, error) {
+	priv := &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: btcec.S256(),
+			X:     wallet.priv.X,
+			Y:     wallet.priv.Y,
+		},
+		D: wallet.priv.D,
+	}
+
+	signature, err := (*btcec.PrivateKey)(priv).Sign(hash)
+	if err != nil {
+		return "", nil
+	}
+
+	return fmt.Sprintf("%x", signature.Serialize()), nil
 }

@@ -13,12 +13,13 @@ import (
 	"strconv"
 )
 
+//KeyValuePair 字典映射
 type KeyValuePair struct {
 	Key   uint8
 	Value uint8
 }
 
-//支付金额
+//Amount 支付金额
 type Amount struct {
 	//货币种类，三到六个字母或20字节的自定义货币
 	Currency string `json:"currency"`
@@ -29,15 +30,17 @@ type Amount struct {
 }
 
 var (
-	//command var
-	COMMAND_SUBMIT = "submit"
+	//CommandSubmit 提交命令
+	CommandSubmit = "submit"
 
-	//配置货币
-	CFG_CURRENCY string
+	//CFGCurrency 配置货币
+	CFGCurrency string
 
-	LEDGER_STATES = map[string]string{"current": "current", "closed": "closed", "validated": "validated"}
+	//LedgerStates 账本状态
+	LedgerStates = map[string]string{"current": "current", "closed": "closed", "validated": "validated"}
 
-	INVERSE_FIELDS_MAP = map[string]*KeyValuePair{
+	//InverseFieldsMap 反转字段映射
+	InverseFieldsMap = map[string]*KeyValuePair{
 		"LedgerEntryType":     &KeyValuePair{1, 1},
 		"TransactionType":     &KeyValuePair{1, 2},
 		"Flags":               &KeyValuePair{2, 2},
@@ -167,10 +170,28 @@ var (
 		"Amendments":          &KeyValuePair{19, 3}}
 )
 
+//Integer int 包装结构。
 type Integer struct {
 	intv int
 }
 
+//ResponseData 区块连网络响应数据结构。
+type ResponseData struct {
+	ID           uint64                 `json:"id"`
+	Status       string                 `json:"status"`
+	Type         string                 `json:"type"`
+	Result       map[string]interface{} `json:"result"`
+	Request      map[string]interface{} `json:"request"`
+	Validated    bool                   `json:"validated"`
+	LedgerIndex  int                    `json:"ledger_index"`
+	LedgerHash   string                 `json:"ledger_hash"`
+	ErrorMessage string                 `json:"error_message"`
+	ErrorCode    int                    `json:"error_code"`
+	Error        string                 `json:"error"`
+	Account      string                 `json:"account"`
+}
+
+//IntValue 基本类型int
 func (integer *Integer) IntValue() int {
 	return integer.intv
 }
@@ -179,6 +200,7 @@ func (integer *Integer) String() string {
 	return strconv.Itoa(integer.intv)
 }
 
+//NewInteger 创建int的包装类型
 func NewInteger(intv int) *Integer {
 	integer := new(Integer)
 	integer.intv = intv
