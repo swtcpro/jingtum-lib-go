@@ -56,7 +56,13 @@ func IsValidSecret(secret string) bool {
 
 //Generate 生成钱包
 func Generate() (*Wallet, error) {
-	return nil, nil
+	keyPair := &secp256k1.Secp256KeyPair{}
+	secret, err := keyPair.GenerateSeed()
+	if err != nil {
+		return nil, err
+	}
+
+	return FromSecret(secret)
 }
 
 //FromSecret 根据井通私钥创建钱包

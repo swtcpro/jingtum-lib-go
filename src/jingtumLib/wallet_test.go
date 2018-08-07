@@ -1,3 +1,12 @@
+/**
+ * 钱包测试类
+ *
+ * @FileName: wallet_test.go
+ * @Auther : 杨雪波
+ * @Email : yangxuebo@yeah.net
+ * @CreateTime: 2018-07-26 10:44:32
+ * @UpdateTime: 2018-07-26 10:44:54
+ */
 package jingtumLib
 
 import (
@@ -37,4 +46,18 @@ func Test_Wallet(t *testing.T) {
 	}
 
 	t.Logf("Success IsValidAddress(%s) is true", wt.GetAddress())
+
+	//生成新钱包
+	newWallet, err := Generate()
+	isOk = IsValidSecret(newWallet.GetSecret())
+	if !isOk {
+		t.Fatalf("New secret IsValidSecret(%s) is false", newWallet.GetSecret())
+	}
+
+	isOk = IsValidAddress(newWallet.GetAddress())
+	if !isOk {
+		t.Fatalf("New address IsValidAddress(%s) is false", newWallet.GetAddress())
+	}
+
+	t.Logf("Success new secret (%s). address (%s)", newWallet.GetSecret(), newWallet.GetAddress())
 }

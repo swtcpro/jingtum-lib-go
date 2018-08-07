@@ -9,7 +9,7 @@ import (
 )
 
 func Test_AddMemo(t *testing.T) {
-	remote, err := NewRemote("",false)
+	remote, err := NewRemote("ws://123.57.219.57:5020", false)
 	if err != nil {
 		t.Fatalf("New remote error : %v.", err)
 	}
@@ -36,14 +36,6 @@ func Test_AddMemo(t *testing.T) {
 	for e := memos.Front(); e != nil; e = e.Next() {
 		t.Logf("Get tx memos info %s.", e.Value.(*serializer.MemoInfo).Memo.MemoData)
 	}
-
-	//	for e := memos.Front(); e != nil; e = memos.Next() {
-	//		t.Logf("Get tx memos info %s.", e.Memo.MemoData)
-	//	}
-
-	//	for i, v := range memos {
-	//		t.Logf("Get tx memos info %d = %s.", i, v.Memo.MemoData)
-	//	}
 }
 
 func TestMain(m *testing.M) {

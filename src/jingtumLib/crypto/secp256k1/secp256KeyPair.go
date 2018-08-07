@@ -102,7 +102,7 @@ func (secp256k1 *Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, erro
 
 //GenerateSeed 生成私钥
 func (secp256k1 *Secp256KeyPair) GenerateSeed() (string, error) {
-	seedBytes := make([]byte, ec.N.BitLen()/8+8)
+	seedBytes := make([]byte, 16)
 	_, err := io.ReadFull(rand.Reader, seedBytes)
 	if err != nil {
 		return "", fmt.Errorf("Reading random reader: %v", err)

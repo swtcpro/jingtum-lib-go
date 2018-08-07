@@ -30,7 +30,6 @@ func main() {
 	// fmt.Printf("%v", fields)
 	// return
 
-
 	remote, err := jingtum.NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
 		fmt.Printf("New remote fail : %s", err)
@@ -79,9 +78,9 @@ func main() {
 		account string
 		secret  string
 	}
-	v.account = "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"
-	v.secret = "ss2QPCgioAmWoFSub4xdScnSBY7zq"
-	to := "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
+	v.account = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
+	v.secret = "saNUs41BdTWSwBRqSTbkNdjnAVR8h"
+	to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk" //"jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
 	amount := constant.Amount{}
 	amount.Currency = "SWT"
 	amount.Value = "10"
