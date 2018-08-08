@@ -231,13 +231,15 @@ func (remote *Remote) Get_now_time() string {
 //	return err, string(msg[:n])
 //}
 
-/*
-*  断开连接
- */
-//func (remote *Remote) Disconnect() {
-//	remote.Wsconn.Ws.Close()
-//	remote.Status = false
-//}
+//Disconnect 关闭连接
+func (remote *Remote) Disconnect() {
+	if remote.server != nil && remote.server.Disconnect() {
+		//清除请求缓存
+		for id := range remote.requests {
+			delete(remote.requests, id)
+		}
+	}
+}
 
 /*
 * 请求底层服务器信息

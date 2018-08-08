@@ -106,7 +106,11 @@ func NewServer(remote *Remote, urlStr string) (*Server, error) {
 	return server, nil
 }
 
+//Disconnect 关闭连接
 func (server *Server) Disconnect() bool {
+	if server == nil || !server.connected {
+		return true
+	}
 	err := server.conn.Close()
 	if err != nil {
 		return false

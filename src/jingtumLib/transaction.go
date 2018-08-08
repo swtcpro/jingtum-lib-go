@@ -325,10 +325,9 @@ func signing(tx *Transaction) (string, error) {
 		return "", err
 	}
 
-	tx.AddTxJson("Blob", strings.ToUpper(soBlog.ToHex()))
-	fmt.Println(tx.GetTxJson("Blob"))
+	tx.AddTxJson("blob", strings.ToUpper(soBlog.ToHex()))
 	tx.localSign = true
-	return tx.GetTxJson("Blob").(string), nil
+	return tx.GetTxJson("blob").(string), nil
 }
 
 func (tx *Transaction) sign(callback func(err error, blob string)) {
@@ -349,24 +348,22 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 				return
 			}
 
-			fmt.Printf("Account info %v\n", result)
-
 			if ret, ok := result.(map[string]interface{}); ok {
-				fmt.Printf("Account info %v\n", ret)
+
 				actData, ok := ret["account_data"]
 				if !ok {
-					callback(errors.New("account_data is null."), "")
+					callback(fmt.Errorf("account_data is null"), "")
 					return
 				}
 
 				actDataMap, ok := actData.(map[string]interface{})
 				if !ok {
-					callback(errors.New(fmt.Sprintf("account_data type %T error.", actData)), "")
+					callback(fmt.Errorf("account_data type %T error", actData), "")
 					return
 				}
 				seq, ok := actDataMap["Sequence"]
 				if !ok {
-					callback(errors.New("Get Sequence is null from server."), "")
+					callback(fmt.Errorf("Get Sequence is null from server"), "")
 					return
 				}
 
@@ -378,7 +375,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 					callback(nil, blob)
 				}
 			} else {
-				callback(errors.New("Request account info fail."), "")
+				callback(fmt.Errorf("Request account info fail"), "")
 			}
 
 		})
@@ -390,16 +387,6 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 			callback(nil, blob)
 		}
 	}
-
-	//			transaction.tx_json.SigningPubKey = wt.GetPublicKey().BytesToHex()
-	//			var prefix uint32 = 0x53545800
-	//			hash, _ := jtSerz.(transaction.tx_json).Hash(prefix)
-	//			transaction.tx_json.TxnSignature = wt.signTx(hash)
-	//			transaction.tx_json.Blob = jtSerz.FromJson(transaction.tx_json).ToHex()
-	//			transaction.local_sign = true
-	//			callback(nil, transaction.tx_json.Blob)
-	//		})
-	//	})
 }
 
 //Submit 提交交易数据
@@ -419,21 +406,15 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 				tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
 			}
 		})
-	} /*else if transaction.tx_json.TransactionType == "Signer" {
+	} else if tx.GetTxJson("TransactionType") == "Signer" {
 		//直接将blob传给底层
-		var data struct{ tx_blob string }
-		data.tx_blob = transaction.tx_json.Blob
-		transaction.remote.Submit("submit", data, transaction.filter, callback)
+		data := map[string]interface{}{"tx_blob": tx.GetTxJson("blob")}
+		tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
 	} else {
 		//不签名交易传给底层
-		var data struct {
-			tx_json *jtSerz.TxData
-			secret  string
-		}
-		data.tx_json = transaction.tx_json
-		data.secret = transaction.secret
-		transaction.remote.Submit("submit", data, transaction.filter, callback)
-	}*/
+		data := map[string]interface{}{"secret": tx.secret, "tx_json": tx.txJSON}
+		tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
+	}
 }
 
 func (tx *Transaction) checkTxError() bool {

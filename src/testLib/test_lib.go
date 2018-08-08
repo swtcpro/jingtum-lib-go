@@ -72,19 +72,22 @@ func main() {
 		account string
 		secret  string
 	}
-	v.account = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
-	v.secret = "saNUs41BdTWSwBRqSTbkNdjnAVR8h"
-	to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk" //"jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
+	// v.account = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
+	// v.secret = "saNUs41BdTWSwBRqSTbkNdjnAVR8h"
+	// to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk" //"jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
+	v.account = "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
+	v.secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
+	to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"
 	amount := constant.Amount{}
 	amount.Currency = "SWT"
-	amount.Value = "5"
+	amount.Value = "0.0001"
 	tx, err := remote.BuildPaymentTx(v.account, to, amount)
 	if err != nil {
 		fmt.Printf("Build paymanet tx fail : %s\n", err)
 		return
 	}
 	tx.SetSecret(v.secret)
-	tx.AddMemo("支付10SWT")
+	tx.AddMemo("支付0.0001SWT")
 	tx.Submit(func(err error, result interface{}) {
 		if err != nil {
 			fmt.Printf("Payment fail : %v\n", err)

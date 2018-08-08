@@ -229,34 +229,34 @@ func ToAmount(amount jtConst.Amount) (interface{}, error) {
 		return nil, jtConst.ERR_EMPTY_PARAM
 	}
 
-	//	value, err := strconv.ParseFloat(amount.Value, 64)
+	value, err := strconv.ParseFloat(amount.Value, 64)
 
-	value, err := decimal.NewFromString(amount.Value)
+	// value, err := decimal.NewFromString(amount.Value)
 
 	if err != nil {
 		return nil, err
 	}
 
-	vf64, ok := value.Float64()
+	// vf64, ok := value.Float64()
 
-	if !ok {
-		return nil, errors.New(fmt.Sprintf("Parse float %s error.", amount.Value))
-	}
+	// if !ok {
+	// 	return nil, errors.New(fmt.Sprintf("Parse float %s error.", amount.Value))
+	// }
 
-	if vf64 > 100000000000 {
+	if value > 100000000000 {
 		return nil, jtConst.ERR_PAYMENT_OUT_OF_AMOUNT
 	}
 
 	if amount.Currency == jtConst.CFGCurrency {
-		mul, err := decimal.NewFromString("1000000")
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Parse float %s error.", "1000000"))
-		}
+		// mul, err := decimal.NewFromString("1000000")
+		// if err != nil {
+		// 	return nil, errors.New(fmt.Sprintf("Parse float %s error.", "1000000"))
+		// }
 
-		retf64, ok := value.Mul(mul).Float64()
+		retf64, ok := decimal.NewFromFloat(value).Mul(decimal.NewFromFloat(1000000)).Float64()
 
 		if !ok {
-			return nil, errors.New(fmt.Sprintf("Parse float %s error.", value.Mul(mul).String()))
+			return nil, fmt.Errorf("Parse float %s error", decimal.NewFromFloat(value).Mul(decimal.NewFromFloat(1000000)).String())
 		}
 		return retf64, nil
 	}
@@ -362,8 +362,6 @@ func SortByFieldName(fields []string) {
 
 //DeepCopy 对象深度copy
 func DeepCopy(value interface{}) interface{} {
-	t := reflect.TypeOf(value)
-	fmt.Printf("value Type %s\n", t.Name())
 	if valueMap, ok := value.(map[string]interface{}); ok {
 		newMap := make(map[string]interface{})
 		for k, v := range valueMap {
@@ -383,6 +381,8 @@ func DeepCopy(value interface{}) interface{} {
 		for e := valueList.Front(); e != nil; e = e.Next() {
 			vl.PushBack(DeepCopy(e.Value))
 		}
+
+		return vl
 	}
 
 	return value
