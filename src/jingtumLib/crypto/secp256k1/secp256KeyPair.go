@@ -54,8 +54,8 @@ func init() {
 	ec.H, _ = new(big.Int).SetString("01", 16)
 }
 
-type Secp256KeyPair struct {
-}
+//Secp256KeyPair Secp256KeyPair
+type Secp256KeyPair struct{}
 
 // PublicKey represents a Bitcoin public key.
 type PublicKey struct {
@@ -78,14 +78,8 @@ func derivePrivateKey(seed []byte) *big.Int {
 	return addMod(pb, privateGen, ec.N)
 }
 
-/**
- *  根据私钥生成秘钥对
- *  parms:
- *      secret: 私钥
- *  return:
- *      PrivateKey, error
- */
-func (secp256k1 *Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
+//DeriveKeyPair 根据私钥生成秘钥对
+func (*Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
 	decodedBytes, err := jtEncode.Base58Decode(secret, jtEncode.JingTumAlphabet)
 	if err != nil || decodedBytes[0] != jtConst.SEED_PREFIX || len(decodedBytes) < 5 {
 		err = errors.New("invalid input size")
@@ -101,7 +95,7 @@ func (secp256k1 *Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, erro
 }
 
 //GenerateSeed 生成私钥
-func (secp256k1 *Secp256KeyPair) GenerateSeed() (string, error) {
+func (*Secp256KeyPair) GenerateSeed() (string, error) {
 	seedBytes := make([]byte, 16)
 	_, err := io.ReadFull(rand.Reader, seedBytes)
 	if err != nil {
@@ -111,7 +105,7 @@ func (secp256k1 *Secp256KeyPair) GenerateSeed() (string, error) {
 }
 
 //CheckAddress 验证地址
-func (secp256k1 *Secp256KeyPair) CheckAddress(address string) bool {
+func (*Secp256KeyPair) CheckAddress(address string) bool {
 	_, err := jtUtils.DecodeB58(jtConst.ACCOUNT_PREFIX, address)
 
 	if err != nil {
@@ -122,57 +116,50 @@ func (secp256k1 *Secp256KeyPair) CheckAddress(address string) bool {
 	return true
 }
 
-/**
- *  将椭圆点压缩成(02+X 如Y 偶), 或(03+X 如Y奇),得到 33 字节的 public key
- *  return:
- *      []byte
- */
+//ToBytes 将椭圆点压缩成(02+X 如Y 偶), 或(03+X 如Y奇),得到 33 字节的 public key
 func (pub *PublicKey) ToBytes() (b []byte) {
 	x := pub.X.Bytes()
 
-	padded_x := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
+	paddedx := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
 
 	if pub.Y.Bit(0) == 0 {
-		return append([]byte{0x02}, padded_x...)
+		return append([]byte{0x02}, paddedx...)
 	}
 
-	return append([]byte{0x03}, padded_x...)
+	return append([]byte{0x03}, paddedx...)
 }
 
-/**
- * 私钥转成32字节
- */
+//ToBytes 私钥转成32字节
 func (priv *PrivateKey) ToBytes() (b []byte) {
 	d := priv.D.Bytes()
 
 	/* Pad D to 32 bytes */
-	padded_d := append(bytes.Repeat([]byte{0x00}, 32-len(d)), d...)
+	paddedD := append(bytes.Repeat([]byte{0x00}, 32-len(d)), d...)
 
-	return padded_d
+	return paddedD
 }
 
+//BytesToHex BytesToHex
 func (pub *PublicKey) BytesToHex() string {
 	return strings.ToUpper(hex.EncodeToString(pub.ToBytes()))
 }
 
-/**
- * 公钥转成钱包地址
- */
+//ToAddress 公钥转成钱包地址
 func (pub *PublicKey) ToAddress() (address string) {
-	pub_bytes := pub.ToBytes()
+	pubBytes := pub.ToBytes()
 
 	/* SHA256 Hash */
-	sha256_h := sha256.New()
-	sha256_h.Reset()
-	sha256_h.Write(pub_bytes)
-	pub_hash_1 := sha256_h.Sum(nil)
+	sha256H := sha256.New()
+	sha256H.Reset()
+	sha256H.Write(pubBytes)
+	pubHash1 := sha256H.Sum(nil)
 
 	/* RIPEMD-160 Hash */
-	ripemd160_h := ripemd160.New()
-	ripemd160_h.Reset()
-	ripemd160_h.Write(pub_hash_1)
-	pub_hash_2 := ripemd160_h.Sum(nil)
-	address = jtUtils.EncodeB58(jtConst.ACCOUNT_PREFIX, pub_hash_2)
+	ripemd160H := ripemd160.New()
+	ripemd160H.Reset()
+	ripemd160H.Write(pubHash1)
+	pubHash2 := ripemd160H.Sum(nil)
+	address = jtUtils.EncodeB58(jtConst.ACCOUNT_PREFIX, pubHash2)
 
 	return address
 }
@@ -216,6 +203,7 @@ func scalarMultiple(bytes []byte) *big.Int {
 	return privateGen
 }
 
+//PrivKeyFromBytes PrivKeyFromBytes
 func PrivKeyFromBytes(curve elliptic.Curve, secret string) (*btcec.PrivateKey,
 	*btcec.PublicKey) {
 	keyPair := &Secp256KeyPair{}

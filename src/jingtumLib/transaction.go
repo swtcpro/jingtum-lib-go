@@ -14,21 +14,16 @@
 package jingtumLib
 
 import (
-	"strings"
-
-	"github.com/yangxuebo-138/decimal"
-
-	//	"encoding/json"
+	"container/list"
 	"errors"
 	"fmt"
-
-	//	"strconv"
-	//	"strings"
-	"container/list"
+	"strings"
 
 	"jingtumLib/constant"
 	"jingtumLib/serializer"
 	"jingtumLib/utils"
+
+	"github.com/yangxuebo-138/decimal"
 )
 
 //Transaction 交易结构体
@@ -265,8 +260,8 @@ func (tx *Transaction) AddMemo(memo string) {
  * 签名方法
  */
 func signing(tx *Transaction) (string, error) {
-
-	tx.AddTxJson("Fee", tx.GetTxJson("Fee").(float32)/1000000)
+	fee, _ := decimal.NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+	tx.AddTxJson("Fee", float32(fee))
 
 	amount := tx.GetTxJson("Amount")
 	if amount == nil {
@@ -274,7 +269,8 @@ func signing(tx *Transaction) (string, error) {
 	}
 
 	if amt64, ok := amount.(float64); ok {
-		tx.AddTxJson("Amount", amt64/1000000)
+		amt, _ := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+		tx.AddTxJson("Amount", amt)
 	}
 
 	if tx.GetTxJson("Memos") != nil {
@@ -286,19 +282,22 @@ func signing(tx *Transaction) (string, error) {
 
 	if tx.GetTxJson("SendMax") != nil {
 		if sendMax, ok := tx.GetTxJson("SendMax").(float64); ok {
-			tx.AddTxJson("SendMax", sendMax/1000000)
+			sm, _ := decimal.NewFromFloat(sendMax).Div(decimal.NewFromFloat(1000000)).Float64()
+			tx.AddTxJson("SendMax", sm)
 		}
 	}
 
 	if tx.GetTxJson("TakerPays") != nil {
 		if takerPays, ok := tx.GetTxJson("TakerPays").(float64); ok {
-			tx.AddTxJson("TakerPays", takerPays/1000000)
+			tp, _ := decimal.NewFromFloat(takerPays).Div(decimal.NewFromFloat(1000000)).Float64()
+			tx.AddTxJson("TakerPays", tp)
 		}
 	}
 
 	if tx.GetTxJson("TakerGets") != nil {
 		if takerGets, ok := tx.GetTxJson("TakerGets").(float64); ok {
-			tx.AddTxJson("TakerGets", takerGets/1000000)
+			tg, _ := decimal.NewFromFloat(takerGets).Div(decimal.NewFromFloat(1000000)).Float64()
+			tx.AddTxJson("TakerGets", tg)
 		}
 	}
 
@@ -309,7 +308,7 @@ func signing(tx *Transaction) (string, error) {
 
 	tx.AddTxJson("SigningPubKey", wt.GetPublicKey())
 	var prefix uint32 = 0x53545800
-	so, err := serializer.FromJSON(tx.txJSON)
+	so, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
 	if err != nil {
 		return "", err
 	}
@@ -318,19 +317,16 @@ func signing(tx *Transaction) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("hash -- > %x. %s\n", hash, strings.ToUpper(signTx))
+
 	tx.AddTxJson("TxnSignature", strings.ToUpper(signTx))
-	tx.AddTxJson("TransactionType", "Payment")
-	soBlog, err := serializer.FromJSON(tx.txJSON)
+	soBlog, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
+
 	if err != nil {
 		return "", err
 	}
-	tx.AddTxJson("TransactionType", "Payment")
+
 	tx.AddTxJson("Blob", strings.ToUpper(soBlog.ToHex()))
 	fmt.Println(tx.GetTxJson("Blob"))
-	//3045022100FAF5E34E8477B2A729D81A3B85E7C7DF22C4360DCBFEEDA52C71F1F5D2B412D002203405C155E2BDE0CC804F13A4A5EDC0FC7D95C113D1A56487CB0A957B1D04A972
-	//304402206893B92E4109E36D92D8435E652ABCB1140C23C439E843FE6FCBF44CD46C50FB0220408C2D44C28AED277D116436259B3B973CDB71C9C80451C09B22E94D3CBC47E2
-
 	tx.localSign = true
 	return tx.GetTxJson("Blob").(string), nil
 }

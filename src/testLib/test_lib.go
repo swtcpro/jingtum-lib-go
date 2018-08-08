@@ -77,7 +77,7 @@ func main() {
 	to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk" //"jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
 	amount := constant.Amount{}
 	amount.Currency = "SWT"
-	amount.Value = "10"
+	amount.Value = "5"
 	tx, err := remote.BuildPaymentTx(v.account, to, amount)
 	if err != nil {
 		fmt.Printf("Build paymanet tx fail : %s\n", err)

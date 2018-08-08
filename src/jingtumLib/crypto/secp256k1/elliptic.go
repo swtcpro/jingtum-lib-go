@@ -30,7 +30,7 @@ type Point struct {
 	Y *big.Int
 }
 
-/* y**2 = x**3 + a*x + b  % p */
+// EllipticCurve y**2 = x**3 + a*x + b  % p
 // EllipticCurve represents the parameters of a short Weierstrass equation elliptic curve.
 type EllipticCurve struct {
 	A *big.Int
@@ -234,16 +234,17 @@ func (ec *EllipticCurve) Add(P, Q Point) (R Point) {
 	return R
 }
 
+//Compression Compression
 func (p Point) Compression() (b []byte) {
 	x := p.X.Bytes()
 
-	padded_x := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
+	paddedX := append(bytes.Repeat([]byte{0x00}, 32-len(x)), x...)
 
 	if p.Y.Bit(0) == 0 {
-		return append([]byte{0x02}, padded_x...)
+		return append([]byte{0x02}, paddedX...)
 	}
 
-	return append([]byte{0x03}, padded_x...)
+	return append([]byte{0x03}, paddedX...)
 }
 
 // ScalarMult computes Q = k * P on EllipticCurve ec.

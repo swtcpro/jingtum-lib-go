@@ -3,7 +3,6 @@ package jingtumLib
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -598,8 +597,6 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 }
 
 func (remote *Remote) handleResponse(data *constant.ResponseData) {
-	fmt.Printf("Handle response --> %v \n", data)
-
 	request, ok := remote.requests[data.ID]
 
 	if !ok {

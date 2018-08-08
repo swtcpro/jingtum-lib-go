@@ -11,6 +11,7 @@ package utils
 
 import (
 	"bytes"
+	"container/list"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -357,4 +358,32 @@ func SortByFieldName(fields []string) {
 			return (xFieldBits - yFieldBits) < 0
 		}
 	})
+}
+
+//DeepCopy 对象深度copy
+func DeepCopy(value interface{}) interface{} {
+	t := reflect.TypeOf(value)
+	fmt.Printf("value Type %s\n", t.Name())
+	if valueMap, ok := value.(map[string]interface{}); ok {
+		newMap := make(map[string]interface{})
+		for k, v := range valueMap {
+			newMap[k] = DeepCopy(v)
+		}
+
+		return newMap
+	} else if valueSlice, ok := value.([]interface{}); ok {
+		newSlice := make([]interface{}, len(valueSlice))
+		for k, v := range valueSlice {
+			newSlice[k] = DeepCopy(v)
+		}
+
+		return newSlice
+	} else if valueList, ok := value.(*list.List); ok {
+		vl := list.New()
+		for e := valueList.Front(); e != nil; e = e.Next() {
+			vl.PushBack(DeepCopy(e.Value))
+		}
+	}
+
+	return value
 }
