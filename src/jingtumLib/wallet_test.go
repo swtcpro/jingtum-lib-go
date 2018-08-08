@@ -61,3 +61,15 @@ func Test_Wallet(t *testing.T) {
 
 	t.Logf("Success new secret (%s). address (%s)", newWallet.GetSecret(), newWallet.GetAddress())
 }
+
+func Test_FromSecret(t *testing.T) {
+	secret := "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
+	//根据私钥创建测试
+	wt, err := FromSecret(secret)
+
+	if err != nil {
+		t.Fatalf("Failure FromSecret : %s, err %v", secret, err)
+	}
+
+	t.Logf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+}
