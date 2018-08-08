@@ -13,6 +13,7 @@
 package jingtumLib
 
 import (
+	"fmt"
 	"jingtumLib/constant"
 	"jingtumLib/utils"
 )
@@ -45,6 +46,11 @@ func NewRequest(remote *Remote, command string, filter Filter) *Request {
 
 //Submit 提交请求
 func (req *Request) Submit(callback func(err error, data interface{})) {
+	if !req.remote.server.IsConnected() {
+		callback(fmt.Errorf("Server not connected"), nil)
+		return
+	}
+
 	if err, ok := req.message[constant.TxJSONErrorKey].(error); ok {
 		callback(err, nil)
 		return

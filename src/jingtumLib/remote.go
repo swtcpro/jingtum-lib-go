@@ -3,7 +3,6 @@ package jingtumLib
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -222,18 +221,9 @@ func (remote *Remote) Disconnect() {
 //RequestServerInfo 请求底层服务器信息
 func (remote *Remote) RequestServerInfo() (*Request, error) {
 	req := NewRequest(remote, constant.CommandServerInfo, func(data interface{}) interface{} {
-		// return {
-		//     complete_ledgers: data.info.complete_ledgers,
-		//     ledger: data.info.validated_ledger.hash,
-		//     public_key: data.info.pubkey_node,
-		//     state: data.info.server_state,
-		//     peers: data.info.peers,
-		//     version: 'skywelld-' + data.info.build_version
-		// };
-		jsonBytes, _ := json.Marshal(data)
-		mapData := data.(map[string]interface{})
-		retData := map[string]interface{}{"complete_ledgers": mapData["info"].(map[string]interface{})["complete_ledgers"], "ledger": mapData["info"].(map[string]interface{})["validated_ledger"].(map[string]interface{})["hash"].(string)}
-		fmt.Println(fmt.Sprintf("Request server info : %s", jsonBytes))
+		info := data.(map[string]interface{})["info"].(map[string]interface{})
+		retData := map[string]interface{}{"version": "skywelld-" + info["build_version"].(string), "peers": info["peers"], "state": info["server_state"], "public_key": info["pubkey_node"], "complete_ledgers": info["complete_ledgers"], "ledger": info["validated_ledger"].(map[string]interface{})["hash"]}
+
 		return retData
 	})
 

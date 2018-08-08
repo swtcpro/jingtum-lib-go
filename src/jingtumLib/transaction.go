@@ -398,6 +398,10 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 
 //Submit 提交交易数据
 func (tx *Transaction) Submit(callback func(err error, result interface{})) {
+	if !tx.remote.server.IsConnected() {
+		callback(fmt.Errorf("Server not connected"), nil)
+		return
+	}
 	if tx.checkTxError() {
 		callback(tx.GetTxJson(constant.TxJSONErrorKey).(error), nil)
 		return

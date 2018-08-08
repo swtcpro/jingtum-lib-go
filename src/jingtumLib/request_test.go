@@ -15,6 +15,7 @@ import (
 	"testing"
 )
 
+//Test_RequestServerInfo 获取服务器信息
 func Test_RequestServerInfo(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
@@ -23,27 +24,44 @@ func Test_RequestServerInfo(t *testing.T) {
 	}
 
 	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
 	req, err := remote.RequestServerInfo()
 	if err != nil {
 		t.Fatalf("Fail request server info %s", err.Error())
 	}
-	t.Logf("%v", req)
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("Fail request server info %s", err.Error())
-			// wg.Done()
+			wg.Done()
 			return
 		}
 
 		jsonByte, _ := json.Marshal(result)
 		t.Logf("Success request server info %s", jsonByte)
-		// wg.Done()
+		wg.Done()
 	})
 
-	// wg.Wait()
+	wg.Wait()
 }
 
 //Test_RequestAccountInfo 账号信息测试
