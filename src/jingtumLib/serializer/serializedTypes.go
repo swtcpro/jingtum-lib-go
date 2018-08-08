@@ -493,25 +493,18 @@ func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noM
 		return
 	}
 
-	fieldNames := []string{"TransactionType", "Flags", "Sequence", "Amount", "Fee", "SigningPubKey", "Account", "Destination", "Memos"}
-	fieldNames2 := []string{"TransactionType", "Flags", "Sequence", "Amount", "Fee", "SigningPubKey", "TxnSignature", "Account", "Destination", "Memos"}
-	// var fieldNames []string
-	// for k := range txData {
-	// 	_, ok := constant.INVERSE_FIELDS_MAP[k]
-	// 	if !ok {
-	// 		so.err = fmt.Errorf("Not fund field name %s", k)
-	// 		return
-	// 	}
+	var fieldNames []string
+	for k := range txData {
+		_, ok := constant.InverseFieldsMap[k]
+		if !ok {
+			so.err = fmt.Errorf("Not fund field name %s", k)
+			return
+		}
 
-	// 	fieldNames = append(fieldNames, k)
-	// }
-
-	// jtUtils.SortByFieldName(fieldNames)
-
-	_, okSign := txData["TxnSignature"]
-	if okSign {
-		fieldNames = fieldNames2
+		fieldNames = append(fieldNames, k)
 	}
+
+	jtUtils.SortByFieldName(fieldNames)
 
 	for _, field := range fieldNames {
 		value := txData[field]

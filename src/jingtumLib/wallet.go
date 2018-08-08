@@ -37,9 +37,7 @@ func IsValidAddress(address string) bool {
 	return utils.IsValidAddress(address)
 }
 
-/**
- * 钱包私钥合法性验证
- */
+//IsValidSecret 钱包私钥合法性验证
 func IsValidSecret(secret string) bool {
 	if secret == "" {
 		return false

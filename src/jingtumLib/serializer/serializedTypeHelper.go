@@ -213,13 +213,13 @@ func Serialize(so *Serializer, fieldName string, value interface{}) {
 	var temp uint8
 	var temp2 uint8
 	if typeBits < 16 {
-		temp = typeBits << 4
+		temp = uint8(typeBits) << 4
 	} else {
 		temp = 0
 	}
 
 	if fieldBits < 16 {
-		temp2 = fieldBits
+		temp2 = uint8(fieldBits)
 	} else {
 		temp2 = 0
 	}
@@ -258,7 +258,7 @@ func Serialize(so *Serializer, fieldName string, value interface{}) {
 	if _, ok := value.(*MemoDataInfo); ok && fieldName == "Memo" {
 		serializedType = STMemo
 	} else {
-		serializedType = typesMap[typeBits]
+		serializedType = typesMap[uint8(typeBits)]
 	}
 
 	serializedType.Serialize(so, value, false)

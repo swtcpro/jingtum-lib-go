@@ -24,12 +24,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// fields := []string{"Flags", "Fee", "TransactionType", "Account", "Amount", "Destination", "Memos", "Sequence", "SigningPubKey"}
-	// fmt.Printf("%v", fields)
-	// utils.SortByFieldName(fields)
-	// fmt.Printf("%v", fields)
-	// return
-
 	remote, err := jingtum.NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
 		fmt.Printf("New remote fail : %s", err)

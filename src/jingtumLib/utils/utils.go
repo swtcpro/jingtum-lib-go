@@ -131,6 +131,23 @@ type FieldWrapper struct {
 	by     func(p, q string) bool
 }
 
+type TestWrapper struct {
+	Ids []string
+	By  func(i, j string) bool
+}
+
+func (tw TestWrapper) Len() int {
+	return len(tw.Ids)
+}
+
+func (tw TestWrapper) Swap(i, j int) {
+	tw.Ids[i], tw.Ids[j] = tw.Ids[j], tw.Ids[i]
+}
+
+func (tw TestWrapper) Less(i, j int) bool {
+	return tw.By(tw.Ids[i], tw.Ids[j])
+}
+
 type SortBy func(p, q string) bool
 
 func sortField(fields []string, by SortBy) {
@@ -335,19 +352,9 @@ func SortByFieldName(fields []string) {
 		yTypeBits := yMap.Key
 		yFieldBits := yMap.Value
 		if xTypeBits != yTypeBits {
-			ret := xTypeBits - yTypeBits
-			if ret > 0 {
-				return true
-			} else {
-				return false
-			}
+			return (xTypeBits - yTypeBits) < 0
 		} else {
-			ret := xFieldBits - yFieldBits
-			if ret > 0 {
-				return true
-			} else {
-				return false
-			}
+			return (xFieldBits - yFieldBits) < 0
 		}
 	})
 }

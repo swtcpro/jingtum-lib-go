@@ -15,8 +15,8 @@ import (
 
 //KeyValuePair 字典映射
 type KeyValuePair struct {
-	Key   uint8
-	Value uint8
+	Key   int
+	Value int
 }
 
 //Amount 支付金额
