@@ -32,6 +32,7 @@ type Transaction struct {
 	txJSON    map[string]interface{}
 	localSign bool
 	secret    string
+	filter    Filter
 }
 
 //FlagClass FlagClass
@@ -43,7 +44,7 @@ var (
 )
 
 //NewTransaction 构造Transaction对象
-func NewTransaction(remote *Remote) (*Transaction, error) {
+func NewTransaction(remote *Remote, filter Filter) (*Transaction, error) {
 	if nil == remote {
 		return nil, constant.ERR_EMPTY_PARAM
 	}
@@ -52,6 +53,12 @@ func NewTransaction(remote *Remote) (*Transaction, error) {
 	tx.txJSON = make(map[string]interface{})
 	tx.AddTxJson("Flags", uint32(0))
 	tx.AddTxJson("Fee", float32(JTConfig.ReadInt("Config", "fee", 10000)))
+	if filter == nil {
+		filter = func(data interface{}) interface{} {
+			return data
+		}
+	}
+	tx.filter = filter
 	return tx, nil
 }
 
@@ -82,7 +89,7 @@ func (tx *Transaction) GetTxJson(key string) interface{} {
  */
 func (tx *Transaction) SetSecret(secret string) {
 	if !IsValidSecret(secret) {
-		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_INVALID_SECRET)
+		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_INVALID_SECRET)
 		return
 	}
 
@@ -94,12 +101,12 @@ func (tx *Transaction) SetSecret(secret string) {
  */
 func (tx *Transaction) AddMemo(memo string) {
 	if memo == "" {
-		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_MEMO_EMPTY)
+		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_MEMO_EMPTY)
 		return
 	}
 
 	if len([]rune(memo)) > 2048 {
-		tx.AddTxJson(constant.TXJSON_ERROR_KEY, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
+		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
 	}
 
 	mi := new(serializer.MemoInfo)
@@ -392,7 +399,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 //Submit 提交交易数据
 func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 	if tx.checkTxError() {
-		callback(tx.GetTxJson(constant.TXJSON_ERROR_KEY).(error), nil)
+		callback(tx.GetTxJson(constant.TxJSONErrorKey).(error), nil)
 		return
 	}
 
@@ -403,22 +410,22 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 				callback(errors.New("sig error. "+err.Error()), nil)
 			} else {
 				data := map[string]interface{}{"tx_blob": blob}
-				tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
+				tx.remote.Submit(constant.CommandSubmit, data, tx.filter, callback)
 			}
 		})
 	} else if tx.GetTxJson("TransactionType") == "Signer" {
 		//直接将blob传给底层
 		data := map[string]interface{}{"tx_blob": tx.GetTxJson("blob")}
-		tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
+		tx.remote.Submit(constant.CommandSubmit, data, tx.filter, callback)
 	} else {
 		//不签名交易传给底层
 		data := map[string]interface{}{"secret": tx.secret, "tx_json": tx.txJSON}
-		tx.remote.Submit(constant.CommandSubmit, data, nil, callback)
+		tx.remote.Submit(constant.CommandSubmit, data, tx.filter, callback)
 	}
 }
 
 func (tx *Transaction) checkTxError() bool {
-	if tx.GetTxJson(constant.TXJSON_ERROR_KEY) != nil {
+	if tx.GetTxJson(constant.TxJSONErrorKey) != nil {
 		return true
 	}
 	return false

@@ -31,7 +31,7 @@ func Test_AddMemo(t *testing.T) {
 	remote.LocalSign = true
 
 	t.Logf("Success remote : %v.", remote)
-	tx, err := NewTransaction(remote)
+	tx, err := NewTransaction(remote, nil)
 
 	if err != nil {
 		t.Fatalf("New transactino error : %s.", err.Error())

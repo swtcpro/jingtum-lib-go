@@ -81,7 +81,7 @@ func derivePrivateKey(seed []byte) *big.Int {
 //DeriveKeyPair 根据私钥生成秘钥对
 func (*Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
 	decodedBytes, err := jtEncode.Base58Decode(secret, jtEncode.JingTumAlphabet)
-	if err != nil || decodedBytes[0] != jtConst.SEED_PREFIX || len(decodedBytes) < 5 {
+	if err != nil || decodedBytes[0] != jtConst.SeedPrefix || len(decodedBytes) < 5 {
 		err = errors.New("invalid input size")
 		return nil, err
 	}
@@ -101,12 +101,12 @@ func (*Secp256KeyPair) GenerateSeed() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Reading random reader: %v", err)
 	}
-	return jtUtils.EncodeB58(jtConst.SEED_PREFIX, seedBytes), nil
+	return jtUtils.EncodeB58(jtConst.SeedPrefix, seedBytes), nil
 }
 
 //CheckAddress 验证地址
 func (*Secp256KeyPair) CheckAddress(address string) bool {
-	_, err := jtUtils.DecodeB58(jtConst.ACCOUNT_PREFIX, address)
+	_, err := jtUtils.DecodeB58(jtConst.AccountPrefix, address)
 
 	if err != nil {
 		fmt.Println(err)
@@ -159,7 +159,7 @@ func (pub *PublicKey) ToAddress() (address string) {
 	ripemd160H.Reset()
 	ripemd160H.Write(pubHash1)
 	pubHash2 := ripemd160H.Sum(nil)
-	address = jtUtils.EncodeB58(jtConst.ACCOUNT_PREFIX, pubHash2)
+	address = jtUtils.EncodeB58(jtConst.AccountPrefix, pubHash2)
 
 	return address
 }

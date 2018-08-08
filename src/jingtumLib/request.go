@@ -13,37 +13,44 @@
 package jingtumLib
 
 import (
-	_ "errors"
-
 	"jingtumLib/constant"
 	"jingtumLib/utils"
-
-	_ "common/github.com/blog4go"
 )
 
+//Filter 过滤函数
 type Filter func(interface{}) interface{}
 
+//Request 请求结构
 type Request struct {
 	remote  *Remote
 	message map[string]interface{}
 	command string
+	filter  Filter
 }
 
-func NewRequest(remote *Remote) *Request {
-	request := new(Request)
-	request.remote = remote
-	request.message = make(map[string]interface{})
-	return request
+//NewRequest 创建请求对象
+func NewRequest(remote *Remote, command string, filter Filter) *Request {
+	req := new(Request)
+	req.remote = remote
+	req.message = make(map[string]interface{})
+	req.command = command
+	if filter == nil {
+		filter = func(data interface{}) interface{} {
+			return data
+		}
+	}
+	req.filter = filter
+	return req
 }
 
-//提交请求
+//Submit 提交请求
 func (req *Request) Submit(callback func(err error, data interface{})) {
-	if err, ok := req.message[constant.TXJSON_ERROR_KEY].(error); ok {
+	if err, ok := req.message[constant.TxJSONErrorKey].(error); ok {
 		callback(err, nil)
 		return
 	}
 
-	req.remote.Submit(req.command, req.message, nil, callback)
+	req.remote.Submit(req.command, req.message, req.filter, callback)
 }
 
 //SelectLedger 选择账本

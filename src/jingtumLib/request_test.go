@@ -15,6 +15,37 @@ import (
 	"testing"
 )
 
+func Test_RequestServerInfo(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+	req, err := remote.RequestServerInfo()
+	if err != nil {
+		t.Fatalf("Fail request server info %s", err.Error())
+	}
+	t.Logf("%v", req)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request server info %s", err.Error())
+			// wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request server info %s", jsonByte)
+		// wg.Done()
+	})
+
+	// wg.Wait()
+}
+
 //Test_RequestAccountInfo 账号信息测试
 func Test_RequestAccountInfo(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)

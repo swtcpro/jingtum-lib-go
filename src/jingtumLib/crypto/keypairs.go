@@ -16,9 +16,7 @@ import (
 	"jingtumLib/crypto/secp256k1"
 )
 
-/**
- *  接口定义
- */
+//KeyPair KeyPair
 type KeyPair interface {
 	//根据私钥获取秘钥对
 	DeriveKeyPair(secret string) (*secp256k1.PrivateKey, error)

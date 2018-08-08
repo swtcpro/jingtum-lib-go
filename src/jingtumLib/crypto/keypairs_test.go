@@ -40,7 +40,7 @@ func Test_CheckAddress(t *testing.T) {
 
 func Test_encode(t *testing.T) {
 	address := []byte{250, 95, 217, 244, 150, 117, 99, 213, 201, 175, 202, 133, 239, 51, 28, 120, 142, 54, 36, 56}
-	adds := utils.EncodeB58(constant.ACCOUNT_PREFIX, address)
+	adds := utils.EncodeB58(constant.AccountPrefix, address)
 	t.Log(adds)
 }
 

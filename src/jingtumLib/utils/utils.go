@@ -100,14 +100,15 @@ func BytesToBigInt(b []byte) *big.Int {
 	return &x
 }
 
+//IsValidCurrency 货币合法性验证
 func IsValidCurrency(currency string) bool {
-	ok, _ := regexp.MatchString(jtConst.REGEX_CURRENCY, currency)
+	ok, _ := regexp.MatchString(jtConst.RegexCurrency, currency)
 	return ok
 }
 
 //DecodeAddress 地址解码。
 func DecodeAddress(address string) ([]byte, error) {
-	decodedBytes, err := DecodeB58(jtConst.ACCOUNT_PREFIX, address)
+	decodedBytes, err := DecodeB58(jtConst.AccountPrefix, address)
 	if err != nil {
 		return nil, fmt.Errorf("Issuer invalid issuer info %s", address)
 	}
@@ -115,40 +116,42 @@ func DecodeAddress(address string) ([]byte, error) {
 	return decodedBytes, nil
 }
 
+//IsValidAddress 地址合法性验证
 func IsValidAddress(address string) bool {
 	if address == "" {
 		return false
 	}
 
-	_, err := DecodeB58(jtConst.ACCOUNT_PREFIX, address)
+	_, err := DecodeB58(jtConst.AccountPrefix, address)
 	if err != nil {
 		return false
 	}
 	return true
 }
 
+//FieldWrapper 字段排序包装类
 type FieldWrapper struct {
 	fields []string
 	by     func(p, q string) bool
 }
 
-type TestWrapper struct {
-	Ids []string
-	By  func(i, j string) bool
-}
+// type TestWrapper struct {
+// 	Ids []string
+// 	By  func(i, j string) bool
+// }
 
-func (tw TestWrapper) Len() int {
-	return len(tw.Ids)
-}
+// func (tw TestWrapper) Len() int {
+// 	return len(tw.Ids)
+// }
 
-func (tw TestWrapper) Swap(i, j int) {
-	tw.Ids[i], tw.Ids[j] = tw.Ids[j], tw.Ids[i]
-}
+// func (tw TestWrapper) Swap(i, j int) {
+// 	tw.Ids[i], tw.Ids[j] = tw.Ids[j], tw.Ids[i]
+// }
 
-func (tw TestWrapper) Less(i, j int) bool {
-	return tw.By(tw.Ids[i], tw.Ids[j])
-}
-
+// func (tw TestWrapper) Less(i, j int) bool {
+// 	return tw.By(tw.Ids[i], tw.Ids[j])
+// }
+//SortBy SortBy
 type SortBy func(p, q string) bool
 
 func sortField(fields []string, by SortBy) {

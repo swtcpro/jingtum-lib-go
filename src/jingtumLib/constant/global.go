@@ -30,9 +30,6 @@ type Amount struct {
 }
 
 var (
-	//CommandSubmit 提交命令
-	CommandSubmit = "submit"
-
 	//CFGCurrency 配置货币
 	CFGCurrency string
 

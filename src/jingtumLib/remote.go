@@ -3,6 +3,7 @@ package jingtumLib
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -37,6 +38,7 @@ type ReqCtx struct {
 	data     map[string]interface{}
 	callback func(err error, data interface{})
 	cid      uint64
+	filter   Filter
 }
 
 /*
@@ -80,31 +82,7 @@ type Remoter interface {
 	BuildPaymentTx(account string, to string, amount constant.Amount) (Transaction, error)
 }
 
-/*
-*   构造函数 带形参
-*   params:
-*           host 主机名
-*           hort  端口号
- */
-/*
-func NewRemote(host string, port string) (*Remote) {
-	remote := new(Remote)
-	remote.Wsconn = new(WsConn)
-	//remote.Wsconn.Ws = websocket.Conn
-	remote.Wsconn.Host = host
-	remote.Wsconn.Port = port
-	remote.Params = make(map[string]string)
-	remote.Status = false
-	return remote
-}
-*/
-/*
-*   构造函数 不带形参
-*   params:
-*           从配置文件读取
-*           Service|Host
-*           Service|Port
- */
+//NewRemote 创建Remote，url 为空是从配置文件获取server 地址
 func NewRemote(url string, localSign bool) (*Remote, error) {
 	remote := new(Remote)
 
@@ -241,35 +219,26 @@ func (remote *Remote) Disconnect() {
 	}
 }
 
-/*
-* 请求底层服务器信息
-    return:
-           response  返回结果
-*/
-//func (remote *Remote) RequestServerInfo() (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//
-//	request := Pack_RequestServerInfo()
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Server Info succ: ", response)
-//	return nil, response
-//}
+//RequestServerInfo 请求底层服务器信息
+func (remote *Remote) RequestServerInfo() (*Request, error) {
+	req := NewRequest(remote, constant.CommandServerInfo, func(data interface{}) interface{} {
+		// return {
+		//     complete_ledgers: data.info.complete_ledgers,
+		//     ledger: data.info.validated_ledger.hash,
+		//     public_key: data.info.pubkey_node,
+		//     state: data.info.server_state,
+		//     peers: data.info.peers,
+		//     version: 'skywelld-' + data.info.build_version
+		// };
+		jsonBytes, _ := json.Marshal(data)
+		mapData := data.(map[string]interface{})
+		retData := map[string]interface{}{"complete_ledgers": mapData["info"].(map[string]interface{})["complete_ledgers"], "ledger": mapData["info"].(map[string]interface{})["validated_ledger"].(map[string]interface{})["hash"].(string)}
+		fmt.Println(fmt.Sprintf("Request server info : %s", jsonBytes))
+		return retData
+	})
+
+	return req, nil
+}
 
 /*
 * 获取最新账本信息
@@ -375,7 +344,7 @@ func getRelationType(relationType string) *constant.Integer {
 * 请求账号信息
  */
 func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
-	req := NewRequest(remote)
+	req := NewRequest(remote, "", nil)
 	req.command = "account_info"
 	account, ok := options["account"]
 	peer, ok := options["peer"]
@@ -584,14 +553,13 @@ func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Reque
 //	return nil, response
 //}
 
-/**
- * 提交请求
- */
+//Submit 提交请求
 func (remote *Remote) Submit(command string, data map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
 	rc := new(ReqCtx)
 	rc.command = command
 	rc.data = data
 	rc.callback = callback
+	rc.filter = filter
 	rc.cid = remote.server.GetCid()
 	remote.requests[rc.cid] = rc
 
@@ -609,9 +577,8 @@ func (remote *Remote) handleResponse(data *constant.ResponseData) {
 	delete(remote.requests, data.ID)
 
 	if data.Status == "success" {
-		//				 var result = request.filter(data.result)
-
-		request.callback(nil, data.Result)
+		result := request.filter(data.Result)
+		request.callback(nil, result)
 	} else if data.Status == "error" {
 		errMsg := data.ErrorMessage
 		if errMsg != "" {
@@ -688,7 +655,7 @@ func (remote *Remote) handleMessage(msg []byte) {
  * 创建支付对象
  */
 func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error) {
-	tx, err := NewTransaction(remote)
+	tx, err := NewTransaction(remote, nil)
 	if err != nil {
 		return nil, err
 	}
