@@ -1,3 +1,12 @@
+/**
+ * 交易测试类
+ *
+ * @FileName: transaction_test.go
+ * @Auther : 杨雪波
+ * @Email : yangxuebo@yeah.net
+ * @CreateTime: 2018-07-26 10:44:32
+ * @UpdateTime: 2018-07-26 10:44:54
+ */
 package jingtumLib
 
 import (
@@ -25,7 +34,7 @@ func Test_AddMemo(t *testing.T) {
 	tx, err := NewTransaction(remote)
 
 	if err != nil {
-		t.Fatalf("New transactino error : %v.", err)
+		t.Fatalf("New transactino error : %s.", err.Error())
 	}
 
 	tx.AddTxJson("TransactionType", "Payment")
