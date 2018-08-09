@@ -71,7 +71,7 @@ type Remoter interface {
 	//获得市场挂单列表
 	RequestOrderBook(account string, gets string, pays string) (error, string)
 
-	//创建支付对象
+	//BuildPaymentTx 创建支付对象
 	BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error)
 }
 
