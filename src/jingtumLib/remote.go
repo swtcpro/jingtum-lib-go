@@ -306,9 +306,7 @@ func getRelationType(relationType string) *constant.Integer {
 	return nil
 }
 
-/*
-* 请求账号信息
- */
+ //RequestAccountInfo 请求账号信息
 func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
 	req := NewRequest(remote, "", nil)
 	req.command = "account_info"
@@ -617,9 +615,7 @@ func (remote *Remote) handleMessage(msg []byte) {
 	}
 }
 
-/**
- * 创建支付对象
- */
+ //BuildPaymentTx 创建支付对象
 func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
