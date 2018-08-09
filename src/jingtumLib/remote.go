@@ -41,32 +41,32 @@ type ReqCtx struct {
 	filter   Filter
 }
 
-/*
-* remoter 提供以下方法：
- */
-
+//Remoter 提供以下方法：
 type Remoter interface {
-	//连接
-	Connect() error
-	//断开
-	//获取当前时间
-	Get_now_time() string
-	// 发送
-	send(request string) error
-	// 接收
-	read() (error, string)
+	//Connect 连接
+	Connect(callback func(err error, result interface{})) error
+
+	//GetNowTime 获取当前时间
+	GetNowTime() string
+
 	//断开连接
 	Disconnect()
-	//请求底层服务器信息
-	RequestServerInfo() (error, string)
-	//获取最新账本信息
-	RequestLedgerClosed() (error, string)
+
+	//RequestServerInfo 请求底层服务器信息
+	RequestServerInfo() (*Request, error)
+
+	//RequestLedgerClosed 获取最新账本信息
+	RequestLedgerClosed() (*Request, error)
+
 	//获取某一账本具体信息
-	RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string)
-	//询某一交易具体信息
-	RequestTx(hash string) (error, string)
+	RequestLedger(options map[string]interface{}) (*Request, error)
+
+	//RequestTx 询某一交易具体信息
+	RequestTx(hash string) (*Request, error)
+
 	//请求账号信息
-	RequestAccountInfo(account string) (error, string)
+	RequestAccountInfo(options map[string]interface{}) (*Request, error)
+
 	//得账号可接收和发送的货币
 	RequestAccountTums(account string) (error, string)
 	//得账号关系
@@ -79,7 +79,7 @@ type Remoter interface {
 	RequestOrderBook(account string, gets string, pays string) (error, string)
 
 	//创建支付对象
-	BuildPaymentTx(account string, to string, amount constant.Amount) (Transaction, error)
+	BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error)
 }
 
 //NewRemote 创建Remote，url 为空是从配置文件获取server 地址
@@ -121,21 +121,7 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 	return remote, nil
 }
 
-//func NewRemoteByURL(url string, localSign bool) (*Remote, error) {
-//	err, remote := NewRemote()
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	remote.Wsconn.Host = url
-//	remote.Wsconn.Port = port
-//	remote.LocalSign = localSign
-//	return remote, nil
-//}
-
-/*
-* 连接函数
- */
+//Connect 连接函数
 func (remote *Remote) Connect(callback func(err error, result interface{})) error {
 	if remote.server == nil {
 		callback(constant.ERR_SERVER_NOT_READY, nil)
@@ -145,69 +131,11 @@ func (remote *Remote) Connect(callback func(err error, result interface{})) erro
 	return remote.server.connect(callback)
 }
 
-/*
-*   获取当前时间
-    params: 无
-    return: string
-            格式(2006-01-02 15:04:05)
-*/
-func (remote *Remote) Get_now_time() string {
+//GetNowTime 获取当前时间。格式(2006-01-02 15:04:05)
+func (remote *Remote) GetNowTime() string {
 	t := time.Now()
 	return t.Format("2006-01-02 15:04:05")
 }
-
-/*
-* 发送
-*     params:
-             request 待发送的报文
-*/
-//func (remote *Remote) send(request string) error {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err
-//		}
-//	}
-//	if request == "" {
-//		return errors.New("Nothing to send")
-//	}
-//	_, err := remote.Wsconn.Ws.Write([]byte(request))
-//	if err != nil {
-//		Error("Send ", request, "fail!", "errno:", err)
-//	} else {
-//		Info("Send: ", request, "succ.")
-//	}
-//	return err
-//}
-
-/*
-* 接收
-    params: 无
-    return:
-           接收的报文
-*/
-
-//func (remote *Remote) read() (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	var msg = make([]byte, MAX_RECIVE_LEN)
-//	var n int
-//	n, err := remote.Wsconn.Ws.Read(msg)
-//	if err != nil {
-//		Error("Received data fail!", "errno:", err)
-//	} else {
-//		Info("Received: data succ. Len= ", n)
-//	}
-//	return err, string(msg[:n])
-//}
 
 //Disconnect 关闭连接
 func (remote *Remote) Disconnect() {
