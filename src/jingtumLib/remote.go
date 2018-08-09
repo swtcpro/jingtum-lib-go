@@ -306,7 +306,7 @@ func getRelationType(relationType string) *constant.Integer {
 	return nil
 }
 
- //RequestAccountInfo 请求账号信息
+//RequestAccountInfo 请求账号信息
 func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
 	req := NewRequest(remote, "", nil)
 	req.command = "account_info"
@@ -615,7 +615,7 @@ func (remote *Remote) handleMessage(msg []byte) {
 	}
 }
 
- //BuildPaymentTx 创建支付对象
+//BuildPaymentTx 创建支付对象
 func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
@@ -648,31 +648,3 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 
 	return tx, nil
 }
-
-/*
-* 支付
- */
-/*
-func (remote *Remote) BuildPaymentTx(account string) (error, string) {
-    if !remote.Status {
-        err := remote.Connect()
-        if if err != nil {
-            host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-            Error("Connect ", host_port, "fail! errno = ", err)
-            return err, ""
-        }
-    }
-	request := fmt.Sprintf("{\"id\":%d,\"command\":\"submit\",\"secret\":\"shXKYEcFwmxPSCeu4rRUz1ECEYtZP\",\"tx_json\":{\"Flags\":0,\"TransactionType\":\"Payment\",\"Account\":\"jD86doF9mBbAfTgK62L6mpqg4YJ1Yhm5wq\",\"Amount\":\"1000000\",\"Destination\":\"jQpP2UpTxECw74kuzrMXB6YEU3jsrnDDsc\"}}", seq)
-	err := send(request)
-	if err != nil {
-		Error("Send data fail!")
-		return err, ""
-	}
-	err, response := read()
-	if err != nil {
-		Error("Received data fail!")
-		return err, ""
-	}
-	Info("Get Reqonse Build Payment Tx succ: ", response)
-	return nil, response
-}*/
