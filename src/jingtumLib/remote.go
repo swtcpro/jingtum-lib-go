@@ -17,13 +17,6 @@ var (
 	MaxReciveLen = 4096000
 )
 
-//WsConn 连接类
-// type WsConn struct {
-// 	Ws   *websocket.Conn
-// 	Host string
-// 	Port string
-// }
-
 //Remote 是跟井通底层交互最主要的类，它可以组装交易发送到底层、订阅事件及从底层拉取数据。
 type Remote struct {
 	requests  map[uint64]*ReqCtx
