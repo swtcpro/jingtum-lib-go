@@ -119,6 +119,10 @@ func (server *Server) Disconnect() bool {
 	server.state = "offline"
 	server.connected = false
 	server.opened = false
+
+	rc := new(ReqCtx)
+	rc.command = constant.CommandDisconnect
+	server.sendMessage(rc)
 	return true
 }
 
@@ -142,6 +146,12 @@ func (server *Server) sendMessage(reqCtx *ReqCtx) {
 func (server *Server) listeningSend() {
 	for {
 		req := <-server.reqs
+
+		//终止消息监听线程
+		if req.command == constant.CommandDisconnect {
+			break
+		}
+
 		req.data["id"] = req.cid
 		req.data["command"] = req.command
 		jsonData, err := json.Marshal(req.data)
