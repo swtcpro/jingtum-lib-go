@@ -30,4 +30,8 @@ const CommandServerInfo = "server_info"
 //CommandSubmit 提交命令
 const CommandSubmit = "submit"
 
+//CommandLedgerClosed 获取最新账本命令
 const CommandLedgerClosed = "ledger_closed"
+
+//CommandLedger 获取某一账本命令
+const CommandLedger = "ledger"

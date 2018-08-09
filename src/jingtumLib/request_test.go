@@ -15,6 +15,57 @@ import (
 	"testing"
 )
 
+//Test_RequestLedger 获取某一账本
+func Test_RequestLedger(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := map[string]interface{}{"transactions": true, "ledger_index": 969054, "ledger_hash": "AEE4B16B543D8C8924F09C1DB822C6419780B86019F5F5FF8DC2938E7E0E89D2"}
+
+	req, err := remote.RequestLedger(options)
+	if err != nil {
+		t.Fatalf("Fail request ledger closed %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request ledger %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request ledger %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
 // Test_RequestLedgerClosed 获取最新账本
 func Test_RequestLedgerClosed(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)

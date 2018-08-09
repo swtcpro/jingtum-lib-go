@@ -239,33 +239,46 @@ func (remote *Remote) RequestLedgerClosed() (*Request, error) {
 	return req, nil
 }
 
-//RequestLedger 获取某一账本具体信息
-func (remote *Remote) RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string) {
-	// if !remote.Status {
-	// 	err := remote.Connect()
-	// 	if err != nil {
-	// 		host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-	// 		Error("Connect ", host_port, "fail! errno = ", err)
-	// 		return err, ""
-	// 	}
-	// }
+//RequestLedger 获取某一账本具体信息.
+func (remote *Remote) RequestLedger(options map[string]interface{}) (*Request, error) {
+	isFilter := true
+	req := NewRequest(remote, constant.CommandLedger, func(data interface{}) interface{} {
+		ledger, ok := data.(map[string]interface{})["ledger"]
+		if !ok {
+			if closed, ok := data.(map[string]interface{})["closed"]; ok {
+				ledger, ok = closed.(map[string]interface{})["ledger"]
+			}
+		}
+		if !isFilter {
+			return ledger
+		}
 
-	// if ledger_index == "" && ledger_hash == "" {
-	// 	return errors.New("ledger_index|ledger_hash value error"), ""
-	// }
-	// request := Pack_RequestLedger(ledger_index, ledger_hash, transactions)
-	// err := remote.send(request)
-	// if err != nil {
-	// 	Error("Send data fail!")
-	// 	return err, ""
-	// }
-	// err, response := remote.read()
-	// if err != nil {
-	// 	Error("Received data fail!")
-	// 	return err, ""
-	// }
-	// Info("Get Reqonse Ledger succ: ", response)
-	return nil, ""
+		if ledger == nil {
+			return nil
+		}
+
+		retData := map[string]interface{}{"accepted": ledger.(map[string]interface{})["accepted"], "ledger_hash": ledger.(map[string]interface{})["hash"], "ledger_index": ledger.(map[string]interface{})["ledger_index"], "parent_hash": ledger.(map[string]interface{})["parent_hash"], "close_time": ledger.(map[string]interface{})["close_time_human"], "total_coins": ledger.(map[string]interface{})["total_coins"]}
+		return retData
+	})
+
+	if ledgerIndex, ok := options["ledger_index"].(string); ok && utils.MatchString("^\\d+$", ledgerIndex) {
+		ledgerIndexNum, err := strconv.Atoi(ledgerIndex)
+		if err != nil {
+			return nil, err
+		}
+		req.message["ledger_index"] = ledgerIndexNum
+	}
+
+	if ledgerHash, ok := options["ledger_hash"].(string); ok && utils.MatchString("^[A-F0-9]{64}$", ledgerHash) {
+		req.message["ledger_hash"] = ledgerHash
+	}
+
+	if transactions, ok := options["transactions"].(bool); ok {
+		req.message["transactions"] = transactions
+		isFilter = false
+	}
+
+	return req, nil
 }
 
 /*
