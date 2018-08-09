@@ -230,65 +230,43 @@ func (remote *Remote) RequestServerInfo() (*Request, error) {
 	return req, nil
 }
 
-/*
-* 获取最新账本信息
-* return
- */
-//func (remote *Remote) RequestLedgerClosed() (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//
-//	request := Pack_RequestLedgerClosed()
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Ledger Closed succ: ", response)
-//	return nil, response
-//}
+//RequestLedgerClosed 获取最新账本信息
+func (remote *Remote) RequestLedgerClosed() (*Request, error) {
+	req := NewRequest(remote, constant.CommandLedgerClosed, func(data interface{}) interface{} {
+		retData := map[string]interface{}{"ledger_hash": data.(map[string]interface{})["ledger_hash"], "ledger_index": data.(map[string]interface{})["ledger_index"]}
+		return retData
+	})
+	return req, nil
+}
 
-/*
-* 获取某一账本具体信息
- */
-//func (remote *Remote) RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//
-//	if ledger_index == "" && ledger_hash == "" {
-//		return errors.New("ledger_index|ledger_hash value error"), ""
-//	}
-//	request := Pack_RequestLedger(ledger_index, ledger_hash, transactions)
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Ledger succ: ", response)
-//	return nil, response
-//}
+//RequestLedger 获取某一账本具体信息
+func (remote *Remote) RequestLedger(ledger_index string, ledger_hash string, transactions bool) (error, string) {
+	// if !remote.Status {
+	// 	err := remote.Connect()
+	// 	if err != nil {
+	// 		host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
+	// 		Error("Connect ", host_port, "fail! errno = ", err)
+	// 		return err, ""
+	// 	}
+	// }
+
+	// if ledger_index == "" && ledger_hash == "" {
+	// 	return errors.New("ledger_index|ledger_hash value error"), ""
+	// }
+	// request := Pack_RequestLedger(ledger_index, ledger_hash, transactions)
+	// err := remote.send(request)
+	// if err != nil {
+	// 	Error("Send data fail!")
+	// 	return err, ""
+	// }
+	// err, response := remote.read()
+	// if err != nil {
+	// 	Error("Received data fail!")
+	// 	return err, ""
+	// }
+	// Info("Get Reqonse Ledger succ: ", response)
+	return nil, ""
+}
 
 /*
 * 查询某一交易具体信息

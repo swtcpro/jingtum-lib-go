@@ -15,6 +15,55 @@ import (
 	"testing"
 )
 
+// Test_RequestLedgerClosed 获取最新账本
+func Test_RequestLedgerClosed(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	req, err := remote.RequestLedgerClosed()
+	if err != nil {
+		t.Fatalf("Fail request ledger closed %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request ledger closed %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request ledger closed %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
 //Test_RequestServerInfo 获取服务器信息
 func Test_RequestServerInfo(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
