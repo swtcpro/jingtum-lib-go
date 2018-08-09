@@ -36,6 +36,9 @@ var (
 	//LedgerStates 账本状态
 	LedgerStates = map[string]string{"current": "current", "closed": "closed", "validated": "validated"}
 
+	//RelationTypes 关系类型
+	RelationTypes = map[string]string{"trust": "trust", "authorize": "authorize", "freeze": "freeze", "unfreeze": "unfreeze"}
+
 	//InverseFieldsMap 反转字段映射
 	InverseFieldsMap = map[string]*KeyValuePair{
 		"LedgerEntryType":     &KeyValuePair{1, 1},

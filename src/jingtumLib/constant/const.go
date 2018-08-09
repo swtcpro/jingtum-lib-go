@@ -38,3 +38,15 @@ const CommandLedger = "ledger"
 
 //CommandTX 查询某一交易信息命令
 const CommandTX = "tx"
+
+//CommandAccountInfo 获取账号信息
+const CommandAccountInfo = "account_info"
+
+//CommandAccountCurrencies 获得账号可接收和发送的货币
+const CommandAccountCurrencies = "account_currencies"
+
+//CommandAccountLines CommandAccountLines
+const CommandAccountLines = "account_lines"
+
+//CommandAccountRelation CommandAccountRelation
+const CommandAccountRelation = "account_relation"

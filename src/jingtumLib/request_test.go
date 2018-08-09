@@ -15,6 +15,115 @@ import (
 	"testing"
 )
 
+//Test_RequestAccountRelations 获得账号关系
+func Test_RequestAccountRelations(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust"}
+	req, err := remote.RequestAccountRelations(options)
+	if err != nil {
+		t.Fatalf("Fail request account relations %s", err.Error())
+	}
+
+	if err != nil {
+		t.Fatalf("Fail request account relations %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request account relations %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request account relations %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
+//Test_RequestAccountTums 获得账号可接收和发送的货币
+func Test_RequestAccountTums(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+	req, err := remote.RequestAccountTums(options)
+	if err != nil {
+		t.Fatalf("Fail request Account Tums %s", err.Error())
+	}
+
+	if err != nil {
+		t.Fatalf("Fail request Account Tums %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request Account Tums %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request Account Tums %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
+//Test_RequestTx 获得某一交易信息
 func Test_RequestTx(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
@@ -260,7 +369,7 @@ func Test_RequestAccountInfo(t *testing.T) {
 			return
 		}
 		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Requst submit result : %s", jsonBytes)
+		t.Logf("Success Requst account info result : %s", jsonBytes)
 		wg.Done()
 	})
 

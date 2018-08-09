@@ -60,10 +60,12 @@ type Remoter interface {
 	//请求账号信息
 	RequestAccountInfo(options map[string]interface{}) (*Request, error)
 
-	//得账号可接收和发送的货币
-	RequestAccountTums(account string) (error, string)
-	//得账号关系
-	RequestAccountRelations(account string, atype string) (error, string)
+	//RequestAccountTums 得账号可接收和发送的货币
+	RequestAccountTums(options map[string]interface{}) (*Request, error)
+
+	//RequestAccountRelations 得账号关系
+	RequestAccountRelations(options map[string]interface{}) (*Request, error)
+
 	//获得账号挂单
 	RequestAccountOffers(account string) (error, string)
 	//获得账号交易列表
@@ -227,10 +229,7 @@ func getRelationType(relationType string) *constant.Integer {
 	return nil
 }
 
-//RequestAccountInfo 请求账号信息
-func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
-	req := NewRequest(remote, "", nil)
-	req.command = "account_info"
+func requestAccount(req *Request, options map[string]interface{}) {
 	account, ok := options["account"]
 	peer, ok := options["peer"]
 	retype, ok := options["type"]
@@ -293,66 +292,48 @@ func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Reque
 	if marker != nil {
 		req.message["marker"] = marker
 	}
+}
 
+//RequestAccountInfo 请求账号信息
+func (remote *Remote) RequestAccountInfo(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, "", nil)
+	req.command = constant.CommandAccountInfo
+	requestAccount(req, options)
 	return req, nil
 }
 
-/*
-* 获得账号可接收和发送的货币
- */
-//func (remote *Remote) RequestAccountTums(account string) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestAccountTums(account)
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Account Tums succ: ", response)
-//	return nil, response
-//}
+//RequestAccountTums 获得账号可接收和发送的货币
+func (remote *Remote) RequestAccountTums(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, "", nil)
+	req.command = constant.CommandAccountCurrencies
+	requestAccount(req, options)
+	return req, nil
+}
 
-/*
-* 获得账号关系
- */
-//func (remote *Remote) RequestAccountRelations(account string, atype string) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestAccountRelations(account, atype)
-//	if request == "" {
-//		return errors.New("RequestAccountRelations type value error"), ""
-//	}
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Account Relations succ: ", response)
-//	return nil, response
-//}
+//RequestAccountRelations 获得账号关系
+func (remote *Remote) RequestAccountRelations(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, "", nil)
+	rtype, ok := options["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid realtion type")
+	}
+
+	if _, okType := constant.RelationTypes[rtype]; !okType {
+		return nil, fmt.Errorf("invalid realtion type %s", rtype)
+	}
+
+	switch rtype {
+	case "trust":
+		req.command = constant.CommandAccountLines
+	case "authorize", "freeze":
+		req.command = constant.CommandAccountRelation
+	default:
+		return nil, fmt.Errorf("relation should not go here %s", rtype)
+	}
+
+	requestAccount(req, options)
+	return req, nil
+}
 
 /*
 * 获得账号挂单
