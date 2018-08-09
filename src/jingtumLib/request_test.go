@@ -15,6 +15,55 @@ import (
 	"testing"
 )
 
+func Test_RequestTx(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	hash := "6537F72CE1DBD8043230C3FF64C6E5E95B11F6573D91EF6A13FEADE6940CB71A"
+	req, err := remote.RequestTx(hash)
+	if err != nil {
+		t.Fatalf("Fail request tx %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request tx %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request tx %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
 //Test_RequestLedger 获取某一账本
 func Test_RequestLedger(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
@@ -45,7 +94,7 @@ func Test_RequestLedger(t *testing.T) {
 
 	req, err := remote.RequestLedger(options)
 	if err != nil {
-		t.Fatalf("Fail request ledger closed %s", err.Error())
+		t.Fatalf("Fail request ledger %s", err.Error())
 	}
 
 	wg := sync.WaitGroup{}

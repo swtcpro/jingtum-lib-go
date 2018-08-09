@@ -3,6 +3,7 @@ package jingtumLib
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -281,32 +282,16 @@ func (remote *Remote) RequestLedger(options map[string]interface{}) (*Request, e
 	return req, nil
 }
 
-/*
-* 查询某一交易具体信息
- */
-//func (remote *Remote) RequestTx(hash string) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestTx(hash)
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Tx succ: ", response)
-//	return nil, response
-//}
+//RequestTx 查询某一交易具体信息
+func (remote *Remote) RequestTx(hash string) (*Request, error) {
+	if hash == "" || !utils.MatchString("^[A-F0-9]{64}$", hash) {
+		return nil, fmt.Errorf("Invalid tx hash")
+	}
+
+	req := NewRequest(remote, constant.CommandTX, nil)
+	req.message["transaction"] = hash
+	return req, nil
+}
 
 func getRelationType(relationType string) *constant.Integer {
 	switch relationType {

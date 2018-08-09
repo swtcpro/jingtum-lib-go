@@ -35,3 +35,6 @@ const CommandLedgerClosed = "ledger_closed"
 
 //CommandLedger 获取某一账本命令
 const CommandLedger = "ledger"
+
+//CommandTX 查询某一交易信息命令
+const CommandTX = "tx"
