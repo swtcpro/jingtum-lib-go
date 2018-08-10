@@ -8,7 +8,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -115,6 +114,38 @@ func main() {
 
 	// 	jsonByte, _ := json.Marshal(result)
 	// 	fmt.Printf("Success request server info %s", jsonByte)
+	// 	wg.Done()
+	// })
+
+	//请求市场挂单
+	// options := make(map[string]interface{}) //{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+	// gets := constant.Amount{}
+	// gets.Currency = "SWT"
+	// pays := constant.Amount{}
+	// pays.Currency = "CNY"
+	// pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+	// options["gets"] = gets
+	// options["pays"] = pays
+	// req, err := remote.RequestOrderBook(options)
+	// if err != nil {
+	// 	fmt.Printf("Fail request order book %s", err.Error())
+	// 	return
+	// }
+
+	// if err != nil {
+	// 	fmt.Printf("Fail request order book %s", err.Error())
+	// 	return
+	// }
+
+	// req.Submit(func(err error, result interface{}) {
+	// 	if err != nil {
+	// 		fmt.Printf("Fail request order book %s", err.Error())
+	// 		wg.Done()
+	// 		return
+	// 	}
+
+	// 	jsonByte, _ := json.Marshal(result)
+	// 	fmt.Printf("Success request order book %s", jsonByte)
 	// 	wg.Done()
 	// })
 

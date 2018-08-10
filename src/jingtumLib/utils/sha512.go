@@ -17,24 +17,29 @@ import (
 	"hash"
 )
 
+//Sha512 Sha512
 type Sha512 struct {
 	h hash.Hash
 }
 
+//NewSha512 NewSha512
 func NewSha512() *Sha512 {
 	s := new(Sha512)
 	s.h = sha512.New()
 	return s
 }
 
+//Finish Finish
 func (s *Sha512) Finish() []byte {
 	return s.h.Sum(nil)
 }
 
+//Add Add
 func (s *Sha512) Add(bytes []byte) (int, error) {
 	return s.h.Write(bytes)
 }
 
+//Add32 Add32
 func (s *Sha512) Add32(i uint32) (int, error) {
 	var b []byte
 	b = append(b, byte(((i >> 24) & 0xFF)))
@@ -44,10 +49,12 @@ func (s *Sha512) Add32(i uint32) (int, error) {
 	return s.h.Write(b)
 }
 
+//Finish256 32字节
 func (s *Sha512) Finish256() []byte {
 	return s.h.Sum(nil)[0:32]
 }
 
+//Finish128 16字节
 func (s *Sha512) Finish128() []byte {
 	return s.h.Sum(nil)[0:16]
 }

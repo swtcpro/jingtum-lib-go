@@ -13,6 +13,7 @@ import (
 	"crypto/sha256"
 )
 
+//Sha256Util Sha256Util
 func Sha256Util(sbytes []byte) []byte {
 	h := sha256.New()
 	h.Write(sbytes)

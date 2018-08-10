@@ -50,3 +50,15 @@ const CommandAccountLines = "account_lines"
 
 //CommandAccountRelation CommandAccountRelation
 const CommandAccountRelation = "account_relation"
+
+//CommandAccountOffers 获得账号挂单
+const CommandAccountOffers = "account_offers"
+
+//CommandAccountTX 获得账号交易列表
+const CommandAccountTX = "account_tx"
+
+//CommandBookOffers 获得市场挂单列表
+const CommandBookOffers = "book_offers"
+
+//AccountOne AccountOne
+const AccountOne = "jjjjjjjjjjjjjjjjjjjjBZbvri"

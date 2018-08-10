@@ -29,12 +29,7 @@ import (
 	"github.com/yangxuebo-138/decimal"
 )
 
-/**
- * concat an item and a buffer
- * @param {integer} item1, should be an integer
- * @param {buffer} buf2, a buffer
- * @returns {buffer} new Buffer
- */
+//concat an item and a buffer
 func bufCat0(item1 uint8, buf2 []byte) []byte {
 	var buf []byte
 	buf = append(buf, item1)
@@ -42,12 +37,7 @@ func bufCat0(item1 uint8, buf2 []byte) []byte {
 	return buf
 }
 
-/**
- * concat one buffer and another
- * @param {buffer} item1, should be an integer
- * @param {buffer} buf2, a buffer
- * @returns {buffer} new Buffer
- */
+//concat one buffer and another
 func bufCat1(buf1 []byte, buf2 []byte) []byte {
 	var buf []byte
 	buf = append(buf, buf1...)
@@ -55,14 +45,7 @@ func bufCat1(buf1 []byte, buf2 []byte) []byte {
 	return buf
 }
 
-/**
- * encode use jingtum base58 encoding
- * including version + data + checksum
- * @param {integer} version
- * @param {buffer} bytes
- * @returns {string}
- * @private
- */
+//EncodeB58 EncodeB58
 func EncodeB58(version uint8, bytes []byte) string {
 	buffer := bufCat0(version, bytes)
 	checksum := Sha256Util(Sha256Util(buffer))[0:4]
@@ -71,6 +54,7 @@ func EncodeB58(version uint8, bytes []byte) string {
 	return encodedString
 }
 
+//DecodeB58 DecodeB58
 func DecodeB58(version uint8, input string) (decodedBytes []byte, err error) {
 	decodedBytes, err = jtEncode.Base58Decode(input, jtEncode.JingTumAlphabet)
 	if err != nil || decodedBytes[0] != version || len(decodedBytes) < 5 {
@@ -93,10 +77,11 @@ func DecodeB58(version uint8, input string) (decodedBytes []byte, err error) {
 	return
 }
 
+//BytesToBigInt BytesToBigInt
 func BytesToBigInt(b []byte) *big.Int {
-	b_buf := bytes.NewBuffer(b)
+	bBuf := bytes.NewBuffer(b)
 	var x big.Int
-	binary.Read(b_buf, binary.BigEndian, &x)
+	binary.Read(bBuf, binary.BigEndian, &x)
 	return &x
 }
 
@@ -135,23 +120,7 @@ type FieldWrapper struct {
 	by     func(p, q string) bool
 }
 
-// type TestWrapper struct {
-// 	Ids []string
-// 	By  func(i, j string) bool
-// }
-
-// func (tw TestWrapper) Len() int {
-// 	return len(tw.Ids)
-// }
-
-// func (tw TestWrapper) Swap(i, j int) {
-// 	tw.Ids[i], tw.Ids[j] = tw.Ids[j], tw.Ids[i]
-// }
-
-// func (tw TestWrapper) Less(i, j int) bool {
-// 	return tw.By(tw.Ids[i], tw.Ids[j])
-// }
-//SortBy SortBy
+//SortBy 排序函数
 type SortBy func(p, q string) bool
 
 func sortField(fields []string, by SortBy) {
@@ -168,18 +137,21 @@ func (fw FieldWrapper) Less(i, j int) bool {
 	return fw.by(fw.fields[i], fw.fields[j])
 }
 
+//GetBytes 获取字节
 func GetBytes(value interface{}) []byte {
 	bytesBuffer := bytes.NewBuffer([]byte{})
 	binary.Write(bytesBuffer, binary.BigEndian, value)
 	return bytesBuffer.Bytes()
 }
 
+//MatchString MatchString
 func MatchString(patter string, str string) bool {
 	match, _ := regexp.MatchString(patter, str)
 
 	return match
 }
 
+//IsNumberType IsNumberType
 func IsNumberType(obj interface{}) bool {
 	switch obj.(type) {
 	case float64, float32, int, int8, int32, int64, byte, uint32, uint64:
@@ -189,11 +161,13 @@ func IsNumberType(obj interface{}) bool {
 	}
 }
 
+//IsNumberString IsNumberString
 func IsNumberString(s string) bool {
 
 	return MatchString("^(-?)(\\d*)(\\.\\d{0,6})?$", s)
 }
 
+//NumberToString NumberToString
 func NumberToString(obj interface{}) string {
 	switch v := obj.(type) {
 	case float32:
@@ -219,14 +193,13 @@ func NumberToString(obj interface{}) string {
 	}
 }
 
+//IsHexString 16进制格式验证
 func IsHexString(str string) bool {
 	match, _ := regexp.MatchString("^[0-9a-fA-F]+$", str)
 	return match
 }
 
-/**
- * 根据货币类型转换成相应的金额对象。如果是SWT则返回基本数据类型
- */
+//ToAmount 根据货币类型转换成相应的金额对象。如果是SWT则返回基本数据类型
 func ToAmount(amount jtConst.Amount) (interface{}, error) {
 	if amount.Value == "" {
 		return nil, jtConst.ERR_EMPTY_PARAM
@@ -267,9 +240,7 @@ func ToAmount(amount jtConst.Amount) (interface{}, error) {
 	return amount, nil
 }
 
-/**
- *  获取对象字段存储的值
- */
+//GetFieldValue 获取对象字段存储的值
 func GetFieldValue(obj interface{}, fieldName string) interface{} {
 	v := reflect.ValueOf(obj)
 
@@ -282,9 +253,7 @@ func GetFieldValue(obj interface{}, fieldName string) interface{} {
 	}
 }
 
-/**
- *  获取对象的字段名
- */
+//GetFieldNames 获取对象的字段名
 func GetFieldNames(obj interface{}) []string {
 	t := reflect.TypeOf(obj)
 	var fields []string
@@ -302,23 +271,52 @@ func GetFieldNames(obj interface{}) []string {
 	return fields
 }
 
+//HexToBytes HexToBytes
 func HexToBytes(hexStr string) ([]byte, error) {
 	return hex.DecodeString(hexStr)
 }
 
+//StringToHex StringToHex
 func StringToHex(str string) string {
 	return hex.EncodeToString([]byte(str))
 }
 
+//ByteToHexString ByteToHexString
 func ByteToHexString(bytes []byte) string {
 	return strings.ToUpper(hex.EncodeToString(bytes))
 }
 
+//HexToString HexToString
 func HexToString(hexStr string) (string, error) {
 	bytes, err := hex.DecodeString(hexStr)
 	return string(bytes), err
 }
 
+//IsValidAmount0 金额宽泛式验证
+func IsValidAmount0(amount *jtConst.Amount) bool {
+	if nil == amount {
+		return false
+	}
+
+	// check amount currency
+	if (amount.Currency != "") && !IsValidCurrency(amount.Currency) {
+		return false
+	}
+
+	// native currency issuer is empty
+	if amount.Currency == jtConst.CFGCurrency && amount.Issuer != "" {
+		return false
+	}
+
+	// non native currency issuer is not allowed to be empty
+	if amount.Currency != jtConst.CFGCurrency && !IsValidAddress(amount.Issuer) {
+		return false
+	}
+
+	return true
+}
+
+//IsValidAmount 金额合法验证
 func IsValidAmount(amount *jtConst.Amount) bool {
 	if nil == amount {
 		return false
@@ -357,9 +355,8 @@ func SortByFieldName(fields []string) {
 		yFieldBits := yMap.Value
 		if xTypeBits != yTypeBits {
 			return (xTypeBits - yTypeBits) < 0
-		} else {
-			return (xFieldBits - yFieldBits) < 0
 		}
+		return (xFieldBits - yFieldBits) < 0
 	})
 }
 

@@ -66,12 +66,14 @@ type Remoter interface {
 	//RequestAccountRelations 得账号关系
 	RequestAccountRelations(options map[string]interface{}) (*Request, error)
 
-	//获得账号挂单
-	RequestAccountOffers(account string) (error, string)
-	//获得账号交易列表
-	RequestAccountTx(account string, limit int) (error, string)
-	//获得市场挂单列表
-	RequestOrderBook(account string, gets string, pays string) (error, string)
+	//RequestAccountOffers 获得账号挂单
+	RequestAccountOffers(options map[string]interface{}) (*Request, error)
+
+	//RequestAccountTx 获得账号交易列表
+	RequestAccountTx(options map[string]interface{}) (*Request, error)
+
+	//RequestOrderBook 获得市场挂单列表
+	RequestOrderBook(options map[string]interface{}) (*Request, error)
 
 	//BuildPaymentTx 创建支付对象
 	BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error)
@@ -230,66 +232,40 @@ func getRelationType(relationType string) *constant.Integer {
 }
 
 func requestAccount(req *Request, options map[string]interface{}) {
-	account, ok := options["account"]
-	peer, ok := options["peer"]
-	retype, ok := options["type"]
-	if ok {
-		relationType := getRelationType(retype.(string))
+	if retype, ok := options["type"].(string); ok {
+		relationType := getRelationType(retype)
 		if relationType != nil {
 			req.message["relation_type"] = relationType.IntValue()
 		}
 	}
 
-	limit, ok := options["limit"]
-	marker, ok := options["marker"]
-
-	if account != nil {
-		req.message["account"] = account.(string)
+	if account, ok := options["account"].(string); ok {
+		req.message["account"] = account
 	}
-	ledger, ok := options["ledger"]
+
+	ledger, _ := options["ledger"]
 	req.SelectLedger(ledger)
 
-	if peer != nil {
-		if utils.IsValidAddress(peer.(string)) {
+	if peer, ok := options["peer"].(string); ok {
+		if utils.IsValidAddress(peer) {
 			req.message["peer"] = peer
 		}
 	}
 
-	var checkedLimit interface{}
-
-	if utils.IsNumberType(limit) {
-		if limit.(float64) < 0 {
-			checkedLimit = 0
+	if limit, ok := options["limit"].(int); ok {
+		if limit < 0 {
+			limit = 0
 		}
 
-		if limit.(float64) > 1000000000 {
-			checkedLimit = 1000000000
+		if limit > 1000000000 {
+			limit = 1000000000
 		}
 
-	} else {
-		if limit != nil {
-			if v, ok := limit.(string); ok {
-				if utils.IsNumberString(v) {
-					lv, err := strconv.ParseFloat(v, 64)
-					if err == nil {
-						if lv < 0 {
-							checkedLimit = 0
-						}
+		req.message["limit"] = limit
 
-						if lv > 1000000000 {
-							checkedLimit = 1000000000
-						}
-					}
-				}
-			}
-		}
 	}
 
-	if checkedLimit != nil {
-		req.message["limit"] = checkedLimit
-	}
-
-	if marker != nil {
+	if marker, ok := options["marker"]; ok {
 		req.message["marker"] = marker
 	}
 }
@@ -335,89 +311,121 @@ func (remote *Remote) RequestAccountRelations(options map[string]interface{}) (*
 	return req, nil
 }
 
-/*
-* 获得账号挂单
- */
-//func (remote *Remote) RequestAccountOffers(account string) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestAccountOffers(account)
-//	if request == "" {
-//		return errors.New("RequestAccountRelations type value error"), ""
-//	}
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Account Offers succ: ", response)
-//	return nil, response
-//}
+//RequestAccountOffers 获得账号挂单
+func (remote *Remote) RequestAccountOffers(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, "", nil)
+	req.command = constant.CommandAccountOffers
+	requestAccount(req, options)
+	return req, nil
+}
 
-/*
-* 获得账号交易列表
- */
-//func (remote *Remote) RequestAccountTx(account string, limit int) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestAccountTx(account, limit)
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Account Tx succ: ", response)
-//	return nil, response
-//}
+//RequestAccountTx 获得账号交易列表
+func (remote *Remote) RequestAccountTx(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, constant.CommandAccountTX, func(data interface{}) interface{} {
+		//過濾交易列表
+		return data
+	})
 
-/*
-* 获得市场挂单列表
- */
-//func (remote *Remote) RequestOrderBook(account string, gets string, pays string) (error, string) {
-//	if !remote.Status {
-//		err := remote.Connect()
-//		if err != nil {
-//			host_port := remote.Wsconn.Host + ":" + remote.Wsconn.Port
-//			Error("Connect ", host_port, "fail! errno = ", err)
-//			return err, ""
-//		}
-//	}
-//	request := Pack_RequestOrderBook(account, gets, pays)
-//	err := remote.send(request)
-//	if err != nil {
-//		Error("Send data fail!")
-//		return err, ""
-//	}
-//	err, response := remote.read()
-//	if err != nil {
-//		Error("Received data fail!")
-//		return err, ""
-//	}
-//	Info("Get Reqonse Account Tx succ: ", response)
-//	return nil, response
-//}
+	if _, ok := options["limit"]; !ok {
+		options["limit"] = 200
+	}
+
+	if account, ok := options["account"].(string); ok {
+		if !utils.IsValidAddress(account) {
+			return nil, fmt.Errorf("account parameter is invalid %s", account)
+		}
+		req.message["account"] = account
+	}
+
+	if ledgerMin, ok := options["ledger_min"].(int); ok {
+		req.message["ledger_index_min"] = ledgerMin
+	} else {
+		req.message["ledger_index_min"] = 0
+	}
+	if ledgerMax, ok := options["ledger_max"].(int); ok {
+		req.message["ledger_index_max"] = ledgerMax
+	} else {
+		req.message["ledger_index_max"] = -1
+	}
+
+	if limit, ok := options["limit"].(int); ok {
+		req.message["limit"] = limit
+	}
+
+	if offset, ok := options["offset"].(int); ok {
+		req.message["offset"] = offset
+	}
+
+	if marker, ok := options["offset"].(map[string]interface{}); ok {
+		if _, ok = marker["ledger"].(int); ok {
+			if _, ok = marker["seq"].(int); ok {
+				req.message["marker"] = marker
+			}
+		}
+	}
+	if forward, ok := options["forward"].(bool); ok {
+		//true 正向；false反向
+		req.message["forward"] = forward
+	}
+	return req, nil
+}
+
+//RequestOrderBook 获得市场挂单列表
+func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request, error) {
+	req := NewRequest(remote, constant.CommandBookOffers, nil)
+
+	if takerGets, ok := options["taker_gets"]; ok {
+		getsAmount, ok := takerGets.(constant.Amount)
+		if !ok {
+			return nil, fmt.Errorf("invalid taker_gets type. See also constant.Amount")
+		}
+		if !utils.IsValidAmount0(&getsAmount) {
+			return nil, fmt.Errorf("invalid taker gets amount")
+		}
+		req.message["taker_gets"] = getsAmount
+	} else if pays, ok := options["pays"]; ok {
+		paysAmount, ok := pays.(constant.Amount)
+		if !ok {
+			return nil, fmt.Errorf("invalid pays type. See also constant.Amount")
+		}
+		if !utils.IsValidAmount0(&paysAmount) {
+			return nil, fmt.Errorf("invalid taker gets amount")
+		}
+		req.message["taker_gets"] = paysAmount
+	}
+
+	if takerPays, ok := options["taker_pays"]; ok {
+		paysAmount, ok := takerPays.(constant.Amount)
+		if !ok {
+			return nil, fmt.Errorf("invalid taker_pays type. See also constant.Amount")
+		}
+		if !utils.IsValidAmount0(&paysAmount) {
+			return nil, fmt.Errorf("invalid taker pays amount")
+		}
+		req.message["taker_pays"] = paysAmount
+
+	} else if gets, ok := options["gets"]; ok {
+		getsAmount, ok := gets.(constant.Amount)
+		if !ok {
+			return nil, fmt.Errorf("invalid gets type. See also constant.Amount")
+		}
+		if !utils.IsValidAmount0(&getsAmount) {
+			return nil, fmt.Errorf("invalid gets amount")
+		}
+		req.message["taker_pays"] = getsAmount
+	}
+
+	if limit, ok := options["limit"].(int); ok {
+		req.message["limit"] = limit
+	}
+
+	if taker, ok := options["taker"]; ok {
+		req.message["taker"] = taker
+	} else {
+		req.message["taker"] = constant.AccountOne
+	}
+	return req, nil
+}
 
 //Submit 提交请求
 func (remote *Remote) Submit(command string, data map[string]interface{}, filter Filter, callback func(err error, data interface{})) {

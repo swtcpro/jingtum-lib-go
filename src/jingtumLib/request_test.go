@@ -11,9 +11,167 @@ package jingtumLib
 
 import (
 	"encoding/json"
+	"jingtumLib/constant"
 	"sync"
 	"testing"
 )
+
+//Test_RequestOrderBook 获得市场挂单列表
+func Test_RequestOrderBook(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := make(map[string]interface{})
+	gets := constant.Amount{}
+	gets.Currency = "SWT"
+	pays := constant.Amount{}
+	pays.Currency = "CNY"
+	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+	options["gets"] = gets
+	options["pays"] = pays
+	req, err := remote.RequestOrderBook(options)
+	if err != nil {
+		t.Fatalf("Fail request order book %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request order book %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		// jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request order book")
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
+//Test_RequestAccountTx 获得账号交易列表
+func Test_RequestAccountTx(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+	req, err := remote.RequestAccountTx(options)
+	if err != nil {
+		t.Fatalf("Fail request account tx %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request account tx %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		// jsonByte, _ := json.Marshal(result)
+		t.Log("Success request account tx")
+		wg.Done()
+	})
+
+	wg.Wait()
+}
+
+//RequestAccountOffers 获得账号挂单
+func Test_RequestAccountOffers(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+	req, err := remote.RequestAccountOffers(options)
+	if err != nil {
+		t.Fatalf("Fail request account offers %s", err.Error())
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request account offers %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Success request account offers %s", jsonByte)
+		wg.Done()
+	})
+
+	wg.Wait()
+}
 
 //Test_RequestAccountRelations 获得账号关系
 func Test_RequestAccountRelations(t *testing.T) {
@@ -43,10 +201,6 @@ func Test_RequestAccountRelations(t *testing.T) {
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust"}
 	req, err := remote.RequestAccountRelations(options)
-	if err != nil {
-		t.Fatalf("Fail request account relations %s", err.Error())
-	}
-
 	if err != nil {
 		t.Fatalf("Fail request account relations %s", err.Error())
 	}
@@ -97,10 +251,6 @@ func Test_RequestAccountTums(t *testing.T) {
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountTums(options)
-	if err != nil {
-		t.Fatalf("Fail request Account Tums %s", err.Error())
-	}
-
 	if err != nil {
 		t.Fatalf("Fail request Account Tums %s", err.Error())
 	}
@@ -165,8 +315,8 @@ func Test_RequestTx(t *testing.T) {
 			return
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		t.Logf("Success request tx %s", jsonByte)
+		// jsonByte, _ := json.Marshal(result)
+		t.Log("Success request tx")
 		wg.Done()
 	})
 
