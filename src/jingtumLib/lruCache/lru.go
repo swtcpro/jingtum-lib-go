@@ -80,7 +80,8 @@ func (c *LRU) Add(key, value interface{}) (evicted bool) {
 	return evict
 }
 
-func (c *LRU) Get(key interface{}) (value interface{}, ok bool) {
+//Get 获取key 的缓存数据
+func (c *LRU) Get(key interface{}) (interface{}, bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if ent, ok := c.items[key]; ok {
@@ -92,12 +93,10 @@ func (c *LRU) Get(key interface{}) (value interface{}, ok bool) {
 			c.removeElement(ent)
 		}
 	}
-	return
+	return nil, false
 }
 
-/**
- * 判断缓存中是否包含指定key的元素
- */
+//Contains 判断缓存中是否包含指定key的元素
 func (c *LRU) Contains(key interface{}) (ok bool) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()

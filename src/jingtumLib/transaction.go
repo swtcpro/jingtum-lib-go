@@ -120,11 +120,6 @@ func (tx *Transaction) AddMemo(memo string) {
 	}
 }
 
-//func (transaction *Transaction) ParseJson(jsonStr string) error {
-//
-//	err := json.Unmarshal([]byte(jsonStr), &transaction.tx_json)
-//	return err
-//}
 //GetAccount 获得交易账号
 func (tx *Transaction) GetAccount() string {
 	account, _ := tx.txJSON["Account"].(string)
@@ -138,14 +133,15 @@ func (tx *Transaction) GetTransactionType() string {
 	return txType
 }
 
-//func (transaction *Transaction) SetFee(fee uint32) {
-//	if fee < 10 {
-//		transaction.tx_json.Fee = errors.New("Fee should be great than or equal 10.")
-//		return
-//	}
-//
-//	transaction.tx_json.Fee = fee
-//}
+func (tx *Transaction) setFee(fee float32) {
+	if fee < 10 {
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("Fee should be great than or equal 10")
+		return
+	}
+
+	tx.txJSON["Fee"] = fee
+}
+
 //
 //func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
 //	if mt, ok := amount.(string); ok {
@@ -170,94 +166,71 @@ func (tx *Transaction) GetTransactionType() string {
 //	return errors.New("invalid amount to max")
 //}
 //
-///**
-// * set a path to payment
-// * this path is repesented as a key, which is computed in path find
-// * so if one path you computed self is not allowed
-// * when path set, sendmax is also set.
-// * @param path
-// */
-//func (transaction *Transaction) setPath(key string) (err error) {
-//	if key == "" || (strings.Count(key, "")-1) != 40 {
-//		err = errors.New("invalid path key")
-//		return
-//	}
-//
-//	item, ok := transaction.remote.Paths.Get(key)
-//
-//	if !ok {
-//		err = errors.New("non exists path key")
-//		return
-//	}
-//
-//	//沒有支付路径，不需要传下面的参数
-//	if item.(jtSerz.PathData).PathsComputed == nil || len(item.(jtSerz.PathData).PathsComputed) == 0 {
-//		return
-//	}
-//	//var path [][]interface{}
-//	//err = json.Unmarshal(item.(jtSerz.PathData).Pathcomputed, &path)
-//	//if err != nil {
-//	//err = errors.New("invalid path.")
-//	//return
-//	//}
-//
-//	transaction.tx_json.Paths = item.(jtSerz.PathData).PathsComputed
-//	amount := transaction.MaxAmount(item.(jtSerz.PathData).Choice)
-//	transaction.tx_json.SendMax = amount
-//	return
-//}
-//
-///**
-// * limit send max amount
-// */
-//func (transaction *Transaction) setSendMax(amount constant.Amount) {
-//	if !utils.IsValidAmount(amount) {
-//		transaction.tx_json.SendMax = errors.New("invalid send max amount")
-//		return
-//	}
-//
-//	transaction.tx_json.SendMax = amount
-//}
-//
-///**
-// * transfer rate
-// * between 0 and 1, type is number
-// * @param rate
-// */
-//func (transaction *Transaction) setTransferRate(rate float32) (err error) {
-//	if rate < 0 || rate > 1 {
-//		err = errors.New("invalid transfer rate")
-//		return
-//	}
-//
-//	transaction.tx_json.TransferRate = uint32((rate + 1) * 1000000000)
-//	return
-//}
-//
-///**
-// * set transaction flags
-// *
-// */
-//func (transaction *Transaction) setFlags(flags interface{}) (err error) {
-//	if fv, ok := flags.(uint32); ok {
-//		transaction.tx_json.Flags = fv
-//		return
-//	}
-//
-//	if transType, isString := transaction.tx_json.TransactionType.(string); isString {
-//		var transaction_flags = TransactionFlags[transType]
-//		if transaction_flags != nil {
-//			if flag_set, isArray := flags.([]string); isArray {
-//				for i := 0; i < len(flag_set); i++ {
-//					flag := flag_set[i]
-//					transaction.tx_json.Flags += transaction_flags[flag]
-//				}
-//			}
-//		}
-//	}
-//	err = errors.New("invalid flags")
-//	return
-//}
+
+//SetPath 设置支付路径
+func (tx *Transaction) SetPath(key string) {
+	if key == "" || len(key) != 40 {
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("invalid path key")
+		return
+	}
+
+	item, ok := tx.remote.Paths.Get(key)
+
+	if !ok {
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("non exists path key %s", key)
+		return
+	}
+
+	//沒有支付路径，不需要传下面的参数
+	if pd, ok := item.(serializer.PathData); ok {
+		if len(pd.PathsComputed) == 0 {
+			return
+		}
+
+		tx.txJSON["Paths"] = pd.PathsComputed
+		// amount := tx.MaxAmount(item.(serializer.PathData).Choice)
+		tx.txJSON["SendMax"] = ""
+	}
+}
+
+//SetSendMax limit send max amount
+func (tx *Transaction) SetSendMax(amount constant.Amount) {
+	if !utils.IsValidAmount(&amount) {
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("invalid send max amount")
+		return
+	}
+
+	tx.txJSON["SendMax"] = amount
+}
+
+//SetTransferRate 设置手续费汇率
+func (tx *Transaction) SetTransferRate(rate float32) {
+	if rate < 0 || rate > 1 {
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("invalid transfer rate %.f", rate)
+		return
+	}
+	tx.txJSON["TransferRate"] = (rate + 1) * 1e9
+}
+
+//SetFlags flags 数据类型：uint32或[]string
+func (tx *Transaction) SetFlags(flags interface{}) {
+	switch v := flags.(type) {
+	case uint32:
+		tx.txJSON["Flags"] = v
+	case []string:
+		if txFlags, ok := TransactionFlags[tx.GetTransactionType()]; ok {
+			flgTemp := uint32(0)
+			for _, flgStr := range v {
+				if flgv, ok := txFlags[flgStr]; ok {
+					flgTemp += uint32(flgv)
+				}
+			}
+			tx.txJSON["Flags"] = flgTemp
+		}
+	default:
+		tx.txJSON[constant.TxJSONErrorKey] = fmt.Errorf("invalid flags")
+	}
+}
 
 //signing 签名
 func signing(tx *Transaction) (string, error) {
