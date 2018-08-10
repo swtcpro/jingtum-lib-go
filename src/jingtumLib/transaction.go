@@ -64,7 +64,7 @@ func NewTransaction(remote *Remote, filter Filter) (*Transaction, error) {
 
 //func (tx *Transaction)
 
-//GetTxJSON 添加交易参数
+//AddTxJSON 添加交易参数
 func (tx *Transaction) AddTxJSON(key string, value interface{}) bool {
 	if key == "" || tx.txJSON == nil {
 		return false
@@ -125,20 +125,19 @@ func (tx *Transaction) AddMemo(memo string) {
 //	err := json.Unmarshal([]byte(jsonStr), &transaction.tx_json)
 //	return err
 //}
-//
-//func (transaction *Transaction) GetAccount() string {
-//	return transaction.tx_json.Account
-//}
-//
-//func (transaction *Transaction) GetTransactionType() interface{} {
-//	return transaction.tx_json.TransactionType
-//}
-//
-//func (transaction *Transaction) SetSecret(secret string) {
-//	transaction.secret = secret
-//}
-//
-//
+//GetAccount 获得交易账号
+func (tx *Transaction) GetAccount() string {
+	account, _ := tx.txJSON["Account"].(string)
+	return account
+}
+
+//GetTransactionType 获得交易类型
+func (tx *Transaction) GetTransactionType() string {
+	txType, _ := tx.txJSON["TransactionType"].(string)
+
+	return txType
+}
+
 //func (transaction *Transaction) SetFee(fee uint32) {
 //	if fee < 10 {
 //		transaction.tx_json.Fee = errors.New("Fee should be great than or equal 10.")
