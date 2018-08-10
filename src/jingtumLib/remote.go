@@ -544,8 +544,8 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 		return nil, constant.ERR_PAYMENT_INVALID_AMOUNT
 	}
 
-	tx.AddTxJson("TransactionType", "Payment")
-	tx.AddTxJson("Account", account)
+	tx.AddTxJSON("TransactionType", "Payment")
+	tx.AddTxJSON("Account", account)
 
 	toamount, err := utils.ToAmount(amount)
 
@@ -553,8 +553,8 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 		return nil, err
 	}
 
-	tx.AddTxJson("Amount", toamount)
-	tx.AddTxJson("Destination", to)
+	tx.AddTxJSON("Amount", toamount)
+	tx.AddTxJSON("Destination", to)
 
 	return tx, nil
 }

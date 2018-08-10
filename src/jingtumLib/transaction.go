@@ -51,8 +51,8 @@ func NewTransaction(remote *Remote, filter Filter) (*Transaction, error) {
 	tx := new(Transaction)
 	tx.remote = remote
 	tx.txJSON = make(map[string]interface{})
-	tx.AddTxJson("Flags", uint32(0))
-	tx.AddTxJson("Fee", float32(JTConfig.ReadInt("Config", "fee", 10000)))
+	tx.AddTxJSON("Flags", uint32(0))
+	tx.AddTxJSON("Fee", float32(JTConfig.ReadInt("Config", "fee", 10000)))
 	if filter == nil {
 		filter = func(data interface{}) interface{} {
 			return data
@@ -64,8 +64,8 @@ func NewTransaction(remote *Remote, filter Filter) (*Transaction, error) {
 
 //func (tx *Transaction)
 
-//AddTxJson 添加交易参数
-func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
+//GetTxJSON 添加交易参数
+func (tx *Transaction) AddTxJSON(key string, value interface{}) bool {
 	if key == "" || tx.txJSON == nil {
 		return false
 	}
@@ -74,8 +74,8 @@ func (tx *Transaction) AddTxJson(key string, value interface{}) bool {
 	return true
 }
 
-//GetTxJson 获取交易参数
-func (tx *Transaction) GetTxJson(key string) interface{} {
+//GetTxJSON 获取交易参数
+func (tx *Transaction) GetTxJSON(key string) interface{} {
 	v, ok := tx.txJSON[key]
 	if ok {
 		return v
@@ -84,29 +84,25 @@ func (tx *Transaction) GetTxJson(key string) interface{} {
 	return nil
 }
 
-/**
- * 本地签名时需要设置私钥
- */
+//SetSecret 本地签名时需要设置私钥
 func (tx *Transaction) SetSecret(secret string) {
 	if !IsValidSecret(secret) {
-		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_INVALID_SECRET)
+		tx.AddTxJSON(constant.TxJSONErrorKey, constant.ERR_PAYMENT_INVALID_SECRET)
 		return
 	}
 
 	tx.secret = secret
 }
 
-/**
- * 设置备注
- */
+//AddMemo 设置备注
 func (tx *Transaction) AddMemo(memo string) {
 	if memo == "" {
-		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_MEMO_EMPTY)
+		tx.AddTxJSON(constant.TxJSONErrorKey, constant.ERR_PAYMENT_MEMO_EMPTY)
 		return
 	}
 
 	if len([]rune(memo)) > 2048 {
-		tx.AddTxJson(constant.TxJSONErrorKey, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
+		tx.AddTxJSON(constant.TxJSONErrorKey, constant.ERR_PAYMENT_OUT_OF_MEMO_LEN)
 	}
 
 	mi := new(serializer.MemoInfo)
@@ -117,7 +113,7 @@ func (tx *Transaction) AddMemo(memo string) {
 	if nil == tx.txJSON["Memos"] {
 		memos := list.New()
 		memos.PushBack(mi)
-		tx.AddTxJson("Memos", memos)
+		tx.AddTxJSON("Memos", memos)
 	} else {
 		memos := tx.txJSON["Memos"].(*list.List)
 		memos.PushBack(mi)
@@ -263,48 +259,47 @@ func (tx *Transaction) AddMemo(memo string) {
 //	err = errors.New("invalid flags")
 //	return
 //}
-/**
- * 签名方法
- */
-func signing(tx *Transaction) (string, error) {
-	fee, _ := decimal.NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
-	tx.AddTxJson("Fee", float32(fee))
 
-	amount := tx.GetTxJson("Amount")
+//signing 签名
+func signing(tx *Transaction) (string, error) {
+	fee, _ := decimal.NewFromFloat32(tx.GetTxJSON("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+	tx.AddTxJSON("Fee", float32(fee))
+
+	amount := tx.GetTxJSON("Amount")
 	if amount == nil {
 		return "", fmt.Errorf("Amount not be empty")
 	}
 
 	if amt64, ok := amount.(float64); ok {
 		amt, _ := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
-		tx.AddTxJson("Amount", amt)
+		tx.AddTxJSON("Amount", amt)
 	}
 
-	if tx.GetTxJson("Memos") != nil {
-		memos := tx.GetTxJson("Memos").(*list.List)
+	if tx.GetTxJSON("Memos") != nil {
+		memos := tx.GetTxJSON("Memos").(*list.List)
 		for e := memos.Front(); e != nil; e = e.Next() {
 			e.Value.(*serializer.MemoInfo).Memo.MemoData, _ = utils.HexToString(e.Value.(*serializer.MemoInfo).Memo.MemoData)
 		}
 	}
 
-	if tx.GetTxJson("SendMax") != nil {
-		if sendMax, ok := tx.GetTxJson("SendMax").(float64); ok {
+	if tx.GetTxJSON("SendMax") != nil {
+		if sendMax, ok := tx.GetTxJSON("SendMax").(float64); ok {
 			sm, _ := decimal.NewFromFloat(sendMax).Div(decimal.NewFromFloat(1000000)).Float64()
-			tx.AddTxJson("SendMax", sm)
+			tx.AddTxJSON("SendMax", sm)
 		}
 	}
 
-	if tx.GetTxJson("TakerPays") != nil {
-		if takerPays, ok := tx.GetTxJson("TakerPays").(float64); ok {
+	if tx.GetTxJSON("TakerPays") != nil {
+		if takerPays, ok := tx.GetTxJSON("TakerPays").(float64); ok {
 			tp, _ := decimal.NewFromFloat(takerPays).Div(decimal.NewFromFloat(1000000)).Float64()
-			tx.AddTxJson("TakerPays", tp)
+			tx.AddTxJSON("TakerPays", tp)
 		}
 	}
 
-	if tx.GetTxJson("TakerGets") != nil {
-		if takerGets, ok := tx.GetTxJson("TakerGets").(float64); ok {
+	if tx.GetTxJSON("TakerGets") != nil {
+		if takerGets, ok := tx.GetTxJSON("TakerGets").(float64); ok {
 			tg, _ := decimal.NewFromFloat(takerGets).Div(decimal.NewFromFloat(1000000)).Float64()
-			tx.AddTxJson("TakerGets", tg)
+			tx.AddTxJSON("TakerGets", tg)
 		}
 	}
 
@@ -313,7 +308,7 @@ func signing(tx *Transaction) (string, error) {
 		return "", err
 	}
 
-	tx.AddTxJson("SigningPubKey", wt.GetPublicKey())
+	tx.AddTxJSON("SigningPubKey", wt.GetPublicKey())
 	var prefix uint32 = 0x53545800
 	so, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
 	if err != nil {
@@ -325,24 +320,25 @@ func signing(tx *Transaction) (string, error) {
 		return "", err
 	}
 
-	tx.AddTxJson("TxnSignature", strings.ToUpper(signTx))
+	tx.AddTxJSON("TxnSignature", strings.ToUpper(signTx))
 	soBlog, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
 
 	if err != nil {
 		return "", err
 	}
 
-	tx.AddTxJson("blob", strings.ToUpper(soBlog.ToHex()))
+	tx.AddTxJSON("blob", strings.ToUpper(soBlog.ToHex()))
 	tx.localSign = true
-	return tx.GetTxJson("blob").(string), nil
+	return tx.GetTxJSON("blob").(string), nil
 }
 
+//sign 签名方法
 func (tx *Transaction) sign(callback func(err error, blob string)) {
 
-	if tx.GetTxJson("Sequence") == nil {
+	if tx.GetTxJSON("Sequence") == nil {
 		//从服务端获取 Sequence 后再签名
 		options := make(map[string]interface{})
-		options["account"] = tx.GetTxJson("Account")
+		options["account"] = tx.GetTxJSON("Account")
 		options["type"] = "trust"
 		req, err := tx.remote.RequestAccountInfo(options)
 		if err != nil {
@@ -374,7 +370,7 @@ func (tx *Transaction) sign(callback func(err error, blob string)) {
 					return
 				}
 
-				tx.AddTxJson("Sequence", uint32(decimal.NewFromFloat(seq.(float64)).IntPart()))
+				tx.AddTxJSON("Sequence", uint32(decimal.NewFromFloat(seq.(float64)).IntPart()))
 				blob, err := signing(tx)
 				if err != nil {
 					callback(err, "")
@@ -403,7 +399,7 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 		return
 	}
 	if tx.checkTxError() {
-		callback(tx.GetTxJson(constant.TxJSONErrorKey).(error), nil)
+		callback(tx.GetTxJSON(constant.TxJSONErrorKey).(error), nil)
 		return
 	}
 
@@ -417,9 +413,9 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 				tx.remote.Submit(constant.CommandSubmit, data, tx.filter, callback)
 			}
 		})
-	} else if tx.GetTxJson("TransactionType") == "Signer" {
+	} else if tx.GetTxJSON("TransactionType") == "Signer" {
 		//直接将blob传给底层
-		data := map[string]interface{}{"tx_blob": tx.GetTxJson("blob")}
+		data := map[string]interface{}{"tx_blob": tx.GetTxJSON("blob")}
 		tx.remote.Submit(constant.CommandSubmit, data, tx.filter, callback)
 	} else {
 		//不签名交易传给底层
@@ -429,7 +425,7 @@ func (tx *Transaction) Submit(callback func(err error, result interface{})) {
 }
 
 func (tx *Transaction) checkTxError() bool {
-	if tx.GetTxJson(constant.TxJSONErrorKey) != nil {
+	if tx.GetTxJSON(constant.TxJSONErrorKey) != nil {
 		return true
 	}
 	return false
