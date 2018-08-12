@@ -558,3 +558,211 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 
 	return tx, nil
 }
+
+//BuildRelationSet
+func (remote *Remote) BuildRelationSetBuildRelationSet(options map[string]interface{}) (*Transaction, error) {
+{
+	var src =  options.source
+	if options.source == "" {
+		src = options.from
+	}
+	if src = "" {
+		src = options.account
+	}
+	var des = options.target
+	var limit = options.limit
+	if !utils.isValidAddress(src) {
+		return tx, Error("invalid source address")
+	}
+
+	if !utils.isValidAddress(des) {
+		return tx, Error("invalid target address")
+	}
+
+	if !utils.isValidAmount(limit) {
+		return tx, Error("invalid amount")
+	}
+	var transactionType =  ""
+	if options.type == "unfreeze" {
+		transactionType = "RelationDel"
+	}
+	else {
+		transactionType = "RelationSet"
+	}
+	tx.AddTxJSON("TransactionType", transactionType)
+	tx.AddTxJSON("AccountAccount", src)
+	tx.AddTxJSON("Target", des)
+	var relationType = ""
+	if options.type == "authorize" {
+		relationType = "1"
+	}
+	else {
+		relationType = "3"
+	}
+	tx.AddTxJSON("RelationType", relationType)
+	if limit != 0 {
+		tx.AddTxJSON("LimitAmount", limit)
+	}
+	return tx, nil
+}
+
+//buildTrustSet
+func (remote *Remote) BuildTrustSet(options map[string]interface{}) (*Transaction, error) {
+	var src = options.source
+	if options.source == "" {
+		src = options.from
+	}
+	if src = "" {
+		src = options.account
+	}
+	var limit = options.limit
+	var quality_out = options.quality_out
+	var quality_in = options.quality_in
+	if !utils.isValidAddress(src) {
+		return tx, Error("invalid source address")
+	}
+	if !utils.isValidAmount(limit) {
+		return tx, Error("invalid amount")
+	}
+	tx.AddTxJSON("TrustSet", TransactionType)
+	tx.AddTxJSON("Account", src)
+	if limit !== 0 {
+		tx.AddTxJSON("LimitAmount", limit)
+	}
+	if quality_in {
+		tx.AddTxJSON("QualityInQualityIn", quality_in)
+	}
+	if quality_out {
+		tx.AddTxJSON("QualityOut", quality_out)
+	}
+	return tx, nil
+}
+
+//创建关系对象
+func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transaction, error) {
+	tx, err := NewTransaction(remote, nil)
+	if err != nil { 
+		return nil, err
+	}
+
+	if _, ok := RelationTypes[options.type]; !ok {
+		return tx, Error("invalid relation type")
+	}
+
+	switch (options.type) {
+		case "trust":
+			return BuildTrustSet(options, tx)
+		case "authorize":
+		case "freeze":
+		case "unfreeze":
+			return BuildRelationSet(options, tx)
+	}
+	Errorf("build relation set should not go here")
+	return tx, Error("build relation set error")
+}
+
+//BuildAccountSet
+func (remote *Remote) BuildAccountSet(options map[string]interface{}) (*Transaction, error) {
+	var src = options.source
+	if options.source == "" {
+		src = options.from
+	}
+	if src = "" {
+		src = options.account
+	}
+    var set_flag = options.set_flag
+	if options.set_flag == "" {
+		set_flag = options.set	
+	}
+    var clear_flag = options.clear_flag
+	if clear_flag == "" {
+		clear_flag = options.clear
+	}
+    if (!utils.isValidAddress(src)) {
+        return tx, Error("invalid source address")
+    }
+    tx.AddTxJSON("TransactionType", "AccountSet")
+    tx.AddTxJSON("Account", src)
+
+    var SetClearFlags = Set_clear_flags[1]
+	var _set_flag = ""
+	if IsNumberType(set_flag) {
+		_set_flag = set_flag
+	}
+	else if SetClearFlags[set_flag] == "" {
+		_set_flag = SetClearFlags["asf" + set_flag]
+	}
+	else {
+		_set_flag = SetClearFlags[set_flag]
+	}
+
+	if set_flag == "" {
+		set_flag = _set_flag
+	}
+	tx.AddTxJSON("SetFlag", set_flag)
+
+	var _clear_flag = ""
+	if IsNumberType(clear_flag) {
+		_clear_flag = clear_flag	
+	} 
+	else if SetClearFlags[clear_flag] == "" {
+		_clear_flag = SetClearFlags["asf" + clear_flag]
+	}
+	else {
+		_clear_flag =  SetClearFlags[clear_flag]
+	}
+    if clear_flag == "" {
+		clear_flag = _clear_flag
+	}
+	tx.addTxJSON("ClearFlag", clear_flag)
+	return tx, nil
+}
+
+//BuildDelegateKeySet
+func (remote *Remote) BuildDelegateKeySet(options map[string]interface{}) (*Transaction, error) {
+	var src = options.source
+	if options.source == "" {
+		src = options.from
+	}
+	if src = "" {
+		src = options.account
+	}
+	var delegate_key = options.delegate_key
+	if !utils.isValidAddress(src) {
+		return tx, Error("invalid source address")
+	}
+	if !utils.isValidAddress(delegate_key) {
+		return tx, Error("invalid regular key address")
+	}
+	tx.addTxJSON("TransactionType", 'SetRegularKey')
+	tx.addTxJSON("Account", src)
+	tx.addTxJSON("RegularKey", delegate_key)
+	return tx, nil
+}
+
+//BuildSignerSet
+func (remote *Remote) BuildSignerSet(options map[string]interface{}) (*Transaction, error) {
+	// TODO
+	tx, err := NewTransaction(remote, nil)
+	return tx, nil
+}
+
+//创建属性对象
+func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transaction, error) {
+	tx, err := NewTransaction(remote, nil)
+	if _, ok := AccountSetTypes[options.type]; !ok {
+		return tx, Error("invalid account set type")
+	}
+
+    switch(options.type) {
+        case "property":
+            return BuildAccountSet(options, tx)
+        case "delegate":
+            return BuildDelegateKeySet(options, tx)
+        case "signer":
+            return BuildSignerSet(options, tx)
+    }
+
+	Errorf("build account set should not go here")
+    return tx, Error("build account set should not go here")
+}
