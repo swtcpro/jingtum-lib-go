@@ -566,7 +566,7 @@ func (remote *Remote) BuildRelationSetBuildRelationSet(options map[string]interf
 	if options.source == "" {
 		src = options.from
 	}
-	if src = "" {
+	if src == "" {
 		src = options.account
 	}
 	var des = options.target
@@ -766,3 +766,166 @@ func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transa
 	Errorf("build account set should not go here")
     return tx, Error("build account set should not go here")
 }
+
+//挂单
+func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Transaction, error) { 
+ 	var tx = NewTransaction(remote, nil)
+    var offer_type = options.type;
+	var src = options.source
+    if options.source == "" {
+        src = options.from
+    }
+    if src = "" {
+        src = options.account
+    }
+    var taker_gets = options.taker_gets 
+	if taker_gets == "" {
+		taker_gets = options.pays
+	}
+    var taker_pays = options.taker_pays
+	if taker_pays == ""{
+		taker_pays = options.gets;
+	}
+    if (!utils.isValidAddress(src)) {
+        return tx, Error("invalid source address");
+    }
+
+	if _, ok := OfferTypesOfferTypes[options.type]; !ok {
+		return tx, Error("invalid offer type")
+	}
+	if !IsStringType(offer_typroffer_typr) {
+		 return tx, Error("invalid offer type")	
+	}
+
+    var taker_gets2, taker_pays2;
+	if IsStringType(taker_gets) && !IsNumberString(taker_gets) {
+		return tx, Error("invalid to pays amount")	
+	}
+	if  !utils.isValidAmount(taker_gets) {
+		return tx, Error("invalid to pays amount object")
+	}
+
+	if IsStringType(taker_pays) && !IsNumberString(taker_pays){
+		return tx, Error("invalid to gets amount")
+	}
+	if !utils.isValidAmount(taker_pays) {
+		return tx, Error("invalid to gets amount object")
+	}
+
+    tx.AddTxJSON("TransactionType", "OfferCreate")
+    if (offer_type == "Sell") {
+		tx.SetFlags(offer_type)
+	}
+    tx.AddTxJSON("Account", src)
+    tx.AddTxJSON("TakerPays", utils.ToAmount(taker_pays)
+    tx.AddTxJSON("TakerGets", utils.ToAmount(taker_gets)
+    return tx, nil;
+}
+
+//取消挂单
+func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Transaction, error) {
+{
+	var tx = NewTransaction(remote, nil)
+	var src = options.source
+	if options.source == "" {
+		src = options.from
+	}
+	if src = "" {
+		src = options.account
+	}
+	var sequence = options.sequence;
+	if !utils.isValidAddress(src) {
+		return tx, Error("invalid source address");
+	}
+
+	if !utils.IsNumberString(sequence) {
+		return tx, Error("invalid sequence param");
+	}
+	tx.AddTxJSON("TransactionType", "OfferCancel")
+	tx.AddTxJSON("Account", src)
+	tx.AddTxJSON("OfferSequence", trconv.Atoi(sequencesequence))
+	return tx;
+}
+
+//部署合约
+func (remote *Remote) DeployContractTx(options map[string]interface{}) (*Transaction, error) {
+{
+	var tx = NewTransaction(remote, nil)
+    var account = options.account
+    var amount = options.amount
+    var payload = options.payload
+    var params = options.params
+    if !utils.isValidAddress(account) {
+        tx.tx_json.account = new Error('invalid address')
+        return tx, Error("invalid address")
+    }
+    if utils.IsNumberString(amount) {
+        return tx, Error("invalid amount")
+    }
+	if utils.IsStringType(payload) {
+		return tx, Error("invalid payload: type error.")
+	}
+
+    if len(params) == 0  {
+        return tx, Error("invalid options type")
+    }
+    tx.AddTxJSON("TransactionType", "ConfigContract")
+    tx.AddTxJSON("Account", account)
+    tx.AddTxJSON("Amount", strconv.ParseFloat(amount, 64) * 1000000)
+    tx.AddTxJSON("Method", 0)
+    tx.AddTxJSON("Payload", payload)
+
+    Args = make(map[string]interface{})
+	for i := range params {
+        var obj = make(map[string]interface{})
+		obj[Parameter] = utils.stringToHex(params[i])
+		Args[Arg] = obj
+    }
+	tx.AddTxJSON("Args", Args)
+    return tx, nil
+}
+
+//执行合约
+func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transaction, error) {
+{
+	var tx = NewTransaction(remote, nil)
+    var account = options.account;
+    var des = options.destination;
+    var params = options.params;
+    var foo = options.foo; //函数名
+    if !utils.isValidAddress(account) {
+        return tx, Error("invalid address")
+    }
+
+    if !utils.isValidAddress(des) {
+        return tx, Error("invalid destination")
+    }
+
+
+    if len(params) == 0 {
+        return tx, Error("invalid options type")
+    }
+
+    if !IsStringType(foo) {
+        return tx, Error("foo must be string")
+    }
+    tx.AddTxJSON("TransactionType", "ConfigContract")
+    tx.AddTxJSON("Account", account)
+    tx.AddTxJSON("Method", 1)
+    tx.AddTxJSON("ContractMethod", utils.stringToHex(foo))
+    tx.AddTxJSON("Destination", des)
+
+    Args = make(map[string]interface{})
+    for i := range params {
+		if !IsStringType(params[i]) {
+			 return tx, Error("params must be string")
+		 }
+		 var obj = make(map[string]interface{})
+		 obj[Parameter] = utils.stringToHex(params[i])
+		 Args[Arg] = obj
+	 }
+	 tx.AddTxJSON("Args", Args)
+	 return tx, nil;
+}
+
+

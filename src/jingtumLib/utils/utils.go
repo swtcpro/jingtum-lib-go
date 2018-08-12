@@ -161,6 +161,15 @@ func IsNumberType(obj interface{}) bool {
 	}
 }
 
+func IsStringType(obj interface{}) bool {
+	switch obj.(type) {
+	case string:
+		return true
+	default:
+		return false
+	}
+}
+
 //IsNumberString IsNumberString
 func IsNumberString(s string) bool {
 
