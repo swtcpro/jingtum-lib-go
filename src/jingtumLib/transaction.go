@@ -17,6 +17,7 @@ import (
 	"container/list"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"jingtumLib/constant"
@@ -151,30 +152,29 @@ func (tx *Transaction) setFee(fee float32) {
 	tx.txJSON["Fee"] = fee
 }
 
-//
-//func (transaction *Transaction) MaxAmount(amount interface{}) interface{} {
-//	if mt, ok := amount.(string); ok {
-//		if utils.IsNumberString(mt) {
-//			f, err := strconv.ParseFloat(mt, 32)
-//			if err != nil {
-//				return errors.New("invalid amount to max")
-//			}
-//
-//			return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
-//		}
-//	}
-//
-//	if at, ok := amount.(constant.Amount); ok && utils.IsValidAmount(at) {
-//		f, err := strconv.ParseFloat(at.Value, 32)
-//		if err != nil {
-//			return errors.New("invalid amount to max")
-//		}
-//		return strconv.FormatFloat(f*1.0001, 'f', 10, 32)
-//	}
-//
-//	return errors.New("invalid amount to max")
-//}
-//
+func maxAmount(amount interface{}) (interface{}, error) {
+	if amt, ok := amount.(string); ok {
+		if utils.IsNumberString(amt) {
+			f, err := strconv.ParseFloat(amt, 32)
+			if err != nil {
+				return nil, fmt.Errorf("invalid amount to max %s", amt)
+			}
+
+			return strconv.FormatFloat(f*1.0001, 'f', 10, 32), nil
+		}
+	}
+
+	if amt, ok := amount.(constant.Amount); ok && utils.IsValidAmount(amt) {
+		f, err := strconv.ParseFloat(amt.Value, 32)
+		if err != nil {
+			return nil, fmt.Errorf("invalid amount to max %s", amt.Value)
+		}
+		amt.Value = strconv.FormatFloat(f*1.0001, 'f', 10, 32)
+		return amt, nil
+	}
+
+	return nil, fmt.Errorf("invalid amount to max")
+}
 
 //SetPath 设置支付路径
 func (tx *Transaction) SetPath(key string) {
@@ -197,8 +197,12 @@ func (tx *Transaction) SetPath(key string) {
 		}
 
 		tx.txJSON["Paths"] = pd.PathsComputed
-		// amount := tx.MaxAmount(item.(serializer.PathData).Choice)
-		tx.txJSON["SendMax"] = ""
+		amount, err := maxAmount(pd.Choice)
+		if err != nil {
+			tx.txJSON[constant.TxJSONErrorKey] = err
+		}
+
+		tx.txJSON["SendMax"] = amount
 	}
 }
 

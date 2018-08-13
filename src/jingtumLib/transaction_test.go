@@ -37,15 +37,15 @@ func Test_AddMemo(t *testing.T) {
 		t.Fatalf("New transactino error : %s.", err.Error())
 	}
 
-	tx.AddTxJson("TransactionType", "Payment")
+	tx.AddTxJSON("TransactionType", "Payment")
 	tx.AddMemo("支付0.000001SWT")
 	tx.AddMemo("我的测试")
 	tx.AddMemo("支付0.000001SWT")
 	tx.AddMemo("支付0.000001SWT")
 	tx.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
-	t.Logf("Get tx TransactionType : %s. Flags : %d. Fee : %d. Secret : %s", tx.GetTxJson("TransactionType"), tx.GetTxJson("Flags"), tx.GetTxJson("Fee"), tx.GetTxJson("secret"))
+	t.Logf("Get tx TransactionType : %s. Flags : %d. Fee : %d. Secret : %s", tx.GetTxJSON("TransactionType"), tx.GetTxJSON("Flags"), tx.GetTxJSON("Fee"), tx.GetTxJSON("secret"))
 
-	memos := tx.GetTxJson("Memos").(*list.List)
+	memos := tx.GetTxJSON("Memos").(*list.List)
 
 	for e := memos.Front(); e != nil; e = e.Next() {
 		t.Logf("Get tx memos info %s.", e.Value.(*serializer.MemoInfo).Memo.MemoData)
