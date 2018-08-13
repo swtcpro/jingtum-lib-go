@@ -39,18 +39,23 @@ type Transaction struct {
 //FlagClass FlagClass
 type FlagClass map[string]uint32
 
-//Set_clear_flags
+//AccountSet AccountSet
 type AccountSet map[string]uint32
 
 var (
 	//TransactionFlags 交易标识
 	TransactionFlags = map[string]FlagClass{"Universal": {"FullyCanonicalSig": 0x00010000}, "AccountSet": {"RequireDestTag": 0x00010000, "OptionalDestTag": 0x00020000, "RequireAuth": 0x00040000, "OptionalAuth": 0x00080000, "DisallowSWT": 0x00100000, "AllowSWT": 0x00200000}, "TrustSet": {"SetAuth": 0x00010000, "NoSkywell": 0x00020000, "SetNoSkywell": 0x00020000, "ClearNoSkywell": 0x00040000, "SetFreeze": 0x00100000, "ClearFreeze": 0x00200000}, "OfferCreate": {"Passive": 0x00010000, "ImmediateOrCancel": 0x00020000, "FillOrKill": 0x00040000, "Sell": 0x00080000}, "Payment": {"NoSkywellDirect": 0x00010000, "PartialPayment": 0x00020000, "LimitQuality": 0x00040000}, "RelationSet": {"Authorize": 0x00000001, "Freeze": 0x00000011}}
-
-	Set_clear_flags = map[uint32]AccountSet{1, map[string]uint32{"asfRequireDest": 1, "asfRequireAuth": 2, "asfDisallowSWT": 3, "asfDisableMaster": 4, "asfNoFreeze": 5, "asfGlobalFreeze": 6}}
+	//SetClearFlags 清除标识
+	SetClearFlags = map[uint32]AccountSet{uint32(1): {"asfRequireDest": uint32(1), "asfRequireAuth": uint32(2), "asfDisallowSWT": uint32(3), "asfDisableMaster": uint32(4), "asfNoFreeze": uint32(5), "asfGlobalFreeze": uint32(6)}}
 )
 
+//OfferTypes offer type 映射
 var OfferTypes = map[string]int{"Sell": 1, "Buy": 2}
+
+//RelationTypes relation type 映射
 var RelationTypes = map[string]int{"trust": 1, "authorize": 2, "freeze": 3, "unfreeze": 4}
+
+//AccountSetTypes account type 映射
 var AccountSetTypes = map[string]int{"property": 1, "delegate": 2, "signer": 3}
 
 //NewTransaction 构造Transaction对象
@@ -164,7 +169,7 @@ func maxAmount(amount interface{}) (interface{}, error) {
 		}
 	}
 
-	if amt, ok := amount.(constant.Amount); ok && utils.IsValidAmount(amt) {
+	if amt, ok := amount.(constant.Amount); ok && utils.IsValidAmount(&amt) {
 		f, err := strconv.ParseFloat(amt.Value, 32)
 		if err != nil {
 			return nil, fmt.Errorf("invalid amount to max %s", amt.Value)
@@ -305,7 +310,7 @@ func signing(tx *Transaction) (string, error) {
 		return "", err
 	}
 
-	tx.AddTxJSON("TxnSignature", strings.ToUpper(signTx))
+	tx.AddTxJSON("TxnSignature", signTx)
 	soBlog, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
 
 	if err != nil {

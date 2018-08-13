@@ -20,15 +20,13 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 )
 
-//钱包结构体
+//Wallet 钱包结构体
 type Wallet struct {
 	priv   *secp256k1.PrivateKey
 	secret string
 }
 
-/**
- * 钱包地址合法性验证
- */
+//IsValidAddress 钱包地址合法性验证
 func IsValidAddress(address string) bool {
 	if address == "" {
 		return false
@@ -79,23 +77,17 @@ func FromSecret(secret string) (*Wallet, error) {
 	return wallet, nil
 }
 
-/**
- * 获取16进制公钥
- */
+//GetPublicKey 获取16进制公钥
 func (wallet *Wallet) GetPublicKey() string {
 	return wallet.priv.PublicKey.BytesToHex()
 }
 
-/**
- * 获取私钥
- */
+//GetSecret 获取私钥
 func (wallet *Wallet) GetSecret() string {
 	return wallet.secret
 }
 
-/**
- * 获取钱包地址
- */
+//GetAddress 获取钱包地址
 func (wallet *Wallet) GetAddress() string {
 	return wallet.priv.PublicKey.ToAddress()
 }
@@ -116,5 +108,5 @@ func (wallet *Wallet) signTx(hash []byte) (string, error) {
 		return "", nil
 	}
 
-	return fmt.Sprintf("%x", signature.Serialize()), nil
+	return fmt.Sprintf("%X", signature.Serialize()), nil
 }
