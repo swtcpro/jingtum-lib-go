@@ -562,7 +562,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 //BuildRelationSet
 // func (remote *Remote) BuildRelationSetBuildRelationSet(options map[string]interface{}) (*Transaction, error) {
 // {
-// 	var src =  options["source"]
+// 	src :=  options["source"]
 // 	if src == "" {
 // 		src = options["from"]
 // 	}
@@ -570,8 +570,8 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 		src = options["account"]
 // 	}
 
-// 	var des = options["target"]
-// 	var limit = options["limit"]
+// 	des := options["target"]
+// 	limit := options["limit"]
 // 	if !utils.isValidAddress(src.(string)) {
 // 		return tx, Error("invalid source address")
 // 	}
@@ -583,7 +583,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	if !utils.isValidAmount(limit) {
 // 		return tx, Error("invalid amount")
 // 	}
-// 	var transactionType =  ""
+// 	transactionType :=  ""
 // 	if options["type"] == "unfreeze" {
 // 		transactionType = "RelationDel"
 // 	} else {
@@ -592,7 +592,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	tx.AddTxJSON("TransactionType", transactionType)
 // 	tx.AddTxJSON("AccountAccount", src)
 // 	tx.AddTxJSON("Target", des)
-// 	var relationType = ""
+// 	relationType := ""
 // 	if options["type"] == "authorize" {
 // 		relationType = "1"
 // 	} else {
@@ -613,9 +613,9 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	if src == "" {
 // 		src = options.account
 // 	}
-// 	var limit = options.limit
-// 	var quality_out = options.quality_out
-// 	var quality_in = options.quality_in
+// 	limit := options.limit
+// 	quality_out := options.quality_out
+// 	quality_in := options.quality_in
 // 	if !utils.isValidAddress(src) {
 // 		return tx, Error("invalid source address")
 // 	}
@@ -639,7 +639,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // //创建关系对象
 // func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transaction, error) {
 // 	tx, err := NewTransaction(remote, nil)
-// 	if err != nil { 
+// 	if err != nil {
 // 		return nil, err
 // 	}
 
@@ -661,18 +661,18 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 
 // //BuildAccountSet
 // func (remote *Remote) BuildAccountSet(options map[string]interface{}) (*Transaction, error) {
-// 	var src = options.source
+// 	src := options.source
 // 	if options.source == "" {
 // 		src = options.from
 // 	}
 // 	if src == "" {
 // 		src = options.account
 // 	}
-//     var set_flag = options.set_flag
+//     set_flag := options.set_flag
 // 	if options.set_flag == "" {
-// 		set_flag = options.set	
+// 		set_flag = options.set
 // 	}
-//     var clear_flag = options.clear_flag
+//     clear_flag := options.clear_flag
 // 	if clear_flag == "" {
 // 		clear_flag = options.clear
 // 	}
@@ -682,8 +682,8 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 //     tx.AddTxJSON("TransactionType", "AccountSet")
 //     tx.AddTxJSON("Account", src)
 
-//     var SetClearFlags = Set_clear_flags[1]
-// 	var _set_flag = ""
+//     SetClearFlags := Set_clear_flags[1]
+// 	_set_flag := ""
 // 	if IsNumberType(set_flag) {
 // 		_set_flag = set_flag
 // 	}
@@ -699,10 +699,10 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	}
 // 	tx.AddTxJSON("SetFlag", set_flag)
 
-// 	var _clear_flag = ""
+// 	_clear_flag := ""
 // 	if IsNumberType(clear_flag) {
-// 		_clear_flag = clear_flag	
-// 	} 
+// 		_clear_flag = clear_flag
+// 	}
 // 	else if SetClearFlags[clear_flag] == "" {
 // 		_clear_flag = SetClearFlags["asf" + clear_flag]
 // 	}
@@ -718,14 +718,14 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 
 // //BuildDelegateKeySet
 // func (remote *Remote) BuildDelegateKeySet(options map[string]interface{}) (*Transaction, error) {
-// 	var src = options.source
+// 	src := options.source
 // 	if options.source == "" {
 // 		src = options.from
 // 	}
 // 	if src = "" {
 // 		src = options.account
 // 	}
-// 	var delegate_key = options.delegate_key
+// 	delegate_key := options.delegate_key
 // 	if !utils.isValidAddress(src) {
 // 		return tx, Error("invalid source address")
 // 	}
@@ -766,21 +766,21 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // }
 
 // //挂单
-// func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Transaction, error) { 
-//  	var tx = NewTransaction(remote, nil)
-//     var offer_type = options.type;
-// 	var src = options.source
+// func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Transaction, error) {
+//  	tx := NewTransaction(remote, nil)
+//     offer_type := options.type;
+// 	src := options.source
 //     if options.source == "" {
 //         src = options.from
 //     }
 //     if src = "" {
 //         src = options.account
 //     }
-//     var taker_gets = options.taker_gets 
+//     taker_gets := options.taker_gets
 // 	if taker_gets == "" {
 // 		taker_gets = options.pays
 // 	}
-//     var taker_pays = options.taker_pays
+//     taker_pays := options.taker_pays
 // 	if taker_pays == ""{
 // 		taker_pays = options.gets;
 // 	}
@@ -792,12 +792,11 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 		return tx, Error("invalid offer type")
 // 	}
 // 	if !IsStringType(offer_typroffer_typr) {
-// 		 return tx, Error("invalid offer type")	
+// 		 return tx, Error("invalid offer type")
 // 	}
 
-//     var taker_gets2, taker_pays2;
 // 	if IsStringType(taker_gets) && !IsNumberString(taker_gets) {
-// 		return tx, Error("invalid to pays amount")	
+// 		return tx, Error("invalid to pays amount")
 // 	}
 // 	if  !utils.isValidAmount(taker_gets) {
 // 		return tx, Error("invalid to pays amount object")
@@ -823,15 +822,15 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // //取消挂单
 // func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Transaction, error) {
 // {
-// 	var tx = NewTransaction(remote, nil)
-// 	var src = options.source
+// 	tx := NewTransaction(remote, nil)
+// 	src := options.source
 // 	if options.source == "" {
 // 		src = options.from
 // 	}
 // 	if src = "" {
 // 		src = options.account
 // 	}
-// 	var sequence = options.sequence;
+// 	sequence := options.sequence;
 // 	if !utils.isValidAddress(src) {
 // 		return tx, Error("invalid source address");
 // 	}
@@ -848,11 +847,11 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // //部署合约
 // func (remote *Remote) DeployContractTx(options map[string]interface{}) (*Transaction, error) {
 // {
-// 	var tx = NewTransaction(remote, nil)
-//     var account = options.account
-//     var amount = options.amount
-//     var payload = options.payload
-//     var params = options.params
+//		tx := NewTransaction(remote, nil)
+//     account := options.account
+//     amount := options.amount
+//     payload := options.payload
+//     params := options.params
 //     if !utils.isValidAddress(account) {
 //         tx.tx_json.account = new Error('invalid address')
 //         return tx, Error("invalid address")
@@ -875,7 +874,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 
 //     Args = make(map[string]interface{})
 // 	for i := range params {
-//         var obj = make(map[string]interface{})
+//         obj := make(map[string]interface{})
 // 		obj[Parameter] = utils.stringToHex(params[i])
 // 		Args[Arg] = obj
 //     }
@@ -886,11 +885,11 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // //执行合约
 // func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transaction, error) {
 // {
-// 	var tx = NewTransaction(remote, nil)
-//     var account = options.account;
-//     var des = options.destination;
-//     var params = options.params;
-//     var foo = options.foo; //函数名
+// 	tx := NewTransaction(remote, nil)
+//     account := options.account;
+//     des := options.destination;
+//     params := options.params;
+//     foo := options.foo; //函数名
 //     if !utils.isValidAddress(account) {
 //         return tx, Error("invalid address")
 //     }
@@ -898,7 +897,6 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 //     if !utils.isValidAddress(des) {
 //         return tx, Error("invalid destination")
 //     }
-
 
 //     if len(params) == 0 {
 //         return tx, Error("invalid options type")
@@ -918,12 +916,10 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 		if !IsStringType(params[i]) {
 // 			 return tx, Error("params must be string")
 // 		 }
-// 		 var obj = make(map[string]interface{})
+// 		 obj := make(map[string]interface{})
 // 		 obj[Parameter] = utils.stringToHex(params[i])
 // 		 Args[Arg] = obj
 // 	 }
 // 	 tx.AddTxJSON("Args", Args)
 // 	 return tx, nil;
 // }
-
-
