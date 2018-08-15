@@ -936,47 +936,51 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 //     return tx, nil
 // }
 
-// //执行合约
-// func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transaction, error) {
-// {
-// 	tx := NewTransaction(remote, nil)
-//     account := options.account;
-//     des := options.destination;
-//     params := options.params;
-//     foo := options.foo; //函数名
-//     if !utils.isValidAddress(account) {
-//         return tx, Error("invalid address")
-//     }
+//CallContractTx 执行合约
+func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transaction, error) {
+	tx, err := NewTransaction(remote, nil)
+	if err != nil {
+		return nil, err
+	}
+	if account, ok := options["account"].(string); ok {
+		if !utils.IsValidAddress(account) {
+			return tx, fmt.Errorf("invalid address %s", account)
+		}
 
-//     if !utils.isValidAddress(des) {
-//         return tx, Error("invalid destination")
-//     }
+		tx.AddTxJSON("Account", account)
+	}
 
-//     if len(params) == 0 {
-//         return tx, Error("invalid options type")
-//     }
+	if des, ok := options["destination"].(string); ok {
+		if !utils.IsValidAddress(des) {
+			return tx, fmt.Errorf("invalid destination %s", des)
+		}
+		tx.AddTxJSON("Destination", des)
+	}
 
-//     if !IsStringType(foo) {
-//         return tx, Error("foo must be string")
-//     }
-//     tx.AddTxJSON("TransactionType", "ConfigContract")
-//     tx.AddTxJSON("Account", account)
-//     tx.AddTxJSON("Method", 1)
-//     tx.AddTxJSON("ContractMethod", utils.stringToHex(foo))
-//     tx.AddTxJSON("Destination", des)
+	if params, ok := options["params"]; ok {
+		if paramArray, ok := params.([]string); ok {
+			var Args []map[string]string
+			for _, v := range paramArray {
+				obj := make(map[string]string)
+				obj["Parameter"] = fmt.Sprintf("%X", v)
+				Args = append(Args, obj)
+			}
+			tx.AddTxJSON("Args", Args)
+		} else {
+			return tx, fmt.Errorf("invalid options type")
+		}
+	}
 
-//     Args = make(map[string]interface{})
-//     for i := range params {
-// 		if !IsStringType(params[i]) {
-// 			 return tx, Error("params must be string")
-// 		 }
-// 		 obj := make(map[string]interface{})
-// 		 obj[Parameter] = utils.stringToHex(params[i])
-// 		 Args[Arg] = obj
-// 	 }
-// 	 tx.AddTxJSON("Args", Args)
-// 	 return tx, nil;
-// }
+	if foo, ok := options["foo"].(string); ok {
+		tx.AddTxJSON("ContractMethod", fmt.Sprintf("%X", foo))
+	} else {
+		return tx, fmt.Errorf("foo must be string")
+	}
+
+	tx.AddTxJSON("TransactionType", "ConfigContract")
+	tx.AddTxJSON("Method", 1)
+	return tx, nil
+}
 
 func (resData ResData) getUint64(key string) uint64 {
 	if ret, ok := (resData)[key]; ok {
