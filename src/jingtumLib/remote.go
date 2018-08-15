@@ -477,7 +477,7 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 //On 监听特定的事件消息
 func (remote *Remote) On(eventName string, callback func(data interface{})) {
 	remote.emit.On(eventName, func(event *emitter.Event) {
-		if len(event.Args) == 1 {
+		if len(event.Args) > 0 {
 			callback(event.Args[0])
 		}
 	})
