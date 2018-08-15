@@ -60,5 +60,17 @@ const CommandAccountTX = "account_tx"
 //CommandBookOffers 获得市场挂单列表
 const CommandBookOffers = "book_offers"
 
+//CommandSubscribe 订阅事件
+const CommandSubscribe = "subscribe"
+
+//CommandUnSubscribe 退订事件
+const CommandUnSubscribe = "unsubscribe"
+
 //AccountOne AccountOne
 const AccountOne = "jjjjjjjjjjjjjjjjjjjjBZbvri"
+
+//EventTX 交易事件
+const EventTX = "transactions"
+
+//EventLedgerClosed 账本事件
+const EventLedgerClosed = "ledger_closed"

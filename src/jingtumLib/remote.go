@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	_ "strings"
 	"time"
 
 	"jingtumLib/constant"
 	jtLRU "jingtumLib/lruCache"
 	"jingtumLib/utils"
+
+	"github.com/olebedev/emitter"
 )
 
 var (
@@ -20,10 +23,15 @@ var (
 //Remote 是跟井通底层交互最主要的类，它可以组装交易发送到底层、订阅事件及从底层拉取数据。
 type Remote struct {
 	requests  map[uint64]*ReqCtx
+	status    map[string]interface{}
 	LocalSign bool
 	Paths     *jtLRU.LRU
+	cache     *jtLRU.LRU
 	server    *Server
+	emit      *emitter.Emitter
 }
+
+type ResData map[string]interface{}
 
 //ReqCtx 请求包装类
 type ReqCtx struct {
@@ -102,11 +110,17 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 	}
 
 	remote.requests = make(map[uint64]*ReqCtx)
+	remote.status = make(map[string]interface{})
 	lru, err := jtLRU.NewLRU(100, time.Duration(5)*time.Minute, nil)
 	if err != nil {
 		return remote, err
 	}
 	remote.Paths = lru
+
+	remote.cache, err = jtLRU.NewLRU(100, time.Duration(5)*time.Minute, nil)
+	if err != nil {
+		return remote, err
+	}
 	remote.LocalSign = localSign
 	server, err := NewServer(remote, url)
 	if err != nil {
@@ -114,6 +128,8 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 	}
 
 	remote.server = server
+	remote.emit = &emitter.Emitter{}
+	remote.emit.Use("*", emitter.Void)
 
 	return remote, nil
 }
@@ -427,6 +443,25 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	return req, nil
 }
 
+//Subscribe 订阅服务
+func (remote *Remote) Subscribe(streams []string) *Request {
+	req := NewRequest(remote, constant.CommandSubscribe, nil)
+
+	if len(streams) > 0 {
+		req.message["streams"] = streams
+	}
+	return req
+}
+
+//UnSubscribe 退订服务
+func (remote *Remote) UnSubscribe(streams []string) *Request {
+	req := NewRequest(remote, constant.CommandUnSubscribe, nil)
+	if len(streams) > 0 {
+		req.message["streams"] = streams
+	}
+	return req
+}
+
 //Submit 提交请求
 func (remote *Remote) Submit(command string, data map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
 	rc := new(ReqCtx)
@@ -440,89 +475,95 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 	remote.server.sendMessage(rc)
 }
 
-func (remote *Remote) handleResponse(data *constant.ResponseData) {
-	request, ok := remote.requests[data.ID]
+//On 监听特定的事件消息
+func (remote *Remote) On(eventName string, callback func(data interface{})) {
+	remote.emit.On(eventName, func(event *emitter.Event) {
+		if len(event.Args) == 1 {
+			callback(event.Args[0])
+		}
+	})
+}
+
+func (remote *Remote) handleResponse(data ResData) {
+	request, ok := remote.requests[data.getUint64("id")]
 
 	if !ok {
-		Errorf("Request id error %d", data.ID)
+		Errorf("Request id error %d", data.getUint64("id"))
 		return
 	}
 
-	delete(remote.requests, data.ID)
+	delete(remote.requests, data.getUint64("id"))
 
-	if data.Status == "success" {
-		result := request.filter(data.Result)
+	if data.getString("status") == "success" {
+		result := request.filter(data.getMap("result"))
 		request.callback(nil, result)
-	} else if data.Status == "error" {
-		errMsg := data.ErrorMessage
+	} else if data.getString("status") == "error" {
+		errMsg := data.getString("error_message")
 		if errMsg != "" {
 			request.callback(errors.New(errMsg), nil)
 		}
 	}
 }
 
-func (remote *Remote) handlePathFind(data *constant.ResponseData) {
+func (remote *Remote) handlePathFind(data ResData) {
 	//    this.emit('path_find', data);
 }
 
-func (remote *Remote) handleTransaction(data *constant.ResponseData) {
-	//    var self = this;
-	//    var tx = data.transaction.hash;
-	//    if (self._cache.get(tx)) return;
-	//    self._cache.set(tx, 1);
-	//    this.emit('transactions', data);
+func (remote *Remote) handleTransaction(data ResData) {
+	if txHash, ok := data.getMap("transaction")["hash"].(string); ok {
+		remote.cache.Add(txHash, 1)
+		go remote.emit.Emit(constant.EventTX, data)
+	}
 }
 
-func (remote *Remote) handleServerStatus(data *constant.ResponseData) {
+func (remote *Remote) handleServerStatus(data ResData) {
 	// TODO check data format
 	//    this._updateServerStatus(data);
 	//    this.emit('server_status', data);
 }
 
-func (remote *Remote) handleLedgerClosed(data *constant.ResponseData) {
-	//    var self = this;
-	//    if (data.ledger_index > self._status.ledger_index) {
-	//        self._status.ledger_index = data.ledger_index;
-	//        self._status.ledger_time = data.ledger_time;
-	//        self._status.reserve_base = data.reserve_base;
-	//        self._status.reserve_inc = data.reserve_inc;
-	//        self._status.fee_base = data.fee_base;
-	//        self._status.fee_ref = data.fee_ref;
-	//        self.emit('ledger_closed', data);
-	//    }
+func (remote *Remote) handleLedgerClosed(data ResData) {
+	stsIdx, ok := remote.status["ledger_index"]
+	if !ok {
+		remote.status["ledger_index"] = data.getFloat64("ledger_index")
+		go remote.emit.Emit(constant.EventLedgerClosed, data)
+	} else if data.getFloat64("ledger_index") > stsIdx.(float64) {
+		remote.status["ledger_time"] = data.getObj("ledger_time")
+		remote.status["reserve_base"] = data.getObj("reserve_base")
+		remote.status["reserve_inc"] = data.getObj("reserve_inc")
+		remote.status["fee_base"] = data.getObj("fee_base")
+		remote.status["fee_ref"] = data.getObj("fee_ref")
+		go remote.emit.Emit(constant.EventLedgerClosed, data)
+	}
 }
 
 //消息处理方法
 func (remote *Remote) handleMessage(msg []byte) {
-	var data constant.ResponseData
+	var data ResData
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
 		Errorf("Received msg json Unmarshal error : %v", err)
 		return
 	}
 
-	if data.Error != "" {
-		// cid, err := strconv.ParseUint(data["id"].(string), 10, 64)
-		// if err != nil {
-		// 	Errorf("Received msg parse id error : %v", err)
-		// 	return
-		// }
-		remote.requests[data.ID].callback(errors.New(data.ErrorMessage), nil)
+	if data.getString("error") != "" {
+		remote.requests[data.getUint64("id")].callback(errors.New(data.getString("error_message")), nil)
 	} else {
-		resType := data.Type
+		resType := data.getString("type")
 		switch resType {
 		case "ledgerClosed":
-			remote.handleLedgerClosed(&data)
+			remote.handleLedgerClosed(data)
 		case "serverStatus":
-			remote.handleServerStatus(&data)
+			remote.handleServerStatus(data)
 		case "response":
-			remote.handleResponse(&data)
+			remote.handleResponse(data)
 		case "transaction":
-			remote.handleTransaction(&data)
+			remote.handleTransaction(data)
 		case "path_find":
-			remote.handlePathFind(&data)
+			remote.handlePathFind(data)
 		}
 	}
+	// }
 }
 
 //BuildPaymentTx 创建支付对象
@@ -923,3 +964,57 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	 tx.AddTxJSON("Args", Args)
 // 	 return tx, nil;
 // }
+
+func (resData ResData) getUint64(key string) uint64 {
+	if ret, ok := (resData)[key]; ok {
+		switch v := ret.(type) {
+		case float64:
+			return uint64(v)
+		case float32:
+			return uint64(v)
+		case int:
+			return uint64(v)
+		case int8:
+			return uint64(v)
+		case int32:
+			return uint64(v)
+		case int64:
+			return uint64(v)
+		case uint:
+			return uint64(v)
+		case uint8:
+			return uint64(v)
+		case uint32:
+			return uint64(v)
+		}
+	}
+	return 0
+}
+
+func (resData ResData) getString(key string) string {
+	if ret, ok := resData[key].(string); ok {
+		return ret
+	}
+	return ""
+}
+
+func (resData ResData) getMap(key string) map[string]interface{} {
+	if ret, ok := resData[key].(map[string]interface{}); ok {
+		return ret
+	}
+	return nil
+}
+
+func (resData ResData) getFloat64(key string) float64 {
+	if ret, ok := resData[key].(float64); ok {
+		return ret
+	}
+	return 0
+}
+
+func (resData ResData) getObj(key string) interface{} {
+	if ret, ok := resData[key]; ok {
+		return ret
+	}
+	return nil
+}

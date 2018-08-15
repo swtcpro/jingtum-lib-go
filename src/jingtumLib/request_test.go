@@ -16,6 +16,43 @@ import (
 	"testing"
 )
 
+//Test_ListenerEvent 监听账本消息
+func Test_ListenerEvent(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	//监听所有账本消息
+	remote.On(constant.EventLedgerClosed, func(data interface{}) {
+		jsonBytes, _ := json.Marshal(data)
+		t.Logf("Success listener ledger closed : %s", string(jsonBytes))
+		wg.Done()
+	})
+	wg.Wait()
+}
+
 //Test_RequestOrderBook 获得市场挂单列表
 func Test_RequestOrderBook(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)

@@ -111,6 +111,15 @@ func (server *Server) Disconnect() bool {
 	if server == nil || !server.connected {
 		return true
 	}
+
+	req := server.remote.UnSubscribe([]string{"transactions", "ledger", "server"})
+	req.Submit(func(err error, result interface{}) {})
+
+	rc := new(ReqCtx)
+	rc.command = constant.CommandDisconnect
+	server.sendMessage(rc)
+	server.remote.emit.Off("*")
+
 	err := server.conn.Close()
 	if err != nil {
 		return false
@@ -119,10 +128,6 @@ func (server *Server) Disconnect() bool {
 	server.state = "offline"
 	server.connected = false
 	server.opened = false
-
-	rc := new(ReqCtx)
-	rc.command = constant.CommandDisconnect
-	server.sendMessage(rc)
 	return true
 }
 
@@ -159,8 +164,7 @@ func (server *Server) listeningSend() {
 			req.callback(err, nil)
 			continue
 		}
-		//, \"marker\":%s
-		// cmd := fmt.Sprintf("{\"id\":\"%d\",\"command\":\"%s\",\"account\":\"%s\",\"ledger_index_min\":-1,\"ledger_index_max\":-1, \"limit\": %d}", req.cid, req.command, req.data["account"].(string), 1000)
+
 		fmt.Printf("Request info %s\n", jsonData)
 		bm := evtwebsocket.Msg{
 			Body: jsonData,
@@ -200,6 +204,11 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 			connectMsg := fmt.Sprintf("Connect to [%s] success.", server.url)
 			once.Do(wg.Done)
 			callback(nil, connectMsg)
+			go func() {
+				req := server.remote.Subscribe([]string{"transactions", "ledger", "server"})
+				req.Submit(func(err error, result interface{}) {
+				})
+			}()
 		},
 
 		OnMessage: func(msg []byte, w *evtwebsocket.Conn) {
