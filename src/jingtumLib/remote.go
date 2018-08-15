@@ -898,43 +898,60 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 // 	return tx;
 // }
 
-// //部署合约
-// func (remote *Remote) DeployContractTx(options map[string]interface{}) (*Transaction, error) {
-// {
-//		tx := NewTransaction(remote, nil)
-//     account := options.account
-//     amount := options.amount
-//     payload := options.payload
-//     params := options.params
-//     if !utils.isValidAddress(account) {
-//         tx.tx_json.account = new Error('invalid address')
-//         return tx, Error("invalid address")
-//     }
-//     if utils.IsNumberString(amount) {
-//         return tx, Error("invalid amount")
-//     }
-// 	if utils.IsStringType(payload) {
-// 		return tx, Error("invalid payload: type error.")
-// 	}
+//DeployContractTx 部署合约
+func (remote *Remote) DeployContractTx(options map[string]interface{}) (*Transaction, error) {
+	tx, err := NewTransaction(remote, nil)
+	if err != nil {
+		return nil, err
+	}
 
-//     if len(params) == 0  {
-//         return tx, Error("invalid options type")
-//     }
-//     tx.AddTxJSON("TransactionType", "ConfigContract")
-//     tx.AddTxJSON("Account", account)
-//     tx.AddTxJSON("Amount", strconv.ParseFloat(amount, 64) * 1000000)
-//     tx.AddTxJSON("Method", 0)
-//     tx.AddTxJSON("Payload", payload)
+	if account, ok := options["account"].(string); ok {
+		if !utils.IsValidAddress(account) {
+			return tx, fmt.Errorf("invalid address %s", account)
+		}
+		tx.AddTxJSON("Account", account)
+	} else {
+		return tx, fmt.Errorf("invalid address")
+	}
 
-//     Args = make(map[string]interface{})
-// 	for i := range params {
-//         obj := make(map[string]interface{})
-// 		obj[Parameter] = utils.stringToHex(params[i])
-// 		Args[Arg] = obj
-//     }
-// 	tx.AddTxJSON("Args", Args)
-//     return tx, nil
-// }
+	if amount, ok := options["amount"]; ok {
+		if amtStr, ok := amount.(string); ok {
+			amtFlat, err := strconv.ParseFloat(amtStr, 64)
+			if err != nil {
+				return tx, err
+			}
+
+			tx.AddTxJSON("Amount", (amtFlat * 1000000))
+		} else if amtFlat64, ok := amount.(float64); ok {
+			tx.AddTxJSON("Amount", (amtFlat64 * 1000000))
+		} else {
+			return tx, fmt.Errorf("amount type must be float64 or string")
+		}
+	}
+
+	if payload, ok := options["payload"].(string); ok {
+		tx.AddTxJSON("Payload", payload)
+	} else {
+		return tx, fmt.Errorf("invalid payload: type error")
+	}
+
+	if params, ok := options["params"]; ok {
+		if paramArray, ok := params.([]string); ok {
+			var Args []map[string]string
+			for _, v := range paramArray {
+				obj := make(map[string]string)
+				obj["Parameter"] = fmt.Sprintf("%X", v)
+				Args = append(Args, obj)
+			}
+			tx.AddTxJSON("Args", Args)
+		} else {
+			return tx, fmt.Errorf("invalid options type")
+		}
+	}
+	tx.AddTxJSON("TransactionType", "ConfigContract")
+	tx.AddTxJSON("Method", 0)
+	return tx, nil
+}
 
 //CallContractTx 执行合约
 func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transaction, error) {
@@ -948,6 +965,8 @@ func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transacti
 		}
 
 		tx.AddTxJSON("Account", account)
+	} else {
+		return tx, fmt.Errorf("invalid address")
 	}
 
 	if des, ok := options["destination"].(string); ok {
