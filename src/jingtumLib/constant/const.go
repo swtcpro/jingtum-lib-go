@@ -74,3 +74,9 @@ const EventTX = "transactions"
 
 //EventLedgerClosed 账本事件
 const EventLedgerClosed = "ledger_closed"
+
+//EventPathFind 支付路径事件
+const EventPathFind = "path_find"
+
+//EventServerStatus 服务状态事件
+const EventServerStatus = "server_status"

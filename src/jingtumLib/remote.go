@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	_ "strings"
 	"time"
 
 	"jingtumLib/constant"
@@ -506,7 +505,7 @@ func (remote *Remote) handleResponse(data ResData) {
 }
 
 func (remote *Remote) handlePathFind(data ResData) {
-	//    this.emit('path_find', data);
+	go remote.emit.Emit(constant.EventPathFind, data)
 }
 
 func (remote *Remote) handleTransaction(data ResData) {
@@ -516,10 +515,24 @@ func (remote *Remote) handleTransaction(data ResData) {
 	}
 }
 
+func (remote *Remote) updateServerStatus(data ResData) {
+	remote.status["load_base"] = data.getObj("load_base")
+	remote.status["load_factor"] = data.getObj("load_factor")
+	if data.getObj("pubkey_node") != nil {
+		remote.status["pubkey_node"] = data.getObj("pubkey_node")
+	}
+	remote.status["server_status"] = data.getObj("server_status")
+	serverStatus := data.getString("server_status")
+	online := "offline"
+	if onlineStates.contain(serverStatus) {
+		online = "online"
+	}
+	remote.server.setState(online)
+}
+
 func (remote *Remote) handleServerStatus(data ResData) {
-	// TODO check data format
-	//    this._updateServerStatus(data);
-	//    this.emit('server_status', data);
+	remote.updateServerStatus(data)
+	go remote.emit.Emit(constant.EventServerStatus, data)
 }
 
 func (remote *Remote) handleLedgerClosed(data ResData) {

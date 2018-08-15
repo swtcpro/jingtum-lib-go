@@ -20,7 +20,6 @@ import (
 	"jingtumLib/constant"
 	"jingtumLib/utils"
 
-	//"golang.org/x/net/websocket"
 	"github.com/caivega/evtwebsocket"
 )
 
@@ -38,8 +37,10 @@ type Server struct {
 	l         *sync.RWMutex
 }
 
+type activeStates []string
+
 var (
-	onlineStates = []string{"syncing", "tracking", "proposing", "validating", "full", "connected"}
+	onlineStates = activeStates{"syncing", "tracking", "proposing", "validating", "full", "connected"}
 	domainRE     = "[A-Za-z0-9]+(\\.[A-Za-z0-9]){1,5}" //"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?(?:\\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|[-_]){0,61}[0-9A-Za-z])?)*\\.?$"
 )
 
@@ -148,6 +149,18 @@ func (server *Server) sendMessage(reqCtx *ReqCtx) {
 	server.reqs <- reqCtx
 }
 
+func (server *Server) setState(state string) {
+	if state == server.state {
+		return
+	}
+	server.state = state
+	server.connected = (state == "online")
+
+	if !server.connected {
+		server.opened = false
+	}
+}
+
 func (server *Server) listeningSend() {
 	for {
 		req := <-server.reqs
@@ -245,4 +258,18 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 	wg.Wait()
 
 	return nil
+}
+
+func (status activeStates) contain(value string) bool {
+	return status.indexOf(value) >= 0
+}
+
+func (status activeStates) indexOf(value string) int {
+	for i, inv := range status {
+		if inv == value {
+			return i
+		}
+	}
+
+	return -1
 }
