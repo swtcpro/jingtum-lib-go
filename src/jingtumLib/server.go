@@ -217,11 +217,11 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 			connectMsg := fmt.Sprintf("Connect to [%s] success.", server.url)
 			once.Do(wg.Done)
 			callback(nil, connectMsg)
-			go func() {
-				req := server.remote.Subscribe([]string{"transactions", "ledger", "server"})
-				req.Submit(func(err error, result interface{}) {
-				})
-			}()
+			// go func() {
+			// 	req := server.remote.Subscribe([]string{"transactions", "ledger", "server"})
+			// 	req.Submit(func(err error, result interface{}) {
+			// 	})
+			// }()
 		},
 
 		OnMessage: func(msg []byte, w *evtwebsocket.Conn) {

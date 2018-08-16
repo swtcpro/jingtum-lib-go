@@ -305,12 +305,14 @@ func signing(tx *Transaction) (string, error) {
 		return "", err
 	}
 	hash := so.Hash(prefix)
+	// fmt.Println(utils.ByteToHexString(hash))
 	signTx, err := wt.signTx(hash)
 	if err != nil {
 		return "", err
 	}
 
 	tx.AddTxJSON("TxnSignature", signTx)
+	// fmt.Println(signTx)
 	soBlog, err := serializer.FromJSON(utils.DeepCopy(tx.txJSON).(map[string]interface{}))
 
 	if err != nil {

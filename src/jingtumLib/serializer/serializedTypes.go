@@ -489,8 +489,17 @@ func (serObject SerializedObject) Parse(so *Serializer) interface{} {
 func (serObject SerializedObject) Serialize(so *Serializer, val interface{}, noMarker bool) {
 	txData, ok := val.(map[string]interface{})
 	if !ok {
-		so.err = fmt.Errorf("Serialive object type must be map[string]interface{}. Actual type : %T. Value : %v", val, val)
-		return
+		bytes, err := json.Marshal(val)
+		if err != nil {
+			so.err = fmt.Errorf("Serialive object type must be map[string]interface{}. Actual type : %T. Value : %v", val, val)
+			return
+		}
+
+		err = json.Unmarshal(bytes, &txData)
+		if err != nil {
+			so.err = fmt.Errorf("Serialive object type must be map[string]interface{}. Actual type : %T. Value : %v", val, val)
+			return
+		}
 	}
 
 	var fieldNames []string
