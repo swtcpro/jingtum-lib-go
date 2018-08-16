@@ -953,7 +953,7 @@ func (remote *Remote) DeployContractTx(options map[string]interface{}) (*Transac
 
 	if params, ok := options["params"]; ok {
 		if paramArray, ok := params.([]string); ok {
-			args := list.New() //[]map[string]string
+			args := list.New()
 			for _, v := range paramArray {
 				argInfo := new(ArgInfo)
 				obj := &ParameterInfo{Parameter: fmt.Sprintf("%X", v)}
@@ -995,13 +995,14 @@ func (remote *Remote) CallContractTx(options map[string]interface{}) (*Transacti
 
 	if params, ok := options["params"]; ok {
 		if paramArray, ok := params.([]string); ok {
-			var Args []map[string]string
+			args := list.New()
 			for _, v := range paramArray {
-				obj := make(map[string]string)
-				obj["Parameter"] = fmt.Sprintf("%X", v)
-				Args = append(Args, obj)
+				argInfo := new(ArgInfo)
+				obj := &ParameterInfo{Parameter: fmt.Sprintf("%X", v)}
+				argInfo.Arg = obj
+				args.PushBack(argInfo)
 			}
-			tx.AddTxJSON("Args", Args)
+			tx.AddTxJSON("Args", args)
 		} else {
 			return tx, fmt.Errorf("invalid options type")
 		}
