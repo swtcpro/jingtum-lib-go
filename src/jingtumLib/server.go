@@ -225,7 +225,7 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 		},
 
 		OnMessage: func(msg []byte, w *evtwebsocket.Conn) {
-			// fmt.Printf("On message %s\n", msg)
+			fmt.Printf("On message %s\n", msg)
 			server.remote.handleMessage(msg)
 		},
 

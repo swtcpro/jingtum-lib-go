@@ -507,9 +507,11 @@ func (remote *Remote) handleResponse(data ResData) {
 		request.callback(nil, result)
 	} else if data.getString("status") == "error" {
 		errMsg := data.getString("error_message")
-		if errMsg != "" {
-			request.callback(errors.New(errMsg), nil)
+		if errMsg == "" {
+			errMsg = data.getString("error_exception")
 		}
+
+		request.callback(errors.New(errMsg), nil)
 	}
 }
 
@@ -568,23 +570,28 @@ func (remote *Remote) handleMessage(msg []byte) {
 		return
 	}
 
-	if data.getString("error") != "" {
-		remote.requests[data.getUint64("id")].callback(errors.New(data.getString("error_message")), nil)
-	} else {
-		resType := data.getString("type")
-		switch resType {
-		case "ledgerClosed":
-			remote.handleLedgerClosed(data)
-		case "serverStatus":
-			remote.handleServerStatus(data)
-		case "response":
-			remote.handleResponse(data)
-		case "transaction":
-			remote.handleTransaction(data)
-		case "path_find":
-			remote.handlePathFind(data)
-		}
+	// if data.getString("error") != "" {
+	// 	delete(remote.requests, data.getUint64("id"))
+	// 	errMsg := data.getString("error_message")
+	// 	if errMsg == "" {
+	// 		errMsg = data.getString("error_exception")
+	// 	}
+	// 	remote.requests[data.getUint64("id")].callback(errors.New(data.getString("error_message")), nil)
+	// } else {
+	resType := data.getString("type")
+	switch resType {
+	case "ledgerClosed":
+		remote.handleLedgerClosed(data)
+	case "serverStatus":
+		remote.handleServerStatus(data)
+	case "response":
+		remote.handleResponse(data)
+	case "transaction":
+		remote.handleTransaction(data)
+	case "path_find":
+		remote.handlePathFind(data)
 	}
+	// }
 	// }
 }
 
