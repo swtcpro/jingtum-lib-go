@@ -256,13 +256,11 @@ func signing(tx *Transaction) (string, error) {
 	tx.AddTxJSON("Fee", float32(fee))
 
 	amount := tx.GetTxJSON("Amount")
-	if amount == nil {
-		return "", fmt.Errorf("Amount not be empty")
-	}
-
-	if amt64, ok := amount.(float64); ok {
-		amt, _ := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
-		tx.AddTxJSON("Amount", amt)
+	if amount != nil {
+		if amt64, ok := amount.(float64); ok {
+			amt, _ := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+			tx.AddTxJSON("Amount", amt)
+		}
 	}
 
 	if tx.GetTxJSON("Memos") != nil {

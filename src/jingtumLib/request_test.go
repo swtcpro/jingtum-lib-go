@@ -11,10 +11,108 @@ package jingtumLib
 
 import (
 	"encoding/json"
+	"fmt"
 	"jingtumLib/constant"
 	"sync"
 	"testing"
 )
+
+//Test_DeployContractTx 部署合约测试
+func Test_DeployContractTx(t *testing.T) {
+	remote, err := NewRemote("ws://139.129.194.175:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	//部署合约
+	options := map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
+	tx, err := remote.DeployContractTx(options)
+	if err != nil {
+		t.Fatalf("Fail request deploy contract %s", err.Error())
+		wg.Done()
+	} else {
+		tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
+		tx.Submit(func(err error, data interface{}) {
+			if err != nil {
+				t.Fatalf("Fail request deploy contract %s", err.Error())
+			} else {
+				jsonBytes, _ := json.Marshal(data)
+				t.Logf("Success deploy contract : %s", string(jsonBytes))
+			}
+			wg.Done()
+		})
+	}
+	wg.Wait()
+}
+
+//Test_CallContractTx 执行合约
+func Test_CallContractTx(t *testing.T) {
+	//执行合约
+	remote, err := NewRemote("ws://139.129.194.175:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	cerr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			t.Fatalf("New remote fail : %s", err.Error())
+			return
+		}
+
+		jsonBytes, _ := json.Marshal(result)
+
+		t.Logf("Connect success : %s", jsonBytes)
+	})
+
+	if cerr != nil {
+		t.Fatalf("Connect service fail : %s", err.Error())
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	options := map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "destination": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72", "foo": "foo", "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
+	tx, err := remote.CallContractTx(options)
+	if err != nil {
+		t.Fatalf("Fail request call contract Tx %s", err.Error())
+		wg.Done()
+	}
+	tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
+	tx.Submit(func(err error, data interface{}) {
+		if err != nil {
+			t.Fatalf("Fail request call contract Tx %s", err.Error())
+		} else {
+			jsonBytes, _ := json.Marshal(data)
+			t.Logf("Success call contract Tx : %s", string(jsonBytes))
+		}
+		wg.Done()
+	})
+	wg.Wait()
+}
 
 //Test_ListenerEvent 监听账本消息
 func Test_ListenerEvent(t *testing.T) {
