@@ -13,6 +13,7 @@
 package serializer
 
 import (
+	"jingtumLib/utils"
 	"fmt"
 	"math"
 	"math/big"
@@ -137,6 +138,9 @@ func (amount *TumAmount) TumToBytes() ([]byte, error) {
 			currencyData[end-j] = (currencyCode[cclen-j] & 0xff)
 		}
 	} else if len(amount.Currency) == 40 {
+		if !utils.MatchString("^[0-9a-zA-F]+", amount.Currency) {
+			return nil, fmt.Errorf("Invalid currency code %s", amount.Currency)
+		}
 		bIntV, ok := big.NewInt(0).SetString(amount.Currency, 16)
 		if !ok {
 			return nil, fmt.Errorf("Invalid currency code %s", amount.Currency)
