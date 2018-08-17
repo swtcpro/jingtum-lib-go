@@ -379,22 +379,27 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		//For other non-native currency
 		//1. Serialize the currency value with offset
 		//Put offset
-		var hi, lo int64 = 0, 0
+		var hi, lo int = 0, 0
 		hi |= 1 << 31
+		hi = int(int32(hi))
+
 		if !tumAmount.IsZeroM() {
 			// Second bit: non-negative?
-			if tumAmount.IsNegative {
+			if !tumAmount.IsNegative {
 				hi |= 1 << 30
+				hi = int(int32(hi))
 			}
 			// Next eight bits: offset/exponent
-			hi |= ((int64(97) + int64(tumAmount.Offset)) & 0xff) << 22
+			hi |= ((97 + tumAmount.Offset) & 0xff) << 22
+			hi = int(int32(hi))
 			// Remaining 54 bits: mantissa
-			hi |= (tumAmount.Value.Int64() >> 32) & 0x3fffff
-			lo = tumAmount.Value.Int64() & 0xffffffff
+			hi |= (int(tumAmount.Value.Int64()) >> 32) & 0x3fffff
+			hi = int(int32(hi))
+			lo = int(tumAmount.Value.Int64()) & 0xffffffff
 		}
 
 		// Convert from a bitArray to an array of bytes.
-		arr := []int64{hi, lo}
+		arr := []int{hi, lo}
 		l := len(arr)
 		var bl int64
 		if l == 0 {
@@ -409,7 +414,7 @@ func (serAmount SerializedAmount) Serialize(so *Serializer, val interface{}, noM
 		}
 
 		var tmparray []byte
-		var tmp int64
+		var tmp int
 		for i := 0; int64(i) < int64(bl/8); i++ {
 			if (i & 3) == 0 {
 				tmp = arr[i/4]
