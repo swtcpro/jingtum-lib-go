@@ -163,7 +163,10 @@ func (server *Server) setState(state string) {
 
 func (server *Server) listeningSend() {
 	for {
-		req := <-server.reqs
+		req, ok := <-server.reqs
+		if !ok {
+			continue
+		}
 
 		//终止消息监听线程
 		if req.command == constant.CommandDisconnect {
