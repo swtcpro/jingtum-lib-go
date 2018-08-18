@@ -185,8 +185,6 @@ func (remote *Remote) GetNowTime() string {
 
 //Disconnect 关闭连接
 func (remote *Remote) Disconnect() {
-	// remote.lock.Lock()
-	// defer remote.lock.Unlock()
 	if remote.server != nil && remote.server.Disconnect() {
 		//清除请求缓存
 		for id := range remote.requests {
@@ -499,8 +497,6 @@ func (remote *Remote) UnSubscribe(streams []string) *Request {
 
 //Submit 提交请求
 func (remote *Remote) Submit(command string, data map[string]interface{}, filter Filter, callback func(err error, data interface{})) {
-	// remote.lock.Lock()
-	// defer remote.lock.Unlock()
 	rc := new(ReqCtx)
 	rc.command = command
 	rc.data = data
@@ -524,16 +520,15 @@ func (remote *Remote) On(eventName string, callback func(data interface{})) {
 
 func (remote *Remote) handleResponse(data ResData) {
 	remote.lock.Lock()
-	// defer remote.lock.Unlock()
 	request, ok := remote.requests[data.getUint64("id")]
-
+	remote.lock.Unlock()
 	if !ok {
 		Errorf("Request id error %d", data.getUint64("id"))
+
 		return
 	}
 
 	delete(remote.requests, data.getUint64("id"))
-	remote.lock.Unlock()
 
 	if data.getString("status") == "success" {
 		result := request.filter(data.getMap("result"))
