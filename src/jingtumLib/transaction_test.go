@@ -62,9 +62,7 @@ func Test_LocalSignPayment(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			return
 		}
@@ -72,10 +70,12 @@ func Test_LocalSignPayment(t *testing.T) {
 		t.Logf("Connect to %s success. Result : %s.", wsurl, jsonByte)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect to %s fail : %s", wsurl, err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect to %s fail : %s", wsurl, conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	//支付请求
 	var v struct {

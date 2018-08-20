@@ -25,9 +25,7 @@ func Test_DeployContractTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -38,10 +36,12 @@ func Test_DeployContractTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -636,7 +636,7 @@ func Test_RequestAccountInfo(t *testing.T) {
 		wg.Done()
 		return
 	}
-
+	req.SelectLedger(1065000)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("Requst account info : %s", err.Error())
