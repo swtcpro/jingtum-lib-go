@@ -75,9 +75,7 @@ func Test_CallContractTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -88,10 +86,12 @@ func Test_CallContractTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -517,9 +517,7 @@ func Test_RequestLedgerClosed(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -530,10 +528,12 @@ func Test_RequestLedgerClosed(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	req, err := remote.RequestLedgerClosed()
 	if err != nil {
@@ -566,9 +566,7 @@ func Test_RequestServerInfo(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -579,10 +577,12 @@ func Test_RequestServerInfo(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	req, err := remote.RequestServerInfo()
 	if err != nil {
