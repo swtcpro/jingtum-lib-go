@@ -159,9 +159,7 @@ func Test_RequestOrderBook(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -172,10 +170,12 @@ func Test_RequestOrderBook(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	options := make(map[string]interface{})
 	gets := constant.Amount{}
@@ -199,8 +199,6 @@ func Test_RequestOrderBook(t *testing.T) {
 			wg.Done()
 			return
 		}
-
-		// jsonByte, _ := json.Marshal(result)
 		t.Logf("Success request order book")
 		wg.Done()
 	})
@@ -215,10 +213,7 @@ func Test_RequestAccountTx(t *testing.T) {
 		t.Fatalf("New remote fail : %s", err.Error())
 		return
 	}
-
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -229,11 +224,11 @@ func Test_RequestAccountTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-
+	defer remote.Disconnect()
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountTx(options)
 	if err != nil {
@@ -249,8 +244,6 @@ func Test_RequestAccountTx(t *testing.T) {
 			wg.Done()
 			return
 		}
-
-		// jsonByte, _ := json.Marshal(result)
 		t.Log("Success request account tx")
 		wg.Done()
 	})
@@ -266,9 +259,7 @@ func Test_RequestAccountOffers(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -279,11 +270,11 @@ func Test_RequestAccountOffers(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-
+	defer remote.Disconnect()
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountOffers(options)
 	if err != nil {
@@ -316,9 +307,7 @@ func Test_RequestAccountRelations(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -329,10 +318,12 @@ func Test_RequestAccountRelations(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust"}
 	req, err := remote.RequestAccountRelations(options)
@@ -366,9 +357,7 @@ func Test_RequestAccountTums(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -379,10 +368,12 @@ func Test_RequestAccountTums(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountTums(options)
@@ -416,9 +407,7 @@ func Test_RequestTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -429,10 +418,12 @@ func Test_RequestTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	hash := "6537F72CE1DBD8043230C3FF64C6E5E95B11F6573D91EF6A13FEADE6940CB71A"
 	req, err := remote.RequestTx(hash)
@@ -466,9 +457,7 @@ func Test_RequestLedger(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -479,10 +468,12 @@ func Test_RequestLedger(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	options := map[string]interface{}{"transactions": true, "ledger_index": 969054, "ledger_hash": "AEE4B16B543D8C8924F09C1DB822C6419780B86019F5F5FF8DC2938E7E0E89D2"}
 
@@ -615,9 +606,7 @@ func Test_RequestAccountInfo(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
 			t.Fatalf("New remote fail : %s", err.Error())
 			return
@@ -628,17 +617,18 @@ func Test_RequestAccountInfo(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
+
+	defer remote.Disconnect()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
 	//请求账号信息
-	options := make(map[string]interface{})
-	options["account"] = "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountInfo(options)
 
 	if err != nil {
