@@ -725,19 +725,12 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	if !ok {
 		src, ok = options["account"]
 	}
-<<<<<<< HEAD
  	quality_out := options["quality_out"]
 	quality_in := options["quality_in"]
 	if src, ok := src.(string); ok {
 		if !utils.IsValidAddress(src) {
 			return fmt.Errorf("invalid source address")
 		}
-=======
-	quality_out := options["quality_out"]
-	quality_in := options["quality_in"]
-	if !utils.IsValidAddress(src.(string)) {
-		return fmt.Errorf("invalid source address")
->>>>>>> c2e92877a61760da6fe8219a57a563bf566fcaf5
 	}
 	limit, ok := options["limit"]
 	if !ok {
