@@ -661,7 +661,10 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
  		src, ok = options["account"]
 	}
 
-	des := options["target"]
+	des, ok := options["target"]
+	if !ok {
+		return fmt.Errorf("invalid target")
+	}
 	limit, ok := options["limit"]
 	if !ok {
 		return fmt.Errorf("invalid limit")
@@ -713,9 +716,11 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 		src, ok = options["account"]
 	}
  	quality_out := options["quality_out"]
- 	quality_in := options["quality_in"]
- 	if !utils.IsValidAddress(src.(string)) {
- 		return fmt.Errorf("invalid source address")
+	quality_in := options["quality_in"]
+	if src, ok := src.(string); ok {
+		if !utils.IsValidAddress(src) {
+			return fmt.Errorf("invalid source address")
+		}
 	}
 	limit, ok := options["limit"]
 	if !ok {
