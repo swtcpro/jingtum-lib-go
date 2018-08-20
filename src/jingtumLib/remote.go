@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"jingtumLib/constant"
@@ -29,6 +30,7 @@ type Remote struct {
 	cache     *jtLRU.LRU
 	server    *Server
 	emit      *emitter.Emitter
+	lock      sync.Mutex
 }
 
 type ResData map[string]interface{}
@@ -114,7 +116,7 @@ type Remoter interface {
 	//DeployContractTx 部署合约
 	DeployContractTx(options map[string]interface{}) (*Transaction, error)
 	//CallContractTx 执行合约
-	CallContractTx(options map[string]interface{}) (*Transaction, error) 
+	CallContractTx(options map[string]interface{}) (*Transaction, error)
 }
 
 //NewRemote 创建Remote，url 为空是从配置文件获取server 地址
@@ -141,6 +143,7 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 
 	remote.requests = make(map[uint64]*ReqCtx)
 	remote.status = make(map[string]interface{})
+	remote.lock = sync.Mutex{}
 	lru, err := jtLRU.NewLRU(100, time.Duration(5)*time.Minute, nil)
 	if err != nil {
 		return remote, err
@@ -500,8 +503,9 @@ func (remote *Remote) Submit(command string, data map[string]interface{}, filter
 	rc.callback = callback
 	rc.filter = filter
 	rc.cid = remote.server.GetCid()
+	remote.lock.Lock()
 	remote.requests[rc.cid] = rc
-
+	remote.lock.Unlock()
 	remote.server.sendMessage(rc)
 }
 
@@ -515,10 +519,12 @@ func (remote *Remote) On(eventName string, callback func(data interface{})) {
 }
 
 func (remote *Remote) handleResponse(data ResData) {
+	remote.lock.Lock()
 	request, ok := remote.requests[data.getUint64("id")]
-
+	remote.lock.Unlock()
 	if !ok {
 		Errorf("Request id error %d", data.getUint64("id"))
+
 		return
 	}
 
@@ -549,6 +555,8 @@ func (remote *Remote) handleTransaction(data ResData) {
 }
 
 func (remote *Remote) updateServerStatus(data ResData) {
+	remote.lock.Lock()
+	defer remote.lock.Unlock()
 	remote.status["load_base"] = data.getObj("load_base")
 	remote.status["load_factor"] = data.getObj("load_factor")
 	if data.getObj("pubkey_node") != nil {
@@ -569,6 +577,8 @@ func (remote *Remote) handleServerStatus(data ResData) {
 }
 
 func (remote *Remote) handleLedgerClosed(data ResData) {
+	remote.lock.Lock()
+	defer remote.lock.Unlock()
 	stsIdx, ok := remote.status["ledger_index"]
 	if !ok {
 		remote.status["ledger_index"] = data.getFloat64("ledger_index")
@@ -652,13 +662,13 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 }
 
 //BuildRelationSet
-func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Transaction) (error) {
-	src, ok :=  options["source"]
- 	if !ok {
- 		src, ok = options["from"]
- 	}
+func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Transaction) error {
+	src, ok := options["source"]
 	if !ok {
- 		src, ok = options["account"]
+		src, ok = options["from"]
+	}
+	if !ok {
+		src, ok = options["account"]
 	}
 
 	des, ok := options["target"]
@@ -677,50 +687,57 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 		return fmt.Errorf("invalid amount")
 	}
 	if !utils.IsValidAddress(src.(string)) {
- 		return fmt.Errorf("invalid source address")
- 	}
+		return fmt.Errorf("invalid source address")
+	}
 
- 	if !utils.IsValidAddress(des.(string)) {
- 		return fmt.Errorf("invalid target address")
- 	}
+	if !utils.IsValidAddress(des.(string)) {
+		return fmt.Errorf("invalid target address")
+	}
 
- 	transactionType :=  ""
- 	if options["type"] == "unfreeze" {
- 		transactionType = "RelationDel"
+	transactionType := ""
+	if options["type"] == "unfreeze" {
+		transactionType = "RelationDel"
 	} else {
- 		transactionType = "RelationSet"
- 	}
+		transactionType = "RelationSet"
+	}
 	tx.AddTxJSON("TransactionType", transactionType)
 	tx.AddTxJSON("AccountAccount", src)
- 	tx.AddTxJSON("Target", des)
- 	relationType := ""
- 	if options["type"] == "authorize" {
- 		relationType = "1"
- 	} else {
- 		relationType = "3"
- 	}
- 	tx.AddTxJSON("RelationType", relationType)
- 	if limit != 0 {
- 		tx.AddTxJSON("LimitAmount", limit)
- 	}
- 	return nil
+	tx.AddTxJSON("Target", des)
+	relationType := ""
+	if options["type"] == "authorize" {
+		relationType = "1"
+	} else {
+		relationType = "3"
+	}
+	tx.AddTxJSON("RelationType", relationType)
+	if limit != 0 {
+		tx.AddTxJSON("LimitAmount", limit)
+	}
+	return nil
 }
 
 func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transaction) error {
 	//tx, err := NewTransaction(remote, nil)
-	src, ok :=  options["source"]
+	src, ok := options["source"]
 	if !ok {
 		src, ok = options["from"]
 	}
 	if !ok {
 		src, ok = options["account"]
 	}
+<<<<<<< HEAD
  	quality_out := options["quality_out"]
 	quality_in := options["quality_in"]
 	if src, ok := src.(string); ok {
 		if !utils.IsValidAddress(src) {
 			return fmt.Errorf("invalid source address")
 		}
+=======
+	quality_out := options["quality_out"]
+	quality_in := options["quality_in"]
+	if !utils.IsValidAddress(src.(string)) {
+		return fmt.Errorf("invalid source address")
+>>>>>>> c2e92877a61760da6fe8219a57a563bf566fcaf5
 	}
 	limit, ok := options["limit"]
 	if !ok {
@@ -733,128 +750,128 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	if !utils.IsValidAmount(&limitAmount) {
 		return fmt.Errorf("invalid amount")
 	}
- 	tx.AddTxJSON("TransactionType", "TrustSet")
- 	tx.AddTxJSON("Account", src)
- 	if limit != 0 {
- 		tx.AddTxJSON("LimitAmount", limit)
- 	}
- 	if quality_in != "" {
- 		tx.AddTxJSON("QualityInQualityIn", quality_in)
- 	}
- 	if quality_out != "" {
- 		tx.AddTxJSON("QualityOut", quality_out)
- 	}
- 	return nil
+	tx.AddTxJSON("TransactionType", "TrustSet")
+	tx.AddTxJSON("Account", src)
+	if limit != 0 {
+		tx.AddTxJSON("LimitAmount", limit)
+	}
+	if quality_in != "" {
+		tx.AddTxJSON("QualityInQualityIn", quality_in)
+	}
+	if quality_out != "" {
+		tx.AddTxJSON("QualityOut", quality_out)
+	}
+	return nil
 }
 
 //创建关系对象
 func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transaction, error) {
- 	tx, err := NewTransaction(remote, nil)
- 	if err != nil {
- 		return nil, err
- 	}
+	tx, err := NewTransaction(remote, nil)
+	if err != nil {
+		return nil, err
+	}
 	optype, ok := options["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid realtion type")
 	}
 
- 	if _, ok := RelationTypes[optype]; !ok {
- 		return tx, fmt.Errorf("invalid relation type %s", optype)
- 	}
+	if _, ok := RelationTypes[optype]; !ok {
+		return tx, fmt.Errorf("invalid relation type %s", optype)
+	}
 
- 	switch (optype) {
- 		case "trust":
- 			return tx, remote.BuildTrustSet(options, tx)
- 		case "authorize":
- 		case "freeze":
- 		case "unfreeze":
- 			return tx, remote.BuildRelationSet(options, tx)
- 	}
- 	Errorf("build relation set should not go here")
- 	return tx, fmt.Errorf("build relation set error")
+	switch optype {
+	case "trust":
+		return tx, remote.BuildTrustSet(options, tx)
+	case "authorize":
+	case "freeze":
+	case "unfreeze":
+		return tx, remote.BuildRelationSet(options, tx)
+	}
+	Errorf("build relation set should not go here")
+	return tx, fmt.Errorf("build relation set error")
 }
 
 //BuildAccountSet
 func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transaction) error {
- 	src, ok := options["source"]
- 	if !ok {
- 		src, ok = options["from"]
- 	}
- 	if !ok {
- 		src, ok = options["account"]
- 	}
-     set_flag, ok := options["set_flag"]
- 	if !ok {
- 		set_flag = options["set"]
- 	}
-    clear_flag, ok := options["clear_flag"]
- 	if !ok {
- 		clear_flag = options["clear"]
- 	}
-    if (!utils.IsValidAddress(src.(string))) {
-        return fmt.Errorf("invalid source address")
-    }
-    tx.AddTxJSON("TransactionType", "AccountSet")
-    tx.AddTxJSON("Account", src)
+	src, ok := options["source"]
+	if !ok {
+		src, ok = options["from"]
+	}
+	if !ok {
+		src, ok = options["account"]
+	}
+	set_flag, ok := options["set_flag"]
+	if !ok {
+		set_flag = options["set"]
+	}
+	clear_flag, ok := options["clear_flag"]
+	if !ok {
+		clear_flag = options["clear"]
+	}
+	if !utils.IsValidAddress(src.(string)) {
+		return fmt.Errorf("invalid source address")
+	}
+	tx.AddTxJSON("TransactionType", "AccountSet")
+	tx.AddTxJSON("Account", src)
 
-    setclearflags := SetClearFlags[1]
- 	_set_flag := set_flag
- 	if utils.IsNumberType(set_flag) {
- 		_set_flag = set_flag
- 	} else if !utils.IsNumberType(setclearflags[set_flag.(string)]) {
- 		_set_flag = setclearflags["asf" + set_flag.(string)]
- 	} else {
- 		_set_flag = setclearflags[set_flag.(string)]
- 	}
+	setclearflags := SetClearFlags[1]
+	_set_flag := set_flag
+	if utils.IsNumberType(set_flag) {
+		_set_flag = set_flag
+	} else if !utils.IsNumberType(setclearflags[set_flag.(string)]) {
+		_set_flag = setclearflags["asf"+set_flag.(string)]
+	} else {
+		_set_flag = setclearflags[set_flag.(string)]
+	}
 
- 	if set_flag == "" {
- 		set_flag = _set_flag
- 	}
- 	tx.AddTxJSON("SetFlag", set_flag)
+	if set_flag == "" {
+		set_flag = _set_flag
+	}
+	tx.AddTxJSON("SetFlag", set_flag)
 
- 	_clear_flag := clear_flag
- 	if utils.IsNumberType(clear_flag) {
- 		_clear_flag = clear_flag
- 	} else if !utils.IsNumberType(setclearflags[clear_flag.(string)]) {
- 		_clear_flag = setclearflags["asf" + clear_flag.(string)]
- 	} else {
- 		_clear_flag =  setclearflags[clear_flag.(string)]
- 	}
-    if clear_flag == "" {
- 		clear_flag = _clear_flag
- 	}
- 	tx.AddTxJSON("ClearFlag", clear_flag)
-	
+	_clear_flag := clear_flag
+	if utils.IsNumberType(clear_flag) {
+		_clear_flag = clear_flag
+	} else if !utils.IsNumberType(setclearflags[clear_flag.(string)]) {
+		_clear_flag = setclearflags["asf"+clear_flag.(string)]
+	} else {
+		_clear_flag = setclearflags[clear_flag.(string)]
+	}
+	if clear_flag == "" {
+		clear_flag = _clear_flag
+	}
+	tx.AddTxJSON("ClearFlag", clear_flag)
+
 	return nil
 }
 
 //BuildDelegateKeySet
 func (remote *Remote) BuildDelegateKeySet(options map[string]interface{}, tx *Transaction) error {
- 	src, ok := options["source"]
- 	if !ok {
- 		src, ok = options["from"]
- 	}
- 	if !ok {
- 		src, ok = options["account"]
- 	}
- 	delegate_key := options["delegate_key"]
- 	if !utils.IsValidAddress(src.(string)) {
- 		return fmt.Errorf("invalid source address")
- 	}
- 	if !utils.IsValidAddress(delegate_key.(string)) {
- 		return fmt.Errorf("invalid regular key address")
- 	}
- 	tx.AddTxJSON("TransactionType", "SetRegularKey")
- 	tx.AddTxJSON("Account", src)
- 	tx.AddTxJSON("RegularKey", delegate_key)
- 	return nil
+	src, ok := options["source"]
+	if !ok {
+		src, ok = options["from"]
+	}
+	if !ok {
+		src, ok = options["account"]
+	}
+	delegate_key := options["delegate_key"]
+	if !utils.IsValidAddress(src.(string)) {
+		return fmt.Errorf("invalid source address")
+	}
+	if !utils.IsValidAddress(delegate_key.(string)) {
+		return fmt.Errorf("invalid regular key address")
+	}
+	tx.AddTxJSON("TransactionType", "SetRegularKey")
+	tx.AddTxJSON("Account", src)
+	tx.AddTxJSON("RegularKey", delegate_key)
+	return nil
 }
 
 //BuildSignerSet
 func (remote *Remote) BuildSignerSet(options map[string]interface{}, tx *Transaction) error {
- 	// TODO
- 	return nil
- }
+	// TODO
+	return nil
+}
 
 //创建属性对象
 func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transaction, error) {
@@ -867,20 +884,20 @@ func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transa
 		return nil, fmt.Errorf("invalid account type")
 	}
 	if _, ok := AccountSetTypes[optype]; !ok {
- 		return tx, fmt.Errorf("invalid account set type %s", optype)
- 	}
+		return tx, fmt.Errorf("invalid account set type %s", optype)
+	}
 
-     switch(optype) {
-         case "property":
-             return tx, remote.BuildAccountSet(options, tx)
-         case "delegate":
-             return tx, remote.BuildDelegateKeySet(options, tx)
-         case "signer":
-             return tx, remote.BuildSignerSet(options, tx)
-     }
+	switch optype {
+	case "property":
+		return tx, remote.BuildAccountSet(options, tx)
+	case "delegate":
+		return tx, remote.BuildDelegateKeySet(options, tx)
+	case "signer":
+		return tx, remote.BuildSignerSet(options, tx)
+	}
 
- 	Errorf("build account set should not go here")
-    return tx, fmt.Errorf("build account set should not go here")
+	Errorf("build account set should not go here")
+	return tx, fmt.Errorf("build account set should not go here")
 }
 
 //挂单
@@ -893,63 +910,63 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	if !ok {
 		return nil, fmt.Errorf("invalid realtion type")
 	}
- 	src, ok := options["source"]
-     if !ok {
-         src, ok = options["from"]
-     }
-     if !ok {
-         src, ok = options["account"]
-     }
-     taker_gets, ok := options["taker_gets"]
- 	if !ok {
- 		taker_gets, ok = options["pays"]
- 	}
+	src, ok := options["source"]
+	if !ok {
+		src, ok = options["from"]
+	}
+	if !ok {
+		src, ok = options["account"]
+	}
+	taker_gets, ok := options["taker_gets"]
+	if !ok {
+		taker_gets, ok = options["pays"]
+	}
 	taker_gets_amount, ok := taker_gets.(constant.Amount)
 	if !ok {
 		return tx, fmt.Errorf("invalid taker_gets")
 	}
-    taker_pays, ok := options["taker_pays"]
- 	if !ok {  
- 		taker_pays, ok = options["gets"]
- 	}
+	taker_pays, ok := options["taker_pays"]
+	if !ok {
+		taker_pays, ok = options["gets"]
+	}
 	taker_pays_amount, ok := taker_pays.(constant.Amount)
 	if !ok {
 		return tx, fmt.Errorf("invalid taker_pays")
 	}
 
-    if (!utils.IsValidAddress(src.(string))) {
-        return tx, fmt.Errorf("invalid source address");
-    }
-	optype, ok := options["type"].(string) 
+	if !utils.IsValidAddress(src.(string)) {
+		return tx, fmt.Errorf("invalid source address")
+	}
+	optype, ok := options["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid offer type")
 	}
 
- 	if _, ok := OfferTypes[optype]; !ok {
- 		return tx, fmt.Errorf("invalid offer type")
- 	}
- 	if !utils.IsStringType(offer_type) {
- 		 return tx, fmt.Errorf("invalid offer type")
- 	}
+	if _, ok := OfferTypes[optype]; !ok {
+		return tx, fmt.Errorf("invalid offer type")
+	}
+	if !utils.IsStringType(offer_type) {
+		return tx, fmt.Errorf("invalid offer type")
+	}
 
- 	if utils.IsStringType(taker_gets) && !utils.IsNumberString(taker_gets.(string)) {
- 		return tx, fmt.Errorf("invalid to pays amount")
- 	}
- 	if !utils.IsValidAmount(&taker_gets_amount) {
- 		return tx, fmt.Errorf("invalid to pays amount object")
- 	}
+	if utils.IsStringType(taker_gets) && !utils.IsNumberString(taker_gets.(string)) {
+		return tx, fmt.Errorf("invalid to pays amount")
+	}
+	if !utils.IsValidAmount(&taker_gets_amount) {
+		return tx, fmt.Errorf("invalid to pays amount object")
+	}
 
- 	if utils.IsStringType(taker_pays) && !utils.IsNumberString(taker_pays.(string)){
- 		return tx, fmt.Errorf("invalid to gets amount")
- 	}
- 	if !utils.IsValidAmount(&taker_pays_amount) {
- 		return tx, fmt.Errorf("invalid to gets amount object")
- 	}
+	if utils.IsStringType(taker_pays) && !utils.IsNumberString(taker_pays.(string)) {
+		return tx, fmt.Errorf("invalid to gets amount")
+	}
+	if !utils.IsValidAmount(&taker_pays_amount) {
+		return tx, fmt.Errorf("invalid to gets amount object")
+	}
 
-     tx.AddTxJSON("TransactionType", "OfferCreate")
-     if (offer_type == "Sell") {
- 		tx.SetFlags(offer_type)
- 	}
+	tx.AddTxJSON("TransactionType", "OfferCreate")
+	if offer_type == "Sell" {
+		tx.SetFlags(offer_type)
+	}
 	tx.AddTxJSON("Account", src)
 	takerpays, err := utils.ToAmount(taker_pays_amount)
 	if err != nil {
@@ -959,9 +976,9 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	if err != nil {
 		return nil, err
 	}
-    tx.AddTxJSON("TakerPays", takerpays)
-    tx.AddTxJSON("TakerGets", takergets)
-    return tx, nil
+	tx.AddTxJSON("TakerPays", takerpays)
+	tx.AddTxJSON("TakerGets", takergets)
+	return tx, nil
 }
 
 //取消挂单
@@ -970,31 +987,31 @@ func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Trans
 	if err != nil {
 		return nil, err
 	}
- 	src , ok := options["source"]
- 	if !ok {
- 		src, ok = options["from"]
- 	}
- 	if !ok  {
- 		src = options["account"]
- 	}
- 	sequence, ok := options["sequence"].(string)
+	src, ok := options["source"]
+	if !ok {
+		src, ok = options["from"]
+	}
+	if !ok {
+		src = options["account"]
+	}
+	sequence, ok := options["sequence"].(string)
 	if !ok {
 		return tx, fmt.Errorf("invalid sequence")
-	} 
-	OfferSequence, err :=  strconv.Atoi(sequence)
-	if err != nil{
+	}
+	OfferSequence, err := strconv.Atoi(sequence)
+	if err != nil {
 		return tx, err
 	}
- 	if !utils.IsValidAddress(src.(string)) {
- 		return tx, fmt.Errorf("invalid source address")
- 	}
+	if !utils.IsValidAddress(src.(string)) {
+		return tx, fmt.Errorf("invalid source address")
+	}
 
- 	if !utils.IsNumberString(sequence) {
- 		return tx, fmt.Errorf("invalid sequence param")
- 	}
+	if !utils.IsNumberString(sequence) {
+		return tx, fmt.Errorf("invalid sequence param")
+	}
 	tx.AddTxJSON("TransactionType", "OfferCancel")
 	tx.AddTxJSON("Account", src)
-	tx.AddTxJSON("OfferSequence", OfferSequence) 
+	tx.AddTxJSON("OfferSequence", OfferSequence)
 	return tx, nil
 }
 

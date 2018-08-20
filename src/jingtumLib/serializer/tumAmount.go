@@ -13,6 +13,7 @@
 package serializer
 
 import (
+	"jingtumLib/utils"
 	"fmt"
 	"math"
 	"math/big"
@@ -128,15 +129,18 @@ func (amount *TumAmount) parseJSON(inJSON interface{}) error {
 
 //TumToBytes 金额转字节
 func (amount *TumAmount) TumToBytes() ([]byte, error) {
-	var currencyData []byte
-	if len([]rune(amount.Currency)) >= currencyNameLen && len([]rune(amount.Currency)) <= currencyNameLen2 {
+	var currencyData = make([]byte, 20)
+	if len(amount.Currency) >= currencyNameLen && len(amount.Currency) <= currencyNameLen2 {
 		currencyCode := amount.Currency //区分大小写
 		end := 14
-		cclen := len([]rune(currencyCode))
+		cclen := len(currencyCode) - 1
 		for j := cclen; j >= 0; j-- {
 			currencyData[end-j] = (currencyCode[cclen-j] & 0xff)
 		}
-	} else if len([]rune(amount.Currency)) == 40 {
+	} else if len(amount.Currency) == 40 {
+		if !utils.MatchString("^[0-9a-zA-F]+", amount.Currency) {
+			return nil, fmt.Errorf("Invalid currency code %s", amount.Currency)
+		}
 		bIntV, ok := big.NewInt(0).SetString(amount.Currency, 16)
 		if !ok {
 			return nil, fmt.Errorf("Invalid currency code %s", amount.Currency)
