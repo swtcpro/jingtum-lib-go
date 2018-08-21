@@ -980,31 +980,33 @@ func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Trans
 	if err != nil {
 		return nil, err
 	}
-	src, ok := options["source"]
-	if !ok {
-		src, ok = options["from"]
+
+	var srcAddr string
+
+	if src, ok := options["source"].(string); ok {
+		srcAddr = src
+	} else if from, ok := options["from"].(string); ok {
+		srcAddr = from
+	} else if account,ok := options["account"].(string); ok {
+		srcAddr = account
 	}
-	if !ok {
-		src = options["account"]
-	}
-	sequence, ok := options["sequence"].(string)
-	if !ok {
-		return tx, fmt.Errorf("invalid sequence")
-	}
-	OfferSequence, err := strconv.Atoi(sequence)
-	if err != nil {
-		return tx, err
-	}
-	if !utils.IsValidAddress(src.(string)) {
+
+	if srcAddr == "" {
 		return tx, fmt.Errorf("invalid source address")
 	}
 
-	if !utils.IsNumberString(sequence) {
-		return tx, fmt.Errorf("invalid sequence param")
+	sequence, ok := options["sequence"].(uint32)
+	if !ok {
+		return tx, fmt.Errorf("invalid sequence")
 	}
+
+	if !utils.IsValidAddress(srcAddr) {
+		return tx, fmt.Errorf("invalid source address")
+	}
+
 	tx.AddTxJSON("TransactionType", "OfferCancel")
-	tx.AddTxJSON("Account", src)
-	tx.AddTxJSON("OfferSequence", OfferSequence)
+	tx.AddTxJSON("Account", srcAddr)
+	tx.AddTxJSON("OfferSequence", sequence)
 	return tx, nil
 }
 

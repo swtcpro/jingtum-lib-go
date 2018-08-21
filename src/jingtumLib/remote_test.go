@@ -175,49 +175,49 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 }
 
 //BuildOfferCancelTx 取消挂单
-func Test_BuildOfferCancelTx(t *testing.T) {
-	remote, err := NewRemote("ws://123.57.219.57:5020", true)
-	if err != nil {
-		t.Fatalf("New remote fail : %s", err.Error())
-		return
-	}
+// func Test_BuildOfferCancelTx(t *testing.T) {
+// 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+// 	if err != nil {
+// 		t.Fatalf("New remote fail : %s", err.Error())
+// 		return
+// 	}
 
-	conErr := remote.Connect(func(err error, result interface{}) {
-		if err != nil {
-			t.Errorf("New remote fail : %s", err.Error())
-			return
-		}
+// 	conErr := remote.Connect(func(err error, result interface{}) {
+// 		if err != nil {
+// 			t.Errorf("New remote fail : %s", err.Error())
+// 			return
+// 		}
 
-		jsonBytes, _ := json.Marshal(result)
+// 		jsonBytes, _ := json.Marshal(result)
 
-		t.Logf("Connect success : %s", jsonBytes)
-	})
+// 		t.Logf("Connect success : %s", jsonBytes)
+// 	})
 
-	if conErr != nil {
-		t.Fatalf("Connect service fail : %s", conErr.Error())
-		return
-	}
-	defer remote.Disconnect()
+// 	if conErr != nil {
+// 		t.Fatalf("Connect service fail : %s", conErr.Error())
+// 		return
+// 	}
+// 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	options["sequence"] = 1
-	req, err := remote.BuildAccountSetTx(options)
-	if err != nil {
-		t.Fatalf("buildOfferCancelTx fail : %s", err.Error())
-		return
-	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	req.Submit(func(err error, result interface{}) {
-		if err != nil {
-			t.Errorf("Build Offer Cancel Tx : %s", err.Error())
-			wg.Done()
-			return
-		}
-		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Success Build Offer Cancel Tx result : %s", jsonBytes)
-		wg.Done()
-	})
+// 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+// 	options["sequence"] = 1
+// 	req, err := remote.BuildAccountSetTx(options)
+// 	if err != nil {
+// 		t.Fatalf("buildOfferCancelTx fail : %s", err.Error())
+// 		return
+// 	}
+// 	wg := sync.WaitGroup{}
+// 	wg.Add(1)
+// 	req.Submit(func(err error, result interface{}) {
+// 		if err != nil {
+// 			t.Errorf("Build Offer Cancel Tx : %s", err.Error())
+// 			wg.Done()
+// 			return
+// 		}
+// 		jsonBytes, _ := json.Marshal(result)
+// 		t.Logf("Success Build Offer Cancel Tx result : %s", jsonBytes)
+// 		wg.Done()
+// 	})
 
-	wg.Wait()
-}
+// 	wg.Wait()
+// }
