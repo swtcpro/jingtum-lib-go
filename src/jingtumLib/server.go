@@ -35,6 +35,7 @@ type Server struct {
 	url       string
 	reqs      chan *ReqCtx
 	l         *sync.RWMutex
+	wg        *sync.WaitGroup
 }
 
 type activeStates []string
@@ -104,6 +105,7 @@ func NewServer(remote *Remote, urlStr string) (*Server, error) {
 	server.opened = false
 	server.l = new(sync.RWMutex)
 	server.reqs = make(chan *ReqCtx)
+	server.wg = &sync.WaitGroup{}
 	return server, nil
 }
 
@@ -118,14 +120,15 @@ func (server *Server) Disconnect() bool {
 
 	rc := new(ReqCtx)
 	rc.command = constant.CommandDisconnect
+	server.wg.Add(1)
 	server.sendMessage(rc)
 	server.remote.emit.Off("*")
-
+	server.wg.Wait()
 	err := server.conn.Close()
 	if err != nil {
 		return false
 	}
-
+	// close(server.reqs)
 	server.state = "offline"
 	server.connected = false
 	server.opened = false
@@ -147,6 +150,9 @@ func (server *Server) GetCid() uint64 {
 
 func (server *Server) sendMessage(reqCtx *ReqCtx) {
 	server.reqs <- reqCtx
+	// select {
+	//  case server.reqs <- reqCtx:
+	// }
 }
 
 func (server *Server) setState(state string) {
@@ -165,11 +171,12 @@ func (server *Server) listeningSend() {
 	for {
 		req, ok := <-server.reqs
 		if !ok {
-			continue
+			break
 		}
 
 		//终止消息监听线程
 		if req.command == constant.CommandDisconnect {
+			server.wg.Done()
 			break
 		}
 
@@ -220,6 +227,7 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 			connectMsg := fmt.Sprintf("Connect to [%s] success.", server.url)
 			once.Do(wg.Done)
 			callback(nil, connectMsg)
+
 			go func() {
 				req := server.remote.Subscribe([]string{"transactions", "ledger", "server"})
 				req.Submit(func(err error, result interface{}) {

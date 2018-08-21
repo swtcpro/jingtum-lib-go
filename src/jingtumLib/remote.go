@@ -974,7 +974,7 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	return tx, nil
 }
 
-//取消挂单
+//BuildOfferCancelTx 取消挂单
 func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
