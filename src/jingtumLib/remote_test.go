@@ -41,7 +41,7 @@ func Test_BuildRelationTx(t *testing.T) {
 
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": "100", "quality_in": "1"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
 	limit := constant.Amount{}
 	limit.Currency = "SWT"
 	limit.Value = "100.0001"
@@ -55,6 +55,7 @@ func Test_BuildRelationTx(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+	req.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			t.Errorf("Build Relation Tx : %s", err.Error())
@@ -95,7 +96,7 @@ func Test_BuildAccountSetTx(t *testing.T) {
 
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
 	limit.Currency = "SWT"
 	limit.Value = "100.0001"
@@ -108,6 +109,7 @@ func Test_BuildAccountSetTx(t *testing.T) {
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+	req.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			t.Errorf("Build AccountSet Tx : %s", err.Error())
@@ -146,7 +148,7 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 	}
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "sell"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property",  "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
 	gets := constant.Amount{}
 	gets.Currency = "SWT"
 	pays := constant.Amount{}
@@ -160,6 +162,7 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+	req.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			t.Errorf("Build Offer Create Tx : %s", err.Error())
