@@ -23,11 +23,9 @@ func Test_BuildRelationTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -36,12 +34,13 @@ func Test_BuildRelationTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+
+	defer remote.Disconnect()
+
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": "100", "quality_in": "1"}
 	limit := constant.Amount{}
 	limit.Currency = "SWT"
@@ -50,18 +49,20 @@ func Test_BuildRelationTx(t *testing.T) {
 	options["limit"] = limit
 	req, err := remote.BuildRelationTx(options)
 	if err != nil {
-		t.Fatalf("BuildRelationTx fail", err.Error())
-		wg.Done()
+		t.Fatalf("BuildRelationTx fail : %s", err.Error())
 		return
 	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Build Relation Tx : ", err.Error())
+			t.Errorf("Build Relation Tx : %s", err.Error())
 			wg.Done()
 			return
 		}
 		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Success Build Relation Tx result : ", jsonBytes)
+		t.Logf("Success Build Relation Tx result : %s", jsonBytes)
 		wg.Done()
 	})
 
@@ -76,11 +77,9 @@ func Test_BuildAccountSetTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -89,12 +88,13 @@ func Test_BuildAccountSetTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+
+	defer remote.Disconnect()
+
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
 	limit.Currency = "SWT"
@@ -103,21 +103,21 @@ func Test_BuildAccountSetTx(t *testing.T) {
 	options["limit"] = limit
 	req, err := remote.BuildAccountSetTx(options)
 	if err != nil {
-		t.Fatalf("Build AccountSet Tx fail", err.Error())
-		wg.Done()
+		t.Fatalf("Build AccountSet Tx fail : %s", err.Error())
 		return
 	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Build AccountSet Tx : ", err.Error())
+			t.Errorf("Build AccountSet Tx : %s", err.Error())
 			wg.Done()
 			return
 		}
 		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Success Build AccountSet Tx result : ", jsonBytes)
+		t.Logf("Success Build AccountSet Tx result : %s", jsonBytes)
 		wg.Done()
 	})
-
 	wg.Wait()
 }
 
@@ -129,11 +129,9 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -142,12 +140,12 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	defer remote.Disconnect()
+
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "sell"}
 	gets := constant.Amount{}
 	gets.Currency = "SWT"
@@ -157,18 +155,19 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 	options["pays"] = pays
 	req, err := remote.BuildAccountSetTx(options)
 	if err != nil {
-		t.Fatalf("BuildOfferCreateTx fail", err.Error())
-		wg.Done()
+		t.Fatalf("BuildOfferCreateTx fail : %s", err.Error())
 		return
 	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Build Offer Create Tx : ", err.Error())
+			t.Errorf("Build Offer Create Tx : %s", err.Error())
 			wg.Done()
 			return
 		}
 		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Success Build Offer Create Tx result : ", jsonBytes)
+		t.Logf("Success Build Offer Create Tx result : %s", jsonBytes)
 		wg.Done()
 	})
 
@@ -183,11 +182,9 @@ func Test_BuildOfferCancelTx(t *testing.T) {
 		return
 	}
 
-	defer remote.Disconnect()
-
-	cerr := remote.Connect(func(err error, result interface{}) {
+	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -196,31 +193,31 @@ func Test_BuildOfferCancelTx(t *testing.T) {
 		t.Logf("Connect success : %s", jsonBytes)
 	})
 
-	if cerr != nil {
-		t.Fatalf("Connect service fail : %s", err.Error())
+	if conErr != nil {
+		t.Fatalf("Connect service fail : %s", conErr.Error())
 		return
 	}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	defer remote.Disconnect()
+
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	options["sequence"] = 1
 	req, err := remote.BuildAccountSetTx(options)
 	if err != nil {
-		t.Fatalf("buildOfferCancelTx fail", err.Error())
-		wg.Done()
+		t.Fatalf("buildOfferCancelTx fail : %s", err.Error())
 		return
 	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Build Offer Cancel Tx : ", err.Error())
+			t.Errorf("Build Offer Cancel Tx : %s", err.Error())
 			wg.Done()
 			return
 		}
 		jsonBytes, _ := json.Marshal(result)
-		t.Logf("Success Build Offer Cancel Tx result : ", jsonBytes)
+		t.Logf("Success Build Offer Cancel Tx result : %s", jsonBytes)
 		wg.Done()
 	})
 
 	wg.Wait()
 }
-

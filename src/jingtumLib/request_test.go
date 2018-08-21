@@ -11,114 +11,16 @@ package jingtumLib
 
 import (
 	"encoding/json"
-	"fmt"
 	"jingtumLib/constant"
 	"sync"
 	"testing"
 )
 
-//Test_DeployContractTx 部署合约测试
-func Test_DeployContractTx(t *testing.T) {
-	remote, err := NewRemote("ws://139.129.194.175:5020", true)
-	if err != nil {
-		t.Fatalf("New remote fail : %s", err.Error())
-		return
-	}
-
-	conErr := remote.Connect(func(err error, result interface{}) {
-		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
-			return
-		}
-
-		jsonBytes, _ := json.Marshal(result)
-
-		t.Logf("Connect success : %s", jsonBytes)
-	})
-
-	if conErr != nil {
-		t.Fatalf("Connect service fail : %s", conErr.Error())
-		return
-	}
-
-	defer remote.Disconnect()
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	//部署合约
-	options := map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
-	tx, err := remote.DeployContractTx(options)
-	if err != nil {
-		t.Fatalf("Fail request deploy contract %s", err.Error())
-		wg.Done()
-	} else {
-		tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
-		tx.Submit(func(err error, data interface{}) {
-			if err != nil {
-				t.Fatalf("Fail request deploy contract %s", err.Error())
-			} else {
-				jsonBytes, _ := json.Marshal(data)
-				t.Logf("Success deploy contract : %s", string(jsonBytes))
-			}
-			wg.Done()
-		})
-	}
-	wg.Wait()
-}
-
-//Test_CallContractTx 执行合约
-func Test_CallContractTx(t *testing.T) {
-	//执行合约
-	remote, err := NewRemote("ws://139.129.194.175:5020", true)
-	if err != nil {
-		t.Fatalf("New remote fail : %s", err.Error())
-		return
-	}
-
-	conErr := remote.Connect(func(err error, result interface{}) {
-		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
-			return
-		}
-
-		jsonBytes, _ := json.Marshal(result)
-
-		t.Logf("Connect success : %s", jsonBytes)
-	})
-
-	if conErr != nil {
-		t.Fatalf("Connect service fail : %s", conErr.Error())
-		return
-	}
-
-	defer remote.Disconnect()
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	options := map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "destination": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72", "foo": "foo", "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
-	tx, err := remote.CallContractTx(options)
-	if err != nil {
-		t.Fatalf("Fail request call contract Tx %s", err.Error())
-		wg.Done()
-	}
-	tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
-	tx.Submit(func(err error, data interface{}) {
-		if err != nil {
-			t.Fatalf("Fail request call contract Tx %s", err.Error())
-		} else {
-			jsonBytes, _ := json.Marshal(data)
-			t.Logf("Success call contract Tx : %s", string(jsonBytes))
-		}
-		wg.Done()
-	})
-	wg.Wait()
-}
-
 //Test_ListenerEvent 监听账本消息
 func Test_ListenerEvent(t *testing.T) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
-		t.Fatalf("New remote fail : %s", err.Error())
+		t.Errorf("New remote fail : %s", err.Error())
 		return
 	}
 
@@ -126,7 +28,7 @@ func Test_ListenerEvent(t *testing.T) {
 
 	cerr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -161,7 +63,7 @@ func Test_RequestOrderBook(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -195,7 +97,7 @@ func Test_RequestOrderBook(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request order book %s", err.Error())
+			t.Errorf("Fail request order book %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -215,7 +117,7 @@ func Test_RequestAccountTx(t *testing.T) {
 	}
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -240,7 +142,7 @@ func Test_RequestAccountTx(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request account tx %s", err.Error())
+			t.Errorf("Fail request account tx %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -261,7 +163,7 @@ func Test_RequestAccountOffers(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -286,7 +188,7 @@ func Test_RequestAccountOffers(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request account offers %s", err.Error())
+			t.Errorf("Fail request account offers %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -309,7 +211,7 @@ func Test_RequestAccountRelations(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -336,7 +238,7 @@ func Test_RequestAccountRelations(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request account relations %s", err.Error())
+			t.Errorf("Fail request account relations %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -359,7 +261,7 @@ func Test_RequestAccountTums(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -386,7 +288,7 @@ func Test_RequestAccountTums(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request Account Tums %s", err.Error())
+			t.Errorf("Fail request Account Tums %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -409,7 +311,7 @@ func Test_RequestTx(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -436,7 +338,7 @@ func Test_RequestTx(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request tx %s", err.Error())
+			t.Errorf("Fail request tx %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -459,7 +361,7 @@ func Test_RequestLedger(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -487,7 +389,7 @@ func Test_RequestLedger(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request ledger %s", err.Error())
+			t.Errorf("Fail request ledger %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -510,7 +412,7 @@ func Test_RequestLedgerClosed(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -536,7 +438,7 @@ func Test_RequestLedgerClosed(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request ledger closed %s", err.Error())
+			t.Errorf("Fail request ledger closed %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -559,7 +461,7 @@ func Test_RequestServerInfo(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -585,7 +487,7 @@ func Test_RequestServerInfo(t *testing.T) {
 
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Fail request server info %s", err.Error())
+			t.Errorf("Fail request server info %s", err.Error())
 			wg.Done()
 			return
 		}
@@ -608,7 +510,7 @@ func Test_RequestAccountInfo(t *testing.T) {
 
 	conErr := remote.Connect(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("New remote fail : %s", err.Error())
+			t.Errorf("New remote fail : %s", err.Error())
 			return
 		}
 
@@ -624,22 +526,22 @@ func Test_RequestAccountInfo(t *testing.T) {
 
 	defer remote.Disconnect()
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
 	//请求账号信息
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
 	req, err := remote.RequestAccountInfo(options)
 
 	if err != nil {
 		t.Fatalf("RequestAccountInfo fail : %s", err.Error())
-		wg.Done()
 		return
 	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	req.SelectLedger(1065000)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			t.Fatalf("Requst account info : %s", err.Error())
+			t.Errorf("Requst account info : %s", err.Error())
 			wg.Done()
 			return
 		}
