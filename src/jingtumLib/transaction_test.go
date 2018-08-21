@@ -21,6 +21,51 @@ import (
 	"jingtumLib/serializer"
 )
 
+//Test_BuildOfferCancelTx 取消挂单
+func Test_BuildOfferCancelTx(t *testing.T) {
+	remote, err := NewRemote("ws://123.57.219.57:5020", true)
+	if err != nil {
+		t.Fatalf("New remote fail : %s", err)
+		return
+	}
+
+	conErr := remote.Connect(func(err error, result interface{}) {
+		if err != nil {
+			return
+		}
+		jsonByte, _ := json.Marshal(result)
+		t.Logf("Connect to %s success. Result : %s.", "ws://123.57.219.57:5020", jsonByte)
+	})
+
+	if conErr != nil {
+		t.Fatalf("Connect to %s fail : %s", "ws://123.57.219.57:5020", conErr.Error())
+		return
+	}
+
+	defer remote.Disconnect()
+
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "sequence": uint32(26)}
+	tx, err := remote.BuildOfferCancelTx(options)
+	if err != nil {
+		t.Fatalf("Fail BuildOfferCancelTx : %s", err.Error())
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	tx.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
+	tx.Submit(func(err error, result interface{}) {
+		if err != nil {
+			t.Errorf("Fail BuildOfferCancelTx : %s", err.Error())
+			wg.Done()
+		} else {
+			jsonBytes, _ := json.Marshal(result)
+			t.Logf("Success BuildOfferCancelTx : %s", jsonBytes)
+			wg.Done()
+		}
+	})
+
+	wg.Wait()
+}
+
 //Test_DeployContractTx 部署合约测试
 func Test_DeployContractTx(t *testing.T) {
 	remote, err := NewRemote("ws://139.129.194.175:5020", true)

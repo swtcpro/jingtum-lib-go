@@ -137,7 +137,7 @@ func (so *Serializer) Serialize(typedef [][]interface{}, txData map[string]inter
 //Append Buffer append
 func (so *Serializer) Append(v []byte) {
 	so.Buffer = append(so.Buffer, v...)
-	fmt.Println(so.Buffer)
+	// fmt.Println(so.Buffer)
 }
 
 //Hash 序列化哈希。

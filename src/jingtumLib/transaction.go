@@ -316,7 +316,7 @@ func signing(tx *Transaction) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+// fmt.Println(strings.ToUpper(soBlog.ToHex()))
 	tx.AddTxJSON("blob", strings.ToUpper(soBlog.ToHex()))
 	tx.localSign = true
 	return tx.GetTxJSON("blob").(string), nil
