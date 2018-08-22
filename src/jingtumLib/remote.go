@@ -3,6 +3,7 @@ package jingtumLib
 import (
 	"container/list"
 	"encoding/json"
+	"strings"
 	"errors"
 	"fmt"
 	"strconv"
@@ -749,7 +750,7 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 		tx.AddTxJSON("LimitAmount", limit)
 	}
 	if quality_in != "" {
-		tx.AddTxJSON("QualityInQualityIn", quality_in)
+		tx.AddTxJSON("QualityIn", quality_in)
 	}
 	if quality_out != "" {
 		tx.AddTxJSON("QualityOut", quality_out)
@@ -793,13 +794,22 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 	if !ok {
 		src, ok = options["account"]
 	}
+	if !ok {
+		return fmt.Errorf("invalid account")
+	}
 	set_flag, ok := options["set_flag"]
 	if !ok {
-		set_flag = options["set"]
+		set_flag, ok = options["set"]
+	}
+	if !ok {
+		return fmt.Errorf("invalid set_flag")
 	}
 	clear_flag, ok := options["clear_flag"]
 	if !ok {
-		clear_flag = options["clear"]
+		clear_flag, ok = options["clear"]
+	}
+	if !ok {
+		return fmt.Errorf("invalid clear_flag")
 	}
 	if !utils.IsValidAddress(src.(string)) {
 		return fmt.Errorf("invalid source address")
@@ -808,32 +818,42 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 	tx.AddTxJSON("Account", src)
 
 	setclearflags := SetClearFlags[1]
-	_set_flag := set_flag
+	_set_flag := 0
 	if utils.IsNumberType(set_flag) {
-		_set_flag = set_flag
-	} else if !utils.IsNumberType(setclearflags[set_flag.(string)]) {
-		_set_flag = setclearflags["asf"+set_flag.(string)]
+		_set_flag, _ = strconv.Atoi(set_flag.(string))
 	} else {
-		_set_flag = setclearflags[set_flag.(string)]
-	}
+		for k, v := range setclearflags {
+			if strings.Compare(k, set_flag.(string)) == 0 || strings.Compare(k, "asf"+set_flag.(string)) == 0 {
+				_set_flag = int(v)
+			}
+		}
+	} 
+	/*
+	else if tmp, ok := setclearflags[set_flag.(string)]; ok{
+		if !utils.IsNumberType(tmp) {
+			_set_flag = int(setclearflags["asf"+set_flag.(string)])
+		}
+	} else {
+		_set_flag = int(setclearflags[set_flag.(string)])
+	}*/
 
-	if set_flag == "" {
+	/*if set_flag {
 		set_flag = _set_flag
-	}
-	tx.AddTxJSON("SetFlag", set_flag)
+	}*/
+	tx.AddTxJSON("SetFlag", _set_flag)
 
-	_clear_flag := clear_flag
+	_clear_flag := 0
 	if utils.IsNumberType(clear_flag) {
-		_clear_flag = clear_flag
+		_clear_flag, _ = strconv.Atoi(clear_flag.(string))
 	} else if !utils.IsNumberType(setclearflags[clear_flag.(string)]) {
-		_clear_flag = setclearflags["asf"+clear_flag.(string)]
+		_clear_flag = int(setclearflags["asf"+clear_flag.(string)])
 	} else {
-		_clear_flag = setclearflags[clear_flag.(string)]
+		_clear_flag = int(setclearflags[clear_flag.(string)])
 	}
-	if clear_flag == "" {
+	/*if clear_flag {
 		clear_flag = _clear_flag
-	}
-	tx.AddTxJSON("ClearFlag", clear_flag)
+	}*/
+	tx.AddTxJSON("ClearFlag", _clear_flag)
 
 	return nil
 }
