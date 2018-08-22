@@ -79,9 +79,9 @@ func Test_RequestOrderBook(t *testing.T) {
 	defer remote.Disconnect()
 
 	options := make(map[string]interface{})
-	gets := constant.Amount{}
+	gets := Amount{}
 	gets.Currency = "SWT"
-	pays := constant.Amount{}
+	pays := Amount{}
 	pays.Currency = "CNY"
 	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
 	options["gets"] = gets
@@ -100,7 +100,7 @@ func Test_RequestOrderBook(t *testing.T) {
 			wg.Done()
 			return
 		}
-		t.Logf("Success request order book")
+		t.Log("Success request order book")
 		wg.Done()
 	})
 

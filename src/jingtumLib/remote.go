@@ -3,10 +3,10 @@ package jingtumLib
 import (
 	"container/list"
 	"encoding/json"
-	"strings"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,6 +35,8 @@ type Remote struct {
 }
 
 type ResData map[string]interface{}
+
+type Amount constant.Amount
 
 type ParameterInfo struct {
 	Parameter string
@@ -425,44 +427,44 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	req := NewRequest(remote, constant.CommandBookOffers, nil)
 
 	if takerGets, ok := options["taker_gets"]; ok {
-		getsAmount, ok := takerGets.(constant.Amount)
+		getsAmount, ok := takerGets.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_gets type. See also constant.Amount")
 		}
-		if !utils.IsValidAmount0(&getsAmount) {
+		if !utils.IsValidAmount0((*constant.Amount)(&getsAmount)) {
 			return nil, fmt.Errorf("invalid taker gets amount")
 		}
-		req.message["taker_gets"] = getsAmount
+		req.message["taker_gets"] = (constant.Amount)(getsAmount)
 	} else if pays, ok := options["pays"]; ok {
-		paysAmount, ok := pays.(constant.Amount)
+		paysAmount, ok := pays.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid pays type. See also constant.Amount")
 		}
-		if !utils.IsValidAmount0(&paysAmount) {
+		if !utils.IsValidAmount0((*constant.Amount)(&paysAmount)) {
 			return nil, fmt.Errorf("invalid taker gets amount")
 		}
-		req.message["taker_gets"] = paysAmount
+		req.message["taker_gets"] = (constant.Amount)(paysAmount)
 	}
 
 	if takerPays, ok := options["taker_pays"]; ok {
-		paysAmount, ok := takerPays.(constant.Amount)
+		paysAmount, ok := takerPays.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_pays type. See also constant.Amount")
 		}
-		if !utils.IsValidAmount0(&paysAmount) {
+		if !utils.IsValidAmount0((*constant.Amount)(&paysAmount)) {
 			return nil, fmt.Errorf("invalid taker pays amount")
 		}
-		req.message["taker_pays"] = paysAmount
+		req.message["taker_pays"] = (constant.Amount)(paysAmount)
 
 	} else if gets, ok := options["gets"]; ok {
-		getsAmount, ok := gets.(constant.Amount)
+		getsAmount, ok := gets.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid gets type. See also constant.Amount")
 		}
-		if !utils.IsValidAmount0(&getsAmount) {
+		if !utils.IsValidAmount0((*constant.Amount)(&getsAmount)) {
 			return nil, fmt.Errorf("invalid gets amount")
 		}
-		req.message["taker_pays"] = getsAmount
+		req.message["taker_pays"] = (constant.Amount)(getsAmount)
 	}
 
 	if limit, ok := options["limit"].(int); ok {
@@ -726,7 +728,7 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	if !ok {
 		src, ok = options["account"]
 	}
- 	quality_out := options["quality_out"]
+	quality_out := options["quality_out"]
 	quality_in := options["quality_in"]
 	if src, ok := src.(string); ok {
 		if !utils.IsValidAddress(src) {
@@ -827,15 +829,15 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 				_set_flag = int(v)
 			}
 		}
-	} 
+	}
 	/*
-	else if tmp, ok := setclearflags[set_flag.(string)]; ok{
-		if !utils.IsNumberType(tmp) {
-			_set_flag = int(setclearflags["asf"+set_flag.(string)])
-		}
-	} else {
-		_set_flag = int(setclearflags[set_flag.(string)])
-	}*/
+		else if tmp, ok := setclearflags[set_flag.(string)]; ok{
+			if !utils.IsNumberType(tmp) {
+				_set_flag = int(setclearflags["asf"+set_flag.(string)])
+			}
+		} else {
+			_set_flag = int(setclearflags[set_flag.(string)])
+		}*/
 
 	/*if set_flag {
 		set_flag = _set_flag
@@ -1007,7 +1009,7 @@ func (remote *Remote) BuildOfferCancelTx(options map[string]interface{}) (*Trans
 		srcAddr = src
 	} else if from, ok := options["from"].(string); ok {
 		srcAddr = from
-	} else if account,ok := options["account"].(string); ok {
+	} else if account, ok := options["account"].(string); ok {
 		srcAddr = account
 	}
 
