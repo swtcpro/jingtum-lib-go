@@ -704,13 +704,13 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 		transactionType = "RelationSet"
 	}
 	tx.AddTxJSON("TransactionType", transactionType)
-	tx.AddTxJSON("AccountAccount", src)
+	tx.AddTxJSON("Account", src)
 	tx.AddTxJSON("Target", des)
-	relationType := ""
+	relationType := 0
 	if options["type"] == "authorize" {
-		relationType = "1"
+		relationType = 1
 	} else {
-		relationType = "3"
+		relationType = 3
 	}
 	tx.AddTxJSON("RelationType", relationType)
 	if limit != 0 {
@@ -778,9 +778,7 @@ func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transact
 	switch optype {
 	case "trust":
 		return tx, remote.BuildTrustSet(options, tx)
-	case "authorize":
-	case "freeze":
-	case "unfreeze":
+	case "authorize", "freeze", "unfreeze":
 		return tx, remote.BuildRelationSet(options, tx)
 	}
 	Errorf("build relation set should not go here")
