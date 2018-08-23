@@ -42,9 +42,10 @@ func Test_BuildRelationTx(t *testing.T) {
 	defer remote.Disconnect()
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
+	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
-	limit.Currency = "SWT"
-	limit.Value = "100.0001"
+	limit.Currency = "CCA"
+	limit.Value = "0.0001"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
 	options["limit"] = limit
 	req, err := remote.BuildRelationTx(options)
@@ -96,7 +97,10 @@ func Test_BuildAccountSetTx(t *testing.T) {
 
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
+	//BuildAccountSet
+	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
+	//BuildDelegateKeySet
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "delegate", "delegate_key": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
 	limit.Currency = "SWT"
 	limit.Value = "100.0001"
