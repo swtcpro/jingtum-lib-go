@@ -252,13 +252,19 @@ func (tx *Transaction) SetFlags(flags interface{}) {
 
 //signing 签名
 func signing(tx *Transaction) (string, error) {
-	fee, _ := decimal.NewFromFloat32(tx.GetTxJSON("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+	fee, ok := decimal.NewFromFloat32(tx.GetTxJSON("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+	if !ok {
+		return "", fmt.Errorf("Fee / 1000000 float error")
+	}
 	tx.AddTxJSON("Fee", float32(fee))
 
 	amount := tx.GetTxJSON("Amount")
 	if amount != nil {
 		if amt64, ok := amount.(float64); ok {
-			amt, _ := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+			amt, ok := decimal.NewFromFloat(amt64).Div(decimal.NewFromFloat(1000000)).Float64() //	NewFromFloat32(tx.GetTxJson("Fee").(float32)).Div(decimal.NewFromFloat32(1000000)).Float64()
+			if !ok {
+				return "", fmt.Errorf("Amount / 1000000 float error")
+			}
 			tx.AddTxJSON("Amount", amt)
 		}
 	}
@@ -272,21 +278,30 @@ func signing(tx *Transaction) (string, error) {
 
 	if tx.GetTxJSON("SendMax") != nil {
 		if sendMax, ok := tx.GetTxJSON("SendMax").(float64); ok {
-			sm, _ := decimal.NewFromFloat(sendMax).Div(decimal.NewFromFloat(1000000)).Float64()
+			sm, ok := decimal.NewFromFloat(sendMax).Div(decimal.NewFromFloat(1000000)).Float64()
+			if !ok {
+				return "", fmt.Errorf("SendMax / 1000000 float error")
+			}
 			tx.AddTxJSON("SendMax", sm)
 		}
 	}
 
 	if tx.GetTxJSON("TakerPays") != nil {
 		if takerPays, ok := tx.GetTxJSON("TakerPays").(float64); ok {
-			tp, _ := decimal.NewFromFloat(takerPays).Div(decimal.NewFromFloat(1000000)).Float64()
+			tp, ok := decimal.NewFromFloat(takerPays).Div(decimal.NewFromFloat(1000000)).Float64()
+			if !ok {
+				return "", fmt.Errorf("TakerPays / 1000000 float error")
+			}
 			tx.AddTxJSON("TakerPays", tp)
 		}
 	}
 
 	if tx.GetTxJSON("TakerGets") != nil {
 		if takerGets, ok := tx.GetTxJSON("TakerGets").(float64); ok {
-			tg, _ := decimal.NewFromFloat(takerGets).Div(decimal.NewFromFloat(1000000)).Float64()
+			tg, ok := decimal.NewFromFloat(takerGets).Div(decimal.NewFromFloat(1000000)).Float64()
+			if !ok {
+				return "", fmt.Errorf("TakerGets / 1000000 float error")
+			}
 			tx.AddTxJSON("TakerGets", tg)
 		}
 	}
@@ -316,7 +331,7 @@ func signing(tx *Transaction) (string, error) {
 	if err != nil {
 		return "", err
 	}
-// fmt.Println(strings.ToUpper(soBlog.ToHex()))
+	// fmt.Println(strings.ToUpper(soBlog.ToHex()))
 	tx.AddTxJSON("blob", strings.ToUpper(soBlog.ToHex()))
 	tx.localSign = true
 	return tx.GetTxJSON("blob").(string), nil
