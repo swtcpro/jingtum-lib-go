@@ -13,7 +13,6 @@ import (
 	"container/list"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 
@@ -255,7 +254,7 @@ func Test_LocalSignPayment(t *testing.T) {
 
 /*
 *以下为remote 性能测试用例
-*/
+ */
 
 //BenchmarkBuildOfferCancelTx 取消挂单
 func BenchmarkBuildOfferCancelTx(b *testing.B) {
@@ -499,16 +498,13 @@ func BenchmarkLocalSignPayment(b *testing.B) {
 	}
 }
 
+// func TestMain(m *testing.M) {
+// 	err := Init()
+// 	if err != nil {
+// 		fmt.Println("Init jingtum-lib error,errno", err)
+// 		os.Exit(0)
+// 	}
 
-
-
-func TestMain(m *testing.M) {
-	err := Init()
-	if err != nil {
-		fmt.Println("Init jingtum-lib error,errno", err)
-		os.Exit(0)
-	}
-
-	ret := m.Run()
-	os.Exit(ret)
-}
+// 	ret := m.Run()
+// 	os.Exit(ret)
+// }

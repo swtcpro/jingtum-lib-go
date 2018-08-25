@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"jingtumLib/constant"
-	
 )
 
 //BuildRelationTx请求账号信息
@@ -154,7 +153,7 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 	}
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property",  "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
 	gets := constant.Amount{}
 	gets.Currency = "SWT"
 	pays := constant.Amount{}
@@ -185,38 +184,37 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 
 /*
 *以下为remote 性能测试用例
-*/
+ */
 
 func BenchmarkConnect(B *testing.B) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
 		B.Fatalf("New remote fail : %s", err.Error())
-		return	
+		return
 	}
 	for i := 0; i < B.N; i++ {
 		conErr := remote.Connect(func(err error, result interface{}) {
 			if err != nil {
 				B.Errorf("New remote fail : %s", err.Error())
-				return	
+				return
 			}
 			jsonBytes, _ := json.Marshal(result)
 			B.Logf("Connect success : %s", jsonBytes)
 		})
 		if conErr != nil {
 			B.Fatalf("Connect service fail : %s", conErr.Error())
-			continue	
+			continue
 		}
 		remote.Disconnect()
 	}
 
 }
 
-
 func BenchmarkBuildRelationTx(B *testing.B) {
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
 		B.Fatalf("New remote fail : %s", err.Error())
-		return	
+		return
 	}
 
 	conErr := remote.Connect(func(err error, result interface{}) {
@@ -248,7 +246,7 @@ func BenchmarkBuildRelationTx(B *testing.B) {
 		req, err := remote.BuildRelationTx(options)
 		if err != nil {
 			B.Fatalf("BuildRelationTx fail : %s", err.Error())
-			continue	
+			continue
 		}
 
 		wg := sync.WaitGroup{}
@@ -294,7 +292,8 @@ func BenchmarkBuildAccountSetTx(B *testing.B) {
 	}
 
 	defer remote.Disconnect()
-
+	wg := sync.WaitGroup{}
+	wg.Add(B.N)
 	for i := 0; i < B.N; i++ {
 		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "delegate", "delegate_key": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 		limit := constant.Amount{}
@@ -305,10 +304,9 @@ func BenchmarkBuildAccountSetTx(B *testing.B) {
 		req, err := remote.BuildAccountSetTx(options)
 		if err != nil {
 			B.Fatalf("Build AccountSet Tx fail : %s", err.Error())
-			continue	
+			continue
 		}
-		wg := sync.WaitGroup{}
-		wg.Add(1)
+
 		req.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 		req.Submit(func(err error, result interface{}) {
 			if err != nil {
@@ -320,15 +318,15 @@ func BenchmarkBuildAccountSetTx(B *testing.B) {
 			B.Logf("Success Build AccountSet Tx result : %s", jsonBytes)
 			wg.Done()
 		})
-		wg.Wait()
 	}
+
+	wg.Wait()
 }
 
-
 func BenchmarkBuildOfferCreateTx(B *testing.B) {
-	sum := 0	
+	sum := 0
 	for i := 0; i < B.N; i++ {
-		time.Sleep(time.Duration(1)*time.Second)
+		time.Sleep(time.Duration(1) * time.Second)
 		sum = sum + 1
 	}
 	remote, err := NewRemote("ws://123.57.219.57:5020", true)
@@ -355,7 +353,7 @@ func BenchmarkBuildOfferCreateTx(B *testing.B) {
 
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property",  "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
 	gets := constant.Amount{}
 	gets.Currency = "SWT"
 	pays := constant.Amount{}
@@ -363,11 +361,11 @@ func BenchmarkBuildOfferCreateTx(B *testing.B) {
 	options["gets"] = gets
 	options["pays"] = pays
 	for i := 0; i < B.N; i++ {
-		B.Logf("%s",string(B.N))
+		B.Logf("%s", string(B.N))
 		req, err := remote.BuildAccountSetTx(options)
 		if err != nil {
 			B.Fatalf("BuildOfferCreateTx fail : %s", err.Error())
-			continue	
+			continue
 		}
 		wg := sync.WaitGroup{}
 		wg.Add(1)
