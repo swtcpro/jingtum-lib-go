@@ -17,11 +17,13 @@ import (
 
 const middle = "========="
 
+//Config 配置类
 type Config struct {
 	Mymap  map[string]string
 	strcet string
 }
 
+//InitConfig 初始化配置
 func (c *Config) InitConfig(path string) error {
 	c.Mymap = make(map[string]string)
 
