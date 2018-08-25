@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"jingtumLib/constant"
+	
 )
 
 //BuildRelationTx请求账号信息
@@ -46,7 +47,7 @@ func Test_BuildRelationTx(t *testing.T) {
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
 	limit.Currency = "CCA"
-	limit.Value = "0.0001"
+	limit.Value = "100000000"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
 	options["limit"] = limit
 	req, err := remote.BuildRelationTx(options)
