@@ -8,6 +8,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -43,8 +44,8 @@ func main() {
 		return
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+	// wg := sync.WaitGroup{}
+	// wg.Add(1)
 
 	//请求账号信息
 	// options := make(map[string]interface{})
@@ -194,6 +195,52 @@ func main() {
 	// 	}
 	// 	wg.Done()
 	// })
+
+	//设置账户属性
+	// options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
+	// limit := constant.Amount{}
+	// limit.Currency = "SWT"
+	// limit.Value = "100.0001"
+	// limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+	// options["limit"] = limit
+	// tx, err := remote.BuildAccountSetTx(options)
+	// if err != nil {
+	// 	fmt.Printf("Build AccountSet Tx fail : %s\n", err.Error())
+	// 	wg.Done()
+	// 	return
+	// }
+	// tx.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
+	// tx.Submit(func(err error, result interface{}) {
+	// 	if err != nil {
+	// 		fmt.Printf("Build AccountSet Tx : %s\n", err.Error())
+	// 		wg.Done()
+	// 		return
+	// 	}
+	// 	jsonBytes, _ := json.Marshal(result)
+	// 	fmt.Printf("Success Build AccountSet Tx result : %s\n", jsonBytes)
+	// 	wg.Done()
+	// })
+
+	//取消挂单
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "sequence": uint32(26)}
+	tx, err := remote.BuildOfferCancelTx(options)
+	if err != nil {
+		fmt.Printf("Fail BuildOfferCancelTx : %s\n", err.Error())
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	tx.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
+	tx.Submit(func(err error, result interface{}) {
+		if err != nil {
+			fmt.Printf("Fail BuildOfferCancelTx : %s\n", err.Error())
+			wg.Done()
+		} else {
+			jsonBytes, _ := json.Marshal(result)
+			fmt.Printf("Success BuildOfferCancelTx : %s\n", jsonBytes)
+			wg.Done()
+		}
+	})
+
 	wg.Wait()
 
 	// defer jingtum.Exits()

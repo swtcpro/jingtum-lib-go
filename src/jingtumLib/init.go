@@ -8,9 +8,10 @@
 package jingtumLib
 
 import (
-	log "common/github.com/blog4go"
 	"fmt"
 	"sync"
+
+	log "common/github.com/blog4go"
 
 	"jingtumLib/constant"
 )
@@ -81,7 +82,15 @@ func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...in
 }
 
 func InitLog() (err error) {
-	rerr := log.NewWriterFromConfigAsFile("../conf/jingtum-lib.xml")
+	//	s, err := exec.LookPath(os.Args[0])
+	//	if err != nil {
+	//		return
+	//	}
+	//
+	//	fmt.Println("file:", s)
+	//	path, _ := filepath.Abs(s)
+	//	fmt.Println("path:", path)
+	rerr := log.NewWriterFromConfigAsFile("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib.xml") //log.NewWriterFromConfigAsFile("../conf/jingtum-lib.xml")
 	if nil != rerr {
 		fmt.Println(rerr.Error())
 		return rerr
@@ -159,7 +168,7 @@ func Flush() {
 }
 
 func InitConfig() error {
-	return JTConfig.InitConfig("../conf/jingtum-lib-config.txt")
+	return JTConfig.InitConfig("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib-config.txt")
 }
 
 func Init() error {
@@ -172,7 +181,7 @@ func Init() error {
 		return err
 	}
 
-	constant.CFG_CURRENCY = JTConfig.Read("Config", "currency")
+	constant.CFGCurrency = JTConfig.Read("Config", "currency")
 
 	return nil
 }
