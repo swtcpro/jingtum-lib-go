@@ -81,7 +81,7 @@ func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...in
 }
 
 func InitLog() (err error) {
-	rerr := log.NewWriterFromConfigAsFile("../conf/jingtum-lib.xml")
+	rerr := log.NewWriterFromConfigAsFile("../../conf/jingtum-lib.xml")
 	if nil != rerr {
 		fmt.Println(rerr.Error())
 		return rerr
@@ -159,7 +159,7 @@ func Flush() {
 }
 
 func InitConfig() error {
-	return JTConfig.InitConfig("../conf/jingtum-lib-config.txt")
+	return JTConfig.InitConfig("../../conf/jingtum-lib-config.txt")
 }
 
 func Init() error {
