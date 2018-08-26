@@ -1,3 +1,3 @@
 #! /bin/bash
 cd ../jingtumLib
-go test
+go test -v

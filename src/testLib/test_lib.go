@@ -12,11 +12,11 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"encoding/json"
 
 	"jingtumLib/constant"
 	jingtum "jingtumLib"
 )
+type Amount constant.Amount
 
 func main() {
 	err := jingtum.Init()
@@ -46,8 +46,8 @@ func main() {
 		return
 	}
 
-	// wg := sync.WaitGroup{}
-	// wg.Add(1)
+	 wg := sync.WaitGroup{}
+	 wg.Add(1)
 
 	//请求账号信息
 	 options := make(map[string]interface{})
@@ -85,6 +85,7 @@ func main() {
 	 amount.Currency = "CCT"
 	 amount.Value = "5"
 	 amount.Issuer = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
+	 wg.Add(1)
 	 tx, err := remote.BuildPaymentTx(v.account, to, amount)
 	 if err != nil {
 	 	fmt.Printf("Build paymanet tx fail : %s\n", err)
@@ -106,6 +107,7 @@ func main() {
 	 })
 
 	//请求服务信息
+	 wg.Add(1)
 	 req, err = remote.RequestServerInfo()
 	 if err != nil {
 	 	fmt.Printf("Fail request server info %s", err.Error())
@@ -123,47 +125,10 @@ func main() {
 	 	wg.Done()
 	 })
 
-	//请求市场挂单
-	 options = make(map[string]interface{}) //{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	 gets := constant.Amount{}
-	 gets.Currency = "SWT"
-	 pays := constant.Amount{}
-	 pays.Currency = "CNY"
-	 pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
-	 options["gets"] = gets
-	 options["pays"] = pays
-	 req, err = remote.RequestOrderBook(options)
-	 if err != nil {
-	 	fmt.Printf("Fail request order book %s", err.Error())
-	 	return
-	 }
-
-	 if err != nil {
-	 	fmt.Printf("Fail request order book %s", err.Error())
-	 	return
-	 }
-
-	 req.Submit(func(err error, result interface{}) {
-	 	if err != nil {
-	 		fmt.Printf("Fail request order book %s", err.Error())
-	 		wg.Done()
-	 		return
-	 	}
-
-	 	jsonByte, _ := json.Marshal(result)
-	 	fmt.Printf("Success request order book %s", jsonByte)
-	 	wg.Done()
-	 })
-
-	//账本监听
-	 remote.On(constant.EventLedgerClosed, func(data interface{}) {
-	 	jsonBytes, _ := json.Marshal(data)
-	 	fmt.Printf("Success listener ledger closed : %s", string(jsonBytes))
-	 	wg.Done()
-	 })
 
 	//部署合约
 	 options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
+	 wg.Add(1)
 	 tx, err = remote.DeployContractTx(options)
 	 if err != nil {
 	 	fmt.Printf("Fail request deploy contract %s", err.Error())
@@ -182,6 +147,7 @@ func main() {
 
 	//执行合约
 	 options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "destination": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72", "foo": "foo", "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
+	 wg.Add(1)
 	 tx, err = remote.CallContractTx(options)
 	 if err != nil {
 	 	fmt.Printf("Fail request call contract Tx %s", err.Error())
@@ -206,6 +172,7 @@ func main() {
     limit.Value = "0.0001"
     limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
     options["limit"] = limit
+	wg.Add(1)
 	treq, err := remote.BuildRelationTx(options)
     if err != nil {
         fmt.Printf("BuildRelationTx fail : %s", err.Error())
@@ -233,12 +200,13 @@ func main() {
     limit.Value = "100.0001"
     limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
     options["limit"] = limit
+	wg.Add(1)
 	tran, err := remote.BuildAccountSetTx(options)
     if err != nil {
         fmt.Printf("Build AccountSet Tx fail : %s", err.Error())
         return
     }
-    wg = sync.WaitGroup{}
+    //wg = sync.WaitGroup{}
     wg.Add(1)
     tran.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
     tran.Submit(func(err error, result interface{}) {
@@ -255,19 +223,18 @@ func main() {
 
 	// 挂单
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property",  "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
-    gets = constant.Amount{}
+	gets := Amount{}
     gets.Currency = "SWT"
-    pays = constant.Amount{}
+	pays := Amount{}
     pays.Currency = "CNY"
     options["gets"] = gets
     options["pays"] = pays
+	wg.Add(1)
 	reqt, err := remote.BuildAccountSetTx(options)
     if err != nil {
         fmt.Printf("BuildOfferCreateTx fail : %s", err.Error())
         return
     }
-    wg = sync.WaitGroup{}
-    wg.Add(1)
     reqt.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
     reqt.Submit(func(err error, result interface{}) {
         if err != nil {
@@ -279,8 +246,44 @@ func main() {
         fmt.Printf("Success Build Offer Create Tx result : %s", jsonBytes)
         wg.Done()
     })
-	wg.Wait()
+	
+	//请求市场挂单
+	options = make(map[string]interface{})
+	gets = Amount{}
+	gets.Currency = "SWT"
+	pays = Amount{}
+	pays.Currency = "CNY"
+	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+	options["gets"] = gets
+	options["pays"] = pays
+	req, err = remote.RequestOrderBook(options)
+	if err != nil {
+		fmt.Printf("RequestOrderBook fail: %s", err.Error())
+	 	return
+	}
 
+	wg.Add(1)
+	req.Submit(func(err error, result interface{}) {
+		if err != nil {
+			fmt.Printf("Fail request order book %s", err.Error())
+			wg.Done()
+			return
+		}
+
+		jsonByte, _ := json.Marshal(result)
+		fmt.Printf("Success request order book %s", jsonByte)
+		wg.Done()
+	})
+
+
+	//账本监听
+	wg.Add(1)
+	remote.On(constant.EventLedgerClosed, func(data interface{}) {
+		jsonBytes, _ := json.Marshal(data)
+		fmt.Printf("Success listener ledger closed : %s", string(jsonBytes))
+		wg.Done()
+	})
+	wg.Wait()
 
 	defer jingtum.Exits()
 }

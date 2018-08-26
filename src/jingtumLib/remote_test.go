@@ -42,8 +42,9 @@ func Test_BuildRelationTx(t *testing.T) {
 
 	defer remote.Disconnect()
 
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
+	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
+	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "unfreeze", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	limit := constant.Amount{}
 	limit.Currency = "CCA"
 	limit.Value = "100000000"
