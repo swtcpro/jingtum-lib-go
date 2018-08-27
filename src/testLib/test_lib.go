@@ -33,43 +33,43 @@ func main() {
     isOk := jingtum.IsValidSecret(secret)
 
     if !isOk {
-        fmt.Printf("Failure IsValidSecret(%s) is false", secret)
+        fmt.Printf("\nFailure IsValidSecret(%s) is false\n", secret)
     }
 
-    fmt.Printf("Success IsValidSecret(%v) is true", secret)
+    fmt.Printf("\nSuccess IsValidSecret(%v) is true\n", secret)
 
     //根据私钥创建测试
     wt, err := jingtum.FromSecret(secret)
 
     if err != nil {
-        fmt.Printf("Failure FromSecret : %s, err %v", secret, err)
+        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
     }
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
     //钱包地址合法性验证
 
     isOk = jingtum.IsValidAddress(wt.GetAddress())
 
     if !isOk {
-        fmt.Printf("Failure IsValidAddress(%s) is false", wt.GetAddress())
+        fmt.Printf("Failure IsValidAddress(%s) is false\n", wt.GetAddress())
     }
 
-    fmt.Printf("Success IsValidAddress(%s) is true", wt.GetAddress())
+    fmt.Printf("Success IsValidAddress(%s) is true\n", wt.GetAddress())
 
     //生成新钱包
     newWallet, err := jingtum.Generate()
     isOk = jingtum.IsValidSecret(newWallet.GetSecret())
     if !isOk {
-        fmt.Printf("New secret IsValidSecret(%s) is false", newWallet.GetSecret())
+        fmt.Printf("New secret IsValidSecret(%s) is false\n", newWallet.GetSecret())
     }
 
     isOk = jingtum.IsValidAddress(newWallet.GetAddress())
     if !isOk {
-        fmt.Printf("New address IsValidAddress(%s) is false", newWallet.GetAddress())
+        fmt.Printf("New address IsValidAddress(%s) is false\n", newWallet.GetAddress())
     }
 
-    fmt.Printf("Success new secret (%s). address (%s)", newWallet.GetSecret(), newWallet.GetAddress())
+    fmt.Printf("Success new secret (%s). address (%s)\n", newWallet.GetSecret(), newWallet.GetAddress())
 
 
 	secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
@@ -77,16 +77,16 @@ func main() {
     wt, err = jingtum.FromSecret(secret)
 
     if err != nil {
-        fmt.Printf("Failure FromSecret : %s, err %v", secret, err)
+        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
     }
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
 	//123.57.219.57:5020
 	//139.129.194.175:5020   合约环境
 	remote, err := jingtum.NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
-		fmt.Printf("New remote fail : %s", err)
+		fmt.Printf("New remote fail : %s\n", err)
 		return
 	}
 
@@ -99,7 +99,7 @@ func main() {
 	})
 
 	if cerr != nil {
-		fmt.Printf("Connect service fail : %v", err)
+		fmt.Printf("Connect service fail : %v\n", err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func main() {
 	 req, err := remote.RequestAccountInfo(options)
 
 	 if err != nil {
-	 	fmt.Printf("RequestAccountInfo fail : %v", err)
+	 	fmt.Printf("RequestAccountInfo fail : %v\n", err)
 	 	return
 	 }
 
@@ -123,7 +123,7 @@ func main() {
 	 		return
 	 	}
 
-	 	fmt.Printf("Requst submit result : %v", result)
+	 	fmt.Printf("Requst submit result : %v\n", result)
 	 	wg.Done()
 	 })
 
@@ -167,18 +167,18 @@ func main() {
 	 wg.Add(1)
 	 req, err = remote.RequestServerInfo()
 	 if err != nil {
-	 	fmt.Printf("Fail request server info %s", err.Error())
+	 	fmt.Printf("Fail request server info %s\n", err.Error())
 	 }
 
 	 req.Submit(func(err error, result interface{}) {
 	 	if err != nil {
-	 		fmt.Printf("Fail request server info %s", err.Error())
+	 		fmt.Printf("Fail request server info %s\n", err.Error())
 	 		wg.Done()
 	 		return
 	 	}
 
 	 	jsonByte, _ := json.Marshal(result)
-	 	fmt.Printf("Success request server info %s", jsonByte)
+	 	fmt.Printf("Success request server info %s\n", jsonByte)
 	 	wg.Done()
 	 })
 
@@ -188,16 +188,16 @@ func main() {
 	 wg.Add(1)
 	 tx, err = remote.DeployContractTx(options)
 	 if err != nil {
-	 	fmt.Printf("Fail request deploy contract %s", err.Error())
+	 	fmt.Printf("Fail request deploy contract %s\n", err.Error())
 	 	wg.Done()
 	 }
 	 tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
 	 tx.Submit(func(err error, data interface{}) {
 	 	if err != nil {
-	 		fmt.Printf("Fail request deploy contract %s", err.Error())
+	 		fmt.Printf("Fail request deploy contract %s\n", err.Error())
 	 	} else {
 	 		jsonBytes, _ := json.Marshal(data)
-	 		fmt.Printf("Success deploy contract : %s", string(jsonBytes))
+	 		fmt.Printf("Success deploy contract : %s\n", string(jsonBytes))
 	 	}
 	 	wg.Done()
 	 })
@@ -207,16 +207,16 @@ func main() {
 	 wg.Add(1)
 	 tx, err = remote.CallContractTx(options)
 	 if err != nil {
-	 	fmt.Printf("Fail request call contract Tx %s", err.Error())
+	 	fmt.Printf("Fail request call contract Tx %s\n", err.Error())
 	 	wg.Done()
 	 }
 	 tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
 	 tx.Submit(func(err error, data interface{}) {
 	 	if err != nil {
-	 		fmt.Printf("Fail request call contract Tx %s", err.Error())
+	 		fmt.Printf("Fail request call contract Tx %s\n", err.Error())
 	 	} else {
 	 		jsonBytes, _ := json.Marshal(data)
-	 		fmt.Printf("Success call contract Tx : %s", string(jsonBytes))
+	 		fmt.Printf("Success call contract Tx : %s\n", string(jsonBytes))
 	 	}
 	 	wg.Done()
 	 })
@@ -232,7 +232,7 @@ func main() {
 	wg.Add(1)
 	treq, err := remote.BuildRelationTx(options)
     if err != nil {
-        fmt.Printf("BuildRelationTx fail : %s", err.Error())
+        fmt.Printf("BuildRelationTx fail : %s\n", err.Error())
         return
     }
 
@@ -241,12 +241,12 @@ func main() {
     treq.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
     treq.Submit(func(err error, result interface{}) {
         if err != nil {
-            fmt.Printf("Build Relation Tx : %s", err.Error())
+            fmt.Printf("Build Relation Tx : %s\n", err.Error())
             wg.Done()
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build Relation Tx result : %s", jsonBytes)
+        fmt.Printf("Success Build Relation Tx result : %s\n", jsonBytes)
         wg.Done()
 	})
 
@@ -260,7 +260,7 @@ func main() {
 	wg.Add(1)
 	tran, err := remote.BuildAccountSetTx(options)
     if err != nil {
-        fmt.Printf("Build AccountSet Tx fail : %s", err.Error())
+        fmt.Printf("Build AccountSet Tx fail : %s\n", err.Error())
         return
     }
     //wg = sync.WaitGroup{}
@@ -268,76 +268,69 @@ func main() {
     tran.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
     tran.Submit(func(err error, result interface{}) {
         if err != nil {
-            fmt.Printf("Build AccountSet Tx : %s", err.Error())
+            fmt.Printf("Build AccountSet Tx : %s\n", err.Error())
             wg.Done()
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build AccountSet Tx result : %s", jsonBytes)
+        fmt.Printf("Success Build AccountSet Tx result : %s\n", jsonBytes)
         wg.Done()
     })
 
 
 	// 挂单
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property",  "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
-	gets := Amount{}
-    gets.Currency = "SWT"
-	pays := Amount{}
-    pays.Currency = "CNY"
-    options["gets"] = gets
-    options["pays"] = pays
 	wg.Add(1)
 	reqt, err := remote.BuildAccountSetTx(options)
     if err != nil {
-        fmt.Printf("BuildOfferCreateTx fail : %s", err.Error())
+        fmt.Printf("BuildOfferCreateTx fail : %s\n", err.Error())
         return
     }
     reqt.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
     reqt.Submit(func(err error, result interface{}) {
         if err != nil {
-            fmt.Printf("Build Offer Create Tx : %s", err.Error())
+            fmt.Printf("Build Offer Create Tx : %s\n", err.Error())
             wg.Done()
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build Offer Create Tx result : %s", jsonBytes)
+        fmt.Printf("Success Build Offer Create Tx result : %s\n", jsonBytes)
         wg.Done()
     })
 	
 	//请求市场挂单
-	options = make(map[string]interface{})
-	gets = Amount{}
-	gets.Currency = "SWT"
-	pays = Amount{}
-	pays.Currency = "CNY"
-	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
-	options["gets"] = gets
-	options["pays"] = pays
-	req, err = remote.RequestOrderBook(options)
+	optionsreq := make(map[string]interface{})
+	getsreq := constant.Amount{}
+	getsreq.Currency = "SWT"
+	paysreq := constant.Amount{}
+	paysreq.Currency = "CNY"
+	paysreq.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+	optionsreq["gets"] = getsreq
+	optionsreq["pays"] = paysreq
+	req, err = remote.RequestOrderBook(optionsreq)
 	if err != nil {
-		fmt.Printf("RequestOrderBook fail: %s", err.Error())
+		fmt.Printf("RequestOrderBook fail: %s\n", err.Error())
 	 	return
 	}
 
 	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			fmt.Printf("Fail request order book %s", err.Error())
+			fmt.Printf("Fail request order book %s\n", err.Error())
 			wg.Done()
 			return
 		}
 
 		jsonByte, _ := json.Marshal(result)
-		fmt.Printf("Success request order book %s", jsonByte)
+		fmt.Printf("Success request order book %s\n", jsonByte)
 		wg.Done()
 	})
-
 
 	//账本监听
 	wg.Add(1)
 	remote.On(constant.EventLedgerClosed, func(data interface{}) {
 		jsonBytes, _ := json.Marshal(data)
-		fmt.Printf("Success listener ledger closed : %s", string(jsonBytes))
+		fmt.Printf("Success listener ledger closed : %s\n", string(jsonBytes))
 		wg.Done()
 	})
 	wg.Wait()
