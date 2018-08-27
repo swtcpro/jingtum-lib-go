@@ -427,7 +427,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	req := NewRequest(remote, constant.CommandBookOffers, nil)
 
 	if takerGets, ok := options["taker_gets"]; ok {
-		getsAmount, ok := takerGets.(Amount)
+		getsAmount, ok := takerGets.(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_gets type. See also constant.Amount")
 		}
@@ -436,7 +436,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 		}
 		req.message["taker_gets"] = (constant.Amount)(getsAmount)
 	} else if pays, ok := options["pays"]; ok {
-		paysAmount, ok := pays.(Amount)
+		paysAmount, ok := interface{}(pays).(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid pays type. See also constant.Amount")
 		}
@@ -447,7 +447,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	}
 
 	if takerPays, ok := options["taker_pays"]; ok {
-		paysAmount, ok := takerPays.(Amount)
+		paysAmount, ok := takerPays.(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_pays type. See also constant.Amount")
 		}
@@ -457,7 +457,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 		req.message["taker_pays"] = (constant.Amount)(paysAmount)
 
 	} else if gets, ok := options["gets"]; ok {
-		getsAmount, ok := gets.(Amount)
+		getsAmount, ok := interface{}(gets).(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid gets type. See also constant.Amount")
 		}

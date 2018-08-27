@@ -16,7 +16,6 @@ import (
 	"jingtumLib/constant"
 	jingtum "jingtumLib"
 )
-type Amount constant.Amount
 
 func main() {
 	err := jingtum.Init()
@@ -36,7 +35,7 @@ func main() {
         fmt.Printf("\nFailure IsValidSecret(%s) is false\n", secret)
     }
 
-    fmt.Printf("\nSuccess IsValidSecret(%v) is true\n", secret)
+    fmt.Printf("\nSuccess IsValidSecret(%v) is true\n\n", secret)
 
     //根据私钥创建测试
     wt, err := jingtum.FromSecret(secret)
@@ -45,7 +44,7 @@ func main() {
         fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
     }
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
     //钱包地址合法性验证
 
@@ -55,7 +54,7 @@ func main() {
         fmt.Printf("Failure IsValidAddress(%s) is false\n", wt.GetAddress())
     }
 
-    fmt.Printf("Success IsValidAddress(%s) is true\n", wt.GetAddress())
+    fmt.Printf("Success IsValidAddress(%s) is true\n\n", wt.GetAddress())
 
     //生成新钱包
     newWallet, err := jingtum.Generate()
@@ -69,7 +68,7 @@ func main() {
         fmt.Printf("New address IsValidAddress(%s) is false\n", newWallet.GetAddress())
     }
 
-    fmt.Printf("Success new secret (%s). address (%s)\n", newWallet.GetSecret(), newWallet.GetAddress())
+    fmt.Printf("Success new secret (%s). address (%s)\n\n", newWallet.GetSecret(), newWallet.GetAddress())
 
 
 	secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
@@ -80,7 +79,7 @@ func main() {
         fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
     }
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
 	//123.57.219.57:5020
 	//139.129.194.175:5020   合约环境
@@ -178,17 +177,17 @@ func main() {
 	 	}
 
 	 	jsonByte, _ := json.Marshal(result)
-	 	fmt.Printf("Success request server info %s\n", jsonByte)
+	 	fmt.Printf("Success request server info %s\n\n", jsonByte)
 	 	wg.Done()
 	 })
 
-
+	/*	
 	//部署合约
 	 options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
 	 wg.Add(1)
 	 tx, err = remote.DeployContractTx(options)
 	 if err != nil {
-	 	fmt.Printf("Fail request deploy contract %s\n", err.Error())
+	 	fmt.Printf("Fail RequestDeployContract %s\n", err.Error())
 	 	wg.Done()
 	 }
 	 tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
@@ -197,30 +196,30 @@ func main() {
 	 		fmt.Printf("Fail request deploy contract %s\n", err.Error())
 	 	} else {
 	 		jsonBytes, _ := json.Marshal(data)
-	 		fmt.Printf("Success deploy contract : %s\n", string(jsonBytes))
+	 		fmt.Printf("Success deploy contract : %s\n\n", string(jsonBytes))
 	 	}
 	 	wg.Done()
 	 })
 
 	//执行合约
-	 options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "destination": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72", "foo": "foo", "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
+	hyoptions := map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "destination": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72", "foo": "foo", "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
 	 wg.Add(1)
-	 tx, err = remote.CallContractTx(options)
+	 hytx, err := remote.CallContractTx(hyoptions)
 	 if err != nil {
-	 	fmt.Printf("Fail request call contract Tx %s\n", err.Error())
-	 	wg.Done()
-	 }
-	 tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
-	 tx.Submit(func(err error, data interface{}) {
-	 	if err != nil {
-	 		fmt.Printf("Fail request call contract Tx %s\n", err.Error())
-	 	} else {
-	 		jsonBytes, _ := json.Marshal(data)
-	 		fmt.Printf("Success call contract Tx : %s\n", string(jsonBytes))
-	 	}
-	 	wg.Done()
-	 })
-
+	 	fmt.Printf("Fail RequestCallContract Tx %s\n", err.Error())
+		wg.Done()
+	}
+	hytx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
+	hytx.Submit(func(err error, data interface{}) {
+		if err != nil {
+			fmt.Printf("Fail request call contract Tx %s\n", err.Error())
+		} else {
+			jsonBytes, _ := json.Marshal(data)
+			fmt.Printf("Success call contract Tx : %s\n\n", string(jsonBytes))
+		}
+		wg.Done()
+	})
+	*/
 	//请求账号信息
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
     //options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
@@ -246,7 +245,7 @@ func main() {
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build Relation Tx result : %s\n", jsonBytes)
+        fmt.Printf("Success Build Relation Tx result : %s\n\n", jsonBytes)
         wg.Done()
 	})
 
@@ -273,7 +272,7 @@ func main() {
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build AccountSet Tx result : %s\n", jsonBytes)
+        fmt.Printf("Success Build AccountSet Tx result : %s\n\n", jsonBytes)
         wg.Done()
     })
 
@@ -294,7 +293,7 @@ func main() {
             return
         }
         jsonBytes, _ := json.Marshal(result)
-        fmt.Printf("Success Build Offer Create Tx result : %s\n", jsonBytes)
+        fmt.Printf("Success Build Offer Create Tx result : %s\n\n", jsonBytes)
         wg.Done()
     })
 	
@@ -322,7 +321,7 @@ func main() {
 		}
 
 		jsonByte, _ := json.Marshal(result)
-		fmt.Printf("Success request order book %s\n", jsonByte)
+		fmt.Printf("Success request order book %s\n\n", jsonByte)
 		wg.Done()
 	})
 
@@ -330,10 +329,10 @@ func main() {
 	wg.Add(1)
 	remote.On(constant.EventLedgerClosed, func(data interface{}) {
 		jsonBytes, _ := json.Marshal(data)
-		fmt.Printf("Success listener ledger closed : %s\n", string(jsonBytes))
+		fmt.Printf("Success listener ledger closed : %s\n\n", string(jsonBytes))
 		wg.Done()
 	})
 	wg.Wait()
-
+	remote.Disconnect()
 	defer jingtum.Exits()
 }
