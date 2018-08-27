@@ -130,14 +130,14 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 		url = JTConfig.Read("Service", "Host")
 
 		if url == "" {
-			Error("Config Service:Host is null.")
+			fmt.Errorf("Config Service:Host is null.")
 			return remote, errors.New("Config|service:Host setting error")
 		}
 
 		port := JTConfig.Read("Service", "Port")
 
 		if port == "" {
-			Error("Config Service:Port is null.")
+			fmt.Errorf("Config Service:Port is null.")
 			return remote, errors.New("Config|service:Port setting error")
 		}
 
@@ -526,7 +526,7 @@ func (remote *Remote) handleResponse(data ResData) {
 	request, ok := remote.requests[data.getUint64("id")]
 	remote.lock.Unlock()
 	if !ok {
-		Errorf("Request id error %d", data.getUint64("id"))
+		fmt.Errorf("Request id error %d", data.getUint64("id"))
 
 		return
 	}
@@ -601,7 +601,7 @@ func (remote *Remote) handleMessage(msg []byte) {
 	var data ResData
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
-		Errorf("Received msg json Unmarshal error : %v", err)
+		fmt.Errorf("Received msg json Unmarshal error : %v", err)
 		return
 	}
 
@@ -696,13 +696,14 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 	if !utils.IsValidAddress(des.(string)) {
 		return fmt.Errorf("invalid target address")
 	}
-
+	
 	transactionType := ""
 	if options["type"] == "unfreeze" {
 		transactionType = "RelationDel"
 	} else {
 		transactionType = "RelationSet"
 	}
+	
 	tx.AddTxJSON("TransactionType", transactionType)
 	tx.AddTxJSON("Account", src)
 	tx.AddTxJSON("Target", des)
@@ -781,7 +782,7 @@ func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transact
 	case "authorize", "freeze", "unfreeze":
 		return tx, remote.BuildRelationSet(options, tx)
 	}
-	Errorf("build relation set should not go here")
+	fmt.Errorf("build relation set should not go here")
 	return tx, fmt.Errorf("build relation set error")
 }
 
@@ -909,7 +910,7 @@ func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transa
 		return tx, remote.BuildSignerSet(options, tx)
 	}
 
-	Errorf("build account set should not go here")
+	fmt.Errorf("build account set should not go here")
 	return tx, fmt.Errorf("build account set should not go here")
 }
 

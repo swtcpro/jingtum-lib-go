@@ -13,6 +13,7 @@ import (
 	"container/list"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 
@@ -498,13 +499,13 @@ func BenchmarkLocalSignPayment(b *testing.B) {
 	}
 }
 
-// func TestMain(m *testing.M) {
-// 	err := Init()
-// 	if err != nil {
-// 		fmt.Println("Init jingtum-lib error,errno", err)
-// 		os.Exit(0)
-// 	}
+func TestMain(m *testing.M) {
+ 	err := Init()
+ 	if err != nil {
+ 		fmt.Println("Init jingtum-lib error,errno", err)
+ 		os.Exit(0)
+ 	}
 
-// 	ret := m.Run()
-// 	os.Exit(ret)
-// }
+ 	ret := m.Run()
+	os.Exit(ret)
+}

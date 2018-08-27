@@ -3,8 +3,8 @@ package jingtumLib
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
+	//"fmt"
+	//"os"
 	"sync"
 	"testing"
 	"time"
@@ -13,7 +13,7 @@ import (
 )
 
 var remote *Remote
-
+/*
 func TestMain(m *testing.M) {
 	err := Init()
 	if err != nil {
@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 	ret := m.Run()
 	os.Exit(ret)
 }
-
+*/
 func BenchmarkBuildPaymentTx(B *testing.B) {
 	B.Logf("Remote is null %t", remote == nil)
 	wg := sync.WaitGroup{}
