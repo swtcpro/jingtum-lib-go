@@ -10,4 +10,4 @@ Port = 5020
 currency     = SWT
 ACCOUNT_ZERO = jjjjjjjjjjjjjjjjjjjjjhoLvTp
 ACCOUNT_ONE  = jjjjjjjjjjjjjjjjjjjjBZbvri
-fee          = 100000000
+fee          = 10000
