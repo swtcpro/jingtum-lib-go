@@ -11,7 +11,7 @@
  * @UpdateTime: 2018-05-28 10:44:54
  */
 
-package jingtumLib
+package jingtumlib
 
 import (
 	"container/list"
@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"jingtumLib/constant"
-	"jingtumLib/serializer"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	"jingtumlib/serializer"
+	"jingtumlib/utils"
 
 	"github.com/yangxuebo-138/decimal"
 )

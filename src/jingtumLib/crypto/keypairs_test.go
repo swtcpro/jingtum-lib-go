@@ -14,9 +14,9 @@ package crypto
 
 import (
 	"flag"
-	"jingtumLib/constant"
-	"jingtumLib/crypto/secp256k1"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	"jingtumlib/crypto/secp256k1"
+	"jingtumlib/utils"
 	"math/big"
 	"os"
 	"testing"

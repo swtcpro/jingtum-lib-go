@@ -13,8 +13,8 @@ import (
 	"os"
 	"sync"
 
-	jingtum "jingtumLib"
-	"jingtumLib/constant"
+	jingtum "jingtumlib"
+	"jingtumlib/constant"
 )
 
 func main() {
@@ -26,60 +26,59 @@ func main() {
 
 	/*
 	*钱包类测试
-	*/
+	 */
 	secret := "snsYqv2FsYLuibE9TGHdG5x5V5Qcn"
-    //私钥合法性测试
-    isOk := jingtum.IsValidSecret(secret)
+	//私钥合法性测试
+	isOk := jingtum.IsValidSecret(secret)
 
-    if !isOk {
-        fmt.Printf("\nFailure IsValidSecret(%s) is false\n", secret)
-    }
+	if !isOk {
+		fmt.Printf("\nFailure IsValidSecret(%s) is false\n", secret)
+	}
 
-    fmt.Printf("\nSuccess IsValidSecret(%v) is true\n\n", secret)
+	fmt.Printf("\nSuccess IsValidSecret(%v) is true\n\n", secret)
 
-    //根据私钥创建测试
-    wt, err := jingtum.FromSecret(secret)
+	//根据私钥创建测试
+	wt, err := jingtum.FromSecret(secret)
 
-    if err != nil {
-        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
-    }
+	if err != nil {
+		fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
+	}
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+	fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
-    //钱包地址合法性验证
+	//钱包地址合法性验证
 
-    isOk = jingtum.IsValidAddress(wt.GetAddress())
+	isOk = jingtum.IsValidAddress(wt.GetAddress())
 
-    if !isOk {
-        fmt.Printf("Failure IsValidAddress(%s) is false\n", wt.GetAddress())
-    }
+	if !isOk {
+		fmt.Printf("Failure IsValidAddress(%s) is false\n", wt.GetAddress())
+	}
 
-    fmt.Printf("Success IsValidAddress(%s) is true\n\n", wt.GetAddress())
+	fmt.Printf("Success IsValidAddress(%s) is true\n\n", wt.GetAddress())
 
-    //生成新钱包
-    newWallet, err := jingtum.Generate()
-    isOk = jingtum.IsValidSecret(newWallet.GetSecret())
-    if !isOk {
-        fmt.Printf("New secret IsValidSecret(%s) is false\n", newWallet.GetSecret())
-    }
+	//生成新钱包
+	newWallet, err := jingtum.Generate()
+	isOk = jingtum.IsValidSecret(newWallet.GetSecret())
+	if !isOk {
+		fmt.Printf("New secret IsValidSecret(%s) is false\n", newWallet.GetSecret())
+	}
 
-    isOk = jingtum.IsValidAddress(newWallet.GetAddress())
-    if !isOk {
-        fmt.Printf("New address IsValidAddress(%s) is false\n", newWallet.GetAddress())
-    }
+	isOk = jingtum.IsValidAddress(newWallet.GetAddress())
+	if !isOk {
+		fmt.Printf("New address IsValidAddress(%s) is false\n", newWallet.GetAddress())
+	}
 
-    fmt.Printf("Success new secret (%s). address (%s)\n\n", newWallet.GetSecret(), newWallet.GetAddress())
-
+	fmt.Printf("Success new secret (%s). address (%s)\n\n", newWallet.GetSecret(), newWallet.GetAddress())
 
 	secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
-    //根据私钥创建测试
-    wt, err = jingtum.FromSecret(secret)
+	//根据私钥创建测试
+	wt, err = jingtum.FromSecret(secret)
 
-    if err != nil {
-        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
-    }
+	if err != nil {
+		fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
+	}
 
-    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+	fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
 	//123.57.219.57:5020
 	//139.129.194.175:5020   合约环境
@@ -137,7 +136,7 @@ func main() {
 	v.account = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
 	v.secret = "saNUs41BdTWSwBRqSTbkNdjnAVR8h"
 	to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"
-	amount := constant.Amount{}
+	amount := jingtum.Amount{}
 	amount.Currency = "CCT"
 	amount.Value = "5"
 	amount.Issuer = "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"
@@ -146,6 +145,7 @@ func main() {
 		fmt.Printf("Build paymanet tx fail : %s\n", err)
 		return
 	}
+	wg.Add(1)
 	tx.SetSecret(v.secret)
 	tx.AddMemo("支付5SWT")
 	tx.Submit(func(err error, result interface{}) {
@@ -181,9 +181,9 @@ func main() {
 
 	//请求市场挂单
 	options = make(map[string]interface{}) //{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	gets := constant.Amount{}
+	gets := jingtum.Amount{}
 	gets.Currency = "SWT"
-	pays := constant.Amount{}
+	pays := jingtum.Amount{}
 	pays.Currency = "CNY"
 	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
 	options["gets"] = gets
@@ -199,6 +199,7 @@ func main() {
 		return
 	}
 
+	wg.Add(1)
 	req.Submit(func(err error, result interface{}) {
 		if err != nil {
 			fmt.Printf("Fail request order book %s", err.Error())
@@ -211,6 +212,7 @@ func main() {
 		wg.Done()
 	})
 
+	wg.Add(1)
 	//账本监听
 	remote.On(constant.EventLedgerClosed, func(data interface{}) {
 		jsonBytes, _ := json.Marshal(data)
@@ -218,7 +220,7 @@ func main() {
 		wg.Done()
 	})
 
-	/*	
+	wg.Add(1)
 	//部署合约
 	options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
 	tx, err = remote.DeployContractTx(options)
@@ -244,6 +246,7 @@ func main() {
 		fmt.Printf("Fail request call contract Tx %s", err.Error())
 		wg.Done()
 	}
+	wg.Add(1)
 	tx.SetSecret("saNUs41BdTWSwBRqSTbkNdjnAVR8h")
 	tx.Submit(func(err error, data interface{}) {
 		if err != nil {
@@ -258,7 +261,7 @@ func main() {
 	//请求账号信息
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-	limit := constant.Amount{}
+	limit := jingtum.Amount{}
 	limit.Currency = "CCA"
 	limit.Value = "0.0001"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -269,7 +272,7 @@ func main() {
 		return
 	}
 
-	wg = sync.WaitGroup{}
+	// wg = sync.WaitGroup{}
 	wg.Add(1)
 	treq.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	treq.Submit(func(err error, result interface{}) {
@@ -285,7 +288,7 @@ func main() {
 
 	//置账号属性
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "delegate", "delegate_key": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-	limit = constant.Amount{}
+	limit = jingtum.Amount{}
 	limit.Currency = "SWT"
 	limit.Value = "100.0001"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -295,7 +298,7 @@ func main() {
 		fmt.Printf("Build AccountSet Tx fail : %s", err.Error())
 		return
 	}
-	wg = sync.WaitGroup{}
+	// wg = sync.WaitGroup{}
 	wg.Add(1)
 	tran.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	tran.Submit(func(err error, result interface{}) {
@@ -311,9 +314,9 @@ func main() {
 
 	// 挂单
 	options = map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
-	gets = constant.Amount{}
+	gets = jingtum.Amount{}
 	gets.Currency = "SWT"
-	pays = constant.Amount{}
+	pays = jingtum.Amount{}
 	pays.Currency = "CNY"
 	options["gets"] = gets
 	options["pays"] = pays
@@ -322,7 +325,7 @@ func main() {
 		fmt.Printf("BuildOfferCreateTx fail : %s", err.Error())
 		return
 	}
-	wg = sync.WaitGroup{}
+	// wg = sync.WaitGroup{}
 	wg.Add(1)
 	reqt.SetSecret("ss2QPCgioAmWoFSub4xdScnSBY7zq")
 	reqt.Submit(func(err error, result interface{}) {

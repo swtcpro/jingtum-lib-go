@@ -13,17 +13,16 @@
 package serializer
 
 import (
-	"jingtumLib/utils"
 	"fmt"
 	"math"
 	"math/big"
 	"strconv"
 	"strings"
 
-	"github.com/yangxuebo-138/decimal"
+	"jingtumlib/constant"
+	"jingtumlib/utils"
 
-	"jingtumLib/constant"
-	jtUtils "jingtumLib/utils"
+	"github.com/yangxuebo-138/decimal"
 )
 
 //TumAmount 金额结构体。
@@ -77,8 +76,8 @@ func fromJSON(inJSON interface{}) (*TumAmount, error) {
 }
 
 func (amount *TumAmount) parseJSON(inJSON interface{}) error {
-	if jtUtils.IsNumberType(inJSON) {
-		err := amount.parseSwtValue(jtUtils.NumberToString(inJSON))
+	if utils.IsNumberType(inJSON) {
+		err := amount.parseSwtValue(utils.NumberToString(inJSON))
 		if err != nil {
 			return err
 		}
@@ -96,7 +95,7 @@ func (amount *TumAmount) parseJSON(inJSON interface{}) error {
 		} else {
 			amount.Currency = jsonAmount.Currency
 			amount.IsNative = false
-			if jsonAmount.Issuer == "" || !jtUtils.IsValidAddress(jsonAmount.Issuer) {
+			if jsonAmount.Issuer == "" || !utils.IsValidAddress(jsonAmount.Issuer) {
 				return fmt.Errorf("Input Amount has invalid issuer info %s", jsonAmount.Issuer)
 			}
 			amount.Issuer = jsonAmount.Issuer
@@ -155,7 +154,7 @@ func (amount *TumAmount) TumToBytes() ([]byte, error) {
 }
 
 func (amount *TumAmount) parseSwtValue(jsonStr string) error {
-	if !jtUtils.MatchString("^(-?)(\\d*)(\\.\\d{0,6})?$", jsonStr) {
+	if !utils.MatchString("^(-?)(\\d*)(\\.\\d{0,6})?$", jsonStr) {
 		amount.Value = nil
 		return nil
 	}

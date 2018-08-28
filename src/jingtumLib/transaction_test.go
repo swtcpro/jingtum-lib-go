@@ -7,7 +7,7 @@
  * @CreateTime: 2018-07-26 10:44:32
  * @UpdateTime: 2018-07-26 10:44:54
  */
-package jingtumLib
+package jingtumlib
 
 import (
 	"container/list"
@@ -17,7 +17,7 @@ import (
 	"sync"
 	"testing"
 
-	"jingtumLib/serializer"
+	"jingtumlib/serializer"
 )
 
 //Test_BuildOfferCancelTx 取消挂单

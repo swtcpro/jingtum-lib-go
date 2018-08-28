@@ -13,7 +13,7 @@
 package crypto
 
 import (
-	"jingtumLib/crypto/secp256k1"
+	"jingtumlib/crypto/secp256k1"
 )
 
 //KeyPair KeyPair

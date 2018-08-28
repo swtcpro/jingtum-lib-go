@@ -1,5 +1,5 @@
 //performance_test.go 性能测试
-package jingtumLib
+package jingtumlib
 
 import (
 	"encoding/json"

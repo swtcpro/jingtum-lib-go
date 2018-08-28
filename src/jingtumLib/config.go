@@ -5,7 +5,7 @@
 *** last_modified_time:  2018-6-6 23:13:23
  */
 
-package jingtumLib
+package jingtumlib
 
 import (
 	"bufio"

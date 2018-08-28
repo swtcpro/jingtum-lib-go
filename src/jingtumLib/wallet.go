@@ -7,15 +7,15 @@
  * @CreateTime: 2018-07-26 10:44:32
  * @UpdateTime: 2018-07-26 10:44:54
  */
-package jingtumLib
+package jingtumlib
 
 import (
 	"fmt"
-	"jingtumLib/constant"
-	"jingtumLib/crypto/secp256k1"
-	"jingtumLib/utils"
-
 	"crypto/ecdsa"
+	
+	"jingtumlib/constant"
+	"jingtumlib/crypto/secp256k1"
+	"jingtumlib/utils"
 
 	"github.com/btcsuite/btcd/btcec"
 )

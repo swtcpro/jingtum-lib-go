@@ -15,8 +15,8 @@ package serializer
 import (
 	"fmt"
 
-	"jingtumLib/constant"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	"jingtumlib/utils"
 )
 
 var (

@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strconv"
 
-	jtUtils "jingtumLib/utils"
+	jtUtils "jingtumlib/utils"
 )
 
 //Serializer struct

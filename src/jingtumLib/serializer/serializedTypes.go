@@ -21,8 +21,8 @@ import (
 	"math"
 	"strconv"
 
-	"jingtumLib/constant"
-	jtUtils "jingtumLib/utils"
+	"jingtumlib/constant"
+	jtUtils "jingtumlib/utils"
 )
 
 var (

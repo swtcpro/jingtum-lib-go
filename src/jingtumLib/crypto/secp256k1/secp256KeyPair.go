@@ -25,9 +25,9 @@ import (
 	"math/big"
 	"strings"
 
-	jtConst "jingtumLib/constant"
-	jtEncode "jingtumLib/encoding"
-	jtUtils "jingtumLib/utils"
+	jtConst "jingtumlib/constant"
+	jtEncode "jingtumlib/encoding"
+	jtUtils "jingtumlib/utils"
 
 	"github.com/btcsuite/btcd/btcec"
 	"golang.org/x/crypto/ripemd160"

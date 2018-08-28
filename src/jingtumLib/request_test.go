@@ -7,11 +7,11 @@
  * @CreateTime: 2018-07-26 10:44:32
  * @UpdateTime: 2018-07-26 10:44:54
  */
-package jingtumLib
+package jingtumlib
 
 import (
 	"encoding/json"
-	"jingtumLib/constant"
+	"jingtumlib/constant"
 	"sync"
 	"testing"
 )
@@ -554,7 +554,7 @@ func Test_RequestAccountInfo(t *testing.T) {
 
 /*
 *以下为request性能测试用例
-*/
+ */
 /*
 //BenchmarkListenerEvent 监听账本消息
 func BenchmarkListenerEvent(b *testing.B) {
@@ -620,33 +620,33 @@ func BenchmarkRequestOrderBook(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := make(map[string]interface{})
-	gets := Amount{}
-	gets.Currency = "SWT"
-	pays := Amount{}
-	pays.Currency = "CNY"
-	pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
-	options["gets"] = gets
-	options["pays"] = pays
-	req, err := remote.RequestOrderBook(options)
-	if err != nil {
-		b.Fatalf("Fail request order book %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		options := make(map[string]interface{})
+		gets := Amount{}
+		gets.Currency = "SWT"
+		pays := Amount{}
+		pays.Currency = "CNY"
+		pays.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
+		options["gets"] = gets
+		options["pays"] = pays
+		req, err := remote.RequestOrderBook(options)
 		if err != nil {
-			b.Errorf("Fail request order book %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request order book %s", err.Error())
 		}
-		b.Log("Success request order book")
-		wg.Done()
-	})
 
-	wg.Wait()
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request order book %s", err.Error())
+				wg.Done()
+				return
+			}
+			b.Log("Success request order book")
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -674,26 +674,26 @@ func BenchmarkRequestAccountTx(b *testing.B) {
 	}
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	req, err := remote.RequestAccountTx(options)
-	if err != nil {
-		b.Fatalf("Fail request account tx %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+		req, err := remote.RequestAccountTx(options)
 		if err != nil {
-			b.Errorf("Fail request account tx %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request account tx %s", err.Error())
 		}
-		b.Log("Success request account tx")
-		wg.Done()
-	})
 
-	wg.Wait()
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request account tx %s", err.Error())
+				wg.Done()
+				return
+			}
+			b.Log("Success request account tx")
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -722,28 +722,28 @@ func BenchmarkRequestAccountOffers(b *testing.B) {
 	}
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	req, err := remote.RequestAccountOffers(options)
-	if err != nil {
-		b.Fatalf("Fail request account offers %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+		req, err := remote.RequestAccountOffers(options)
 		if err != nil {
-			b.Errorf("Fail request account offers %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request account offers %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request account offers %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request account offers %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request account offers %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -773,28 +773,28 @@ func BenchmarkRequestAccountRelations(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust"}
-	req, err := remote.RequestAccountRelations(options)
-	if err != nil {
-		b.Fatalf("Fail request account relations %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust"}
+		req, err := remote.RequestAccountRelations(options)
 		if err != nil {
-			b.Errorf("Fail request account relations %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request account relations %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request account relations %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request account relations %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request account relations %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -824,28 +824,28 @@ func BenchmarkRequestAccountTums(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	req, err := remote.RequestAccountTums(options)
-	if err != nil {
-		b.Fatalf("Fail request Account Tums %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+		req, err := remote.RequestAccountTums(options)
 		if err != nil {
-			b.Errorf("Fail request Account Tums %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request Account Tums %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request Account Tums %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request Account Tums %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request Account Tums %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -875,28 +875,28 @@ func BenchmarkRequestTx(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	hash := "6537F72CE1DBD8043230C3FF64C6E5E95B11F6573D91EF6A13FEADE6940CB71A"
-	req, err := remote.RequestTx(hash)
-	if err != nil {
-		b.Fatalf("Fail request tx %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		hash := "6537F72CE1DBD8043230C3FF64C6E5E95B11F6573D91EF6A13FEADE6940CB71A"
+		req, err := remote.RequestTx(hash)
 		if err != nil {
-			b.Errorf("Fail request tx %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request tx %s", err.Error())
 		}
 
-		// jsonByte, _ := json.Marshal(result)
-		b.Log("Success request tx")
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request tx %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			// jsonByte, _ := json.Marshal(result)
+			b.Log("Success request tx")
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -926,29 +926,29 @@ func BenchmarkRequestLedger(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	options := map[string]interface{}{"transactions": true, "ledger_index": 969054, "ledger_hash": "AEE4B16B543D8C8924F09C1DB822C6419780B86019F5F5FF8DC2938E7E0E89D2"}
+		options := map[string]interface{}{"transactions": true, "ledger_index": 969054, "ledger_hash": "AEE4B16B543D8C8924F09C1DB822C6419780B86019F5F5FF8DC2938E7E0E89D2"}
 
-	req, err := remote.RequestLedger(options)
-	if err != nil {
-		b.Fatalf("Fail request ledger %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		req, err := remote.RequestLedger(options)
 		if err != nil {
-			b.Errorf("Fail request ledger %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request ledger %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request ledger %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request ledger %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request ledger %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -978,27 +978,27 @@ func BenchmarkRequestLedgerClosed(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	req, err := remote.RequestLedgerClosed()
-	if err != nil {
-		b.Fatalf("Fail request ledger closed %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		req, err := remote.RequestLedgerClosed()
 		if err != nil {
-			b.Errorf("Fail request ledger closed %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request ledger closed %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request ledger closed %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request ledger closed %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request ledger closed %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -1028,27 +1028,27 @@ func BenchmarkRequestServerInfo(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	req, err := remote.RequestServerInfo()
-	if err != nil {
-		b.Fatalf("Fail request server info %s", err.Error())
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.Submit(func(err error, result interface{}) {
+		req, err := remote.RequestServerInfo()
 		if err != nil {
-			b.Errorf("Fail request server info %s", err.Error())
-			wg.Done()
-			return
+			b.Fatalf("Fail request server info %s", err.Error())
 		}
 
-		jsonByte, _ := json.Marshal(result)
-		b.Logf("Success request server info %s", jsonByte)
-		wg.Done()
-	})
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	wg.Wait()
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Fail request server info %s", err.Error())
+				wg.Done()
+				return
+			}
+
+			jsonByte, _ := json.Marshal(result)
+			b.Logf("Success request server info %s", jsonByte)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }
 
@@ -1078,30 +1078,30 @@ func BenchmarkRequestAccountInfo(b *testing.B) {
 
 	defer remote.Disconnect()
 	for i := 0; i < b.N; i++ {
-	//请求账号信息
-	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
-	req, err := remote.RequestAccountInfo(options)
+		//请求账号信息
+		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk"}
+		req, err := remote.RequestAccountInfo(options)
 
-	if err != nil {
-		b.Fatalf("RequestAccountInfo fail : %s", err.Error())
-		return
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	req.SelectLedger(1065000)
-	req.Submit(func(err error, result interface{}) {
 		if err != nil {
-			b.Errorf("Requst account info : %s", err.Error())
-			wg.Done()
+			b.Fatalf("RequestAccountInfo fail : %s", err.Error())
 			return
 		}
-		jsonBytes, _ := json.Marshal(result)
-		b.Logf("Success Requst account info result : %s", jsonBytes)
-		wg.Done()
-	})
 
-	wg.Wait()
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		req.SelectLedger(1065000)
+		req.Submit(func(err error, result interface{}) {
+			if err != nil {
+				b.Errorf("Requst account info : %s", err.Error())
+				wg.Done()
+				return
+			}
+			jsonBytes, _ := json.Marshal(result)
+			b.Logf("Success Requst account info result : %s", jsonBytes)
+			wg.Done()
+		})
+
+		wg.Wait()
 	}
 }

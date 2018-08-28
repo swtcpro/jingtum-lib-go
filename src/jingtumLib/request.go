@@ -10,12 +10,12 @@
  * @UpdateTime: 2018-05-28 10:44:54
  */
 
-package jingtumLib
+package jingtumlib
 
 import (
 	"fmt"
-	"jingtumLib/constant"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	"jingtumlib/utils"
 )
 
 //Filter 过滤函数

@@ -1,13 +1,10 @@
-/**
- * 底层区块链网络通信服务类，不对外部提供方法。
- *
- * @FileName: server.go
- * @Auther : 杨雪波
- * @Email : yangxuebo@yeah.net
- * @CreateTime: 2018-07-31 14:44:32
- * @UpdateTime: 2018-07-31 14:44:54
- */
-package jingtumLib
+// Package jingtumlib 底层区块链网络通信服务类，不对外部提供方法。
+// @FileName: server.go
+// @Auther : 杨雪波
+// @Email : yangxuebo@yeah.net
+// @CreateTime: 2018-07-31 14:44:32
+// @UpdateTime: 2018-07-31 14:44:54
+package jingtumlib
 
 import (
 	"encoding/json"
@@ -17,8 +14,8 @@ import (
 	"strings"
 	"sync"
 
-	"jingtumLib/constant"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	"jingtumlib/utils"
 
 	"github.com/caivega/evtwebsocket"
 )

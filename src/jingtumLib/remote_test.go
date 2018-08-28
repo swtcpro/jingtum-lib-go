@@ -5,7 +5,7 @@
 *** last_modified_time:  2018-08-15 23:13:23
  */
 
-package jingtumLib
+package jingtumlib
 
 import (
 	"encoding/json"

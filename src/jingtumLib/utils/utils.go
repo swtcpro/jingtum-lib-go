@@ -23,8 +23,8 @@ import (
 	"strconv"
 	"strings"
 
-	jtConst "jingtumLib/constant"
-	jtEncode "jingtumLib/encoding"
+	jtConst "jingtumlib/constant"
+	jtEncode "jingtumlib/encoding"
 
 	"github.com/yangxuebo-138/decimal"
 )

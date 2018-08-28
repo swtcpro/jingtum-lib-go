@@ -5,10 +5,10 @@
 *** last_modified_time:  2018-5-25 13:13:23
  */
 
-package jingtumLib
+package jingtumlib
 
 import (
-	"jingtumLib/constant"
+	"jingtumlib/constant"
 )
 
 var (

@@ -1,4 +1,4 @@
-package jingtumLib
+package jingtumlib
 
 import (
 	"encoding/json"

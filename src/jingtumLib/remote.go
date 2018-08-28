@@ -1,4 +1,4 @@
-package jingtumLib
+package jingtumlib
 
 import (
 	"container/list"
@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"jingtumLib/constant"
-	jtLRU "jingtumLib/lruCache"
-	"jingtumLib/utils"
+	"jingtumlib/constant"
+	jtLRU "jingtumlib/lruCache"
+	"jingtumlib/utils"
 
 	"github.com/olebedev/emitter"
 )
