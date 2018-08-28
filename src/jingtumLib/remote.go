@@ -427,7 +427,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	req := NewRequest(remote, constant.CommandBookOffers, nil)
 
 	if takerGets, ok := options["taker_gets"]; ok {
-		getsAmount, ok := takerGets.(constant.Amount)
+		getsAmount, ok := takerGets.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_gets type. See also constant.Amount")
 		}
@@ -436,7 +436,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 		}
 		req.message["taker_gets"] = (constant.Amount)(getsAmount)
 	} else if pays, ok := options["pays"]; ok {
-		paysAmount, ok := interface{}(pays).(constant.Amount)
+		paysAmount, ok := pays.(Amount) //interface{}(pays).(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid pays type. See also constant.Amount")
 		}
@@ -447,7 +447,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 	}
 
 	if takerPays, ok := options["taker_pays"]; ok {
-		paysAmount, ok := takerPays.(constant.Amount)
+		paysAmount, ok := takerPays.(Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid taker_pays type. See also constant.Amount")
 		}
@@ -457,7 +457,7 @@ func (remote *Remote) RequestOrderBook(options map[string]interface{}) (*Request
 		req.message["taker_pays"] = (constant.Amount)(paysAmount)
 
 	} else if gets, ok := options["gets"]; ok {
-		getsAmount, ok := interface{}(gets).(constant.Amount)
+		getsAmount, ok := gets.(Amount) //interface{}(gets).(constant.Amount)
 		if !ok {
 			return nil, fmt.Errorf("invalid gets type. See also constant.Amount")
 		}
@@ -631,7 +631,7 @@ func (remote *Remote) handleMessage(msg []byte) {
 }
 
 //BuildPaymentTx 创建支付对象
-func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.Amount) (*Transaction, error) {
+func (remote *Remote) BuildPaymentTx(account string, to string, amount Amount) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
 		return nil, err
@@ -645,14 +645,14 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount constant.
 		return nil, constant.ERR_PAYMENT_INVALID_DST_ADDR
 	}
 
-	if !utils.IsValidAmount(&amount) {
+	if !utils.IsValidAmount((*constant.Amount)(&amount)) {
 		return nil, constant.ERR_PAYMENT_INVALID_AMOUNT
 	}
 
 	tx.AddTxJSON("TransactionType", "Payment")
 	tx.AddTxJSON("Account", account)
 
-	toamount, err := utils.ToAmount(amount)
+	toamount, err := utils.ToAmount(constant.Amount(amount))
 
 	if err != nil {
 		return nil, err
@@ -696,14 +696,14 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 	if !utils.IsValidAddress(des.(string)) {
 		return fmt.Errorf("invalid target address")
 	}
-	
+
 	transactionType := ""
 	if options["type"] == "unfreeze" {
 		transactionType = "RelationDel"
 	} else {
 		transactionType = "RelationSet"
 	}
-	
+
 	tx.AddTxJSON("TransactionType", transactionType)
 	tx.AddTxJSON("Account", src)
 	tx.AddTxJSON("Target", des)

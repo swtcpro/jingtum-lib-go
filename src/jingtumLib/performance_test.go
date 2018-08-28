@@ -8,11 +8,10 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"jingtumLib/constant"
 )
 
 var remote *Remote
+
 /*
 func TestMain(m *testing.M) {
 	err := Init()
@@ -52,7 +51,7 @@ func BenchmarkBuildPaymentTx(B *testing.B) {
 		v.account = "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
 		v.secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
 		to := "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk" //"jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"
-		amount := constant.Amount{}
+		amount := Amount{}
 		amount.Currency = "SWT"
 		amount.Value = "0.0001"
 		start := time.Now().Unix()
