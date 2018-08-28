@@ -20,7 +20,7 @@ import (
 func main() {
 	err := jingtum.Init()
 	if err != nil {
-		fmt.Printf("Init jingtum-lib error,errno", err)
+		fmt.Println("Init jingtum-lib error,errno", err)
 		os.Exit(0)
 	}
 
