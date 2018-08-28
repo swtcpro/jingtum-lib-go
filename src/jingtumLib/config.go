@@ -13,6 +13,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 const middle = "========="
@@ -29,7 +30,7 @@ func (c *Config) InitConfig(path string) error {
 
 	f, err := os.Open(path)
 	if err != nil {
-		Error(err)
+		fmt.Errorf(err.Error())
 		return err
 	}
 	defer f.Close()
@@ -41,7 +42,7 @@ func (c *Config) InitConfig(path string) error {
 			if err == io.EOF {
 				break
 			}
-			Error(err)
+			fmt.Errorf(err.Error())
 			return err
 		}
 
@@ -99,7 +100,7 @@ func (c *Config) InitConfig(path string) error {
 		key := c.strcet + middle + frist
 		c.Mymap[key] = strings.TrimSpace(second)
 	}
-	Info("Init config succ.")
+	fmt.Printf("Init config succ.")
 	return nil
 }
 

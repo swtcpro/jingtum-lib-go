@@ -160,6 +160,12 @@ func getTransactionType(structure interface{}) (interface{}, error) {
 			output = "RemoveContract"
 		case 20:
 			output = "TrustSet"
+		case 21:
+			output = "RelationSet"
+		case 22:
+			output = "RelationDel"
+		case 30:
+			output = "ConfigContract"
 		case 100:
 			output = "EnableFeature"
 		case 101:
@@ -186,6 +192,12 @@ func getTransactionType(structure interface{}) (interface{}, error) {
 			output = 10
 		case "TrustSet":
 			output = 20
+		case "RelationSet":
+			output = 21
+		case "RelationDel":
+			output = 22
+		case "ConfigContract":
+			output = 30
 		case "EnableFeature":
 			output = 100
 		case "SetFee":

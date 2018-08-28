@@ -124,10 +124,7 @@ func (server *Server) Disconnect() bool {
 	server.sendMessage(rc)
 	server.remote.emit.Off("*")
 	server.wg.Wait()
-	err := server.conn.Close()
-	if err != nil {
-		return false
-	}
+	server.conn.Close()
 	// close(server.reqs)
 	server.state = "offline"
 	server.connected = false
@@ -245,7 +242,7 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 		},
 
 		OnError: func(err error) {
-			Errorf("On error : %s", err.Error())
+			fmt.Errorf("On error : %s", err.Error())
 			//自动重连
 			// server.Disconnect()
 			// server.connect(func(err error, result interface{}) {

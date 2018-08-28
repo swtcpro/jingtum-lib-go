@@ -8,10 +8,6 @@
 package jingtumLib
 
 import (
-	"fmt"
-	"sync"
-
-	log "common/github.com/blog4go"
 
 	"jingtumLib/constant"
 )
@@ -82,8 +78,8 @@ func (hook *MyHook) Fire(level log.LevelType, tags map[string]string, args ...in
 }
 
 func InitLog() (err error) {
-	//rerr := log.NewWriterFromConfigAsFile("../../conf/jingtum-lib.xml")
-	rerr := log.NewWriterFromConfigAsFile("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib.xml")
+	rerr := log.NewWriterFromConfigAsFile("../../conf/jingtum-lib.xml")
+	// rerr := log.NewWriterFromConfigAsFile("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib.xml")
 	if nil != rerr {
 		fmt.Println(rerr.Error())
 		return rerr
@@ -161,16 +157,12 @@ func Flush() {
 }
 
 func InitConfig() error {
-	//return JTConfig.InitConfig("../../conf/jingtum-lib-config.txt")
-	return JTConfig.InitConfig("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib-config.txt")
+	return JTConfig.InitConfig("../../conf/jingtum-lib-config.txt")
+	// return JTConfig.InitConfig("G:/Golang/project/jingtum-lib-go/conf/jingtum-lib-config.txt")
 }
 
 func Init() error {
-	err := InitLog()
-	if err != nil {
-		return err
-	}
-	err = InitConfig()
+	err := InitConfig()
 	if err != nil {
 		return err
 	}
@@ -182,5 +174,4 @@ func Init() error {
 
 //退出
 func Exits() {
-	defer log.Close()
 }

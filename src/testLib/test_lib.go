@@ -20,15 +20,72 @@ import (
 func main() {
 	err := jingtum.Init()
 	if err != nil {
-		fmt.Println("Init jingtum-lib error,errno", err)
+		fmt.Printf("Init jingtum-lib error,errno", err)
 		os.Exit(0)
 	}
+
+	/*
+	*钱包类测试
+	*/
+	secret := "snsYqv2FsYLuibE9TGHdG5x5V5Qcn"
+    //私钥合法性测试
+    isOk := jingtum.IsValidSecret(secret)
+
+    if !isOk {
+        fmt.Printf("\nFailure IsValidSecret(%s) is false\n", secret)
+    }
+
+    fmt.Printf("\nSuccess IsValidSecret(%v) is true\n\n", secret)
+
+    //根据私钥创建测试
+    wt, err := jingtum.FromSecret(secret)
+
+    if err != nil {
+        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
+    }
+
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
+
+    //钱包地址合法性验证
+
+    isOk = jingtum.IsValidAddress(wt.GetAddress())
+
+    if !isOk {
+        fmt.Printf("Failure IsValidAddress(%s) is false\n", wt.GetAddress())
+    }
+
+    fmt.Printf("Success IsValidAddress(%s) is true\n\n", wt.GetAddress())
+
+    //生成新钱包
+    newWallet, err := jingtum.Generate()
+    isOk = jingtum.IsValidSecret(newWallet.GetSecret())
+    if !isOk {
+        fmt.Printf("New secret IsValidSecret(%s) is false\n", newWallet.GetSecret())
+    }
+
+    isOk = jingtum.IsValidAddress(newWallet.GetAddress())
+    if !isOk {
+        fmt.Printf("New address IsValidAddress(%s) is false\n", newWallet.GetAddress())
+    }
+
+    fmt.Printf("Success new secret (%s). address (%s)\n\n", newWallet.GetSecret(), newWallet.GetAddress())
+
+
+	secret = "ssc5eiFivvU2otV6bSYmJeZrAsQK3"
+    //根据私钥创建测试
+    wt, err = jingtum.FromSecret(secret)
+
+    if err != nil {
+        fmt.Printf("Failure FromSecret : %s, err %v\n", secret, err)
+    }
+
+    fmt.Printf("Success FromSecret(%s). PublicKey : %s. Wallet address : %s\n\n", wt.GetSecret(), wt.GetPublicKey(), wt.GetAddress())
 
 	//123.57.219.57:5020
 	//139.129.194.175:5020   合约环境
 	remote, err := jingtum.NewRemote("ws://123.57.219.57:5020", true)
 	if err != nil {
-		fmt.Printf("New remote fail : %s", err)
+		fmt.Printf("New remote fail : %s\n", err)
 		return
 	}
 
@@ -37,11 +94,11 @@ func main() {
 			return
 		}
 
-		fmt.Println(result)
+		fmt.Printf("%s", result)
 	})
 
 	if cerr != nil {
-		fmt.Printf("Connect service fail : %v", err)
+		fmt.Printf("Connect service fail : %v\n", err)
 		return
 	}
 
@@ -161,6 +218,7 @@ func main() {
 		wg.Done()
 	})
 
+	/*	
 	//部署合约
 	options = map[string]interface{}{"account": "jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h", "amount": float64(100), "payload": fmt.Sprintf("%X", "result={}; function Init(t) result=scGetAccountBalance(t) return result end; function foo(t) result=scGetAccountBalance(t) return result end"), "params": []string{"jHJJXehDxPg8HLYytVuMVvG3Z5RfhtCz7h"}}
 	tx, err = remote.DeployContractTx(options)
