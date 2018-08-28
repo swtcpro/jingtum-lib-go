@@ -12,8 +12,6 @@ import (
 	"sync"
 	"testing"
 	"time"
-
-	"jingtumLib/constant"
 )
 
 //BuildRelationTx请求账号信息
@@ -45,7 +43,7 @@ func Test_BuildRelationTx(t *testing.T) {
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "unfreeze", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-	limit := constant.Amount{}
+	limit := Amount{}
 	limit.Currency = "CCA"
 	limit.Value = "100000000"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -103,7 +101,7 @@ func Test_BuildAccountSetTx(t *testing.T) {
 	//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
 	//BuildDelegateKeySet
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "delegate", "delegate_key": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-	limit := constant.Amount{}
+	limit := Amount{}
 	limit.Currency = "SWT"
 	limit.Value = "100.0001"
 	limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -155,9 +153,9 @@ func Test_BuildOfferCreateTx(t *testing.T) {
 	defer remote.Disconnect()
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
-	gets := constant.Amount{}
+	gets := Amount{}
 	gets.Currency = "SWT"
-	pays := constant.Amount{}
+	pays := Amount{}
 	pays.Currency = "CNY"
 	options["gets"] = gets
 	options["pays"] = pays
@@ -239,7 +237,7 @@ func BenchmarkBuildRelationTx(B *testing.B) {
 	for i := 0; i < B.N; i++ {
 		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "trust", "quality_out": 100, "quality_in": 10}
 		//options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "authorize", "target": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-		limit := constant.Amount{}
+		limit := Amount{}
 		limit.Currency = "CCA"
 		limit.Value = "0.0001"
 		limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -297,7 +295,7 @@ func BenchmarkBuildAccountSetTx(B *testing.B) {
 	wg.Add(B.N)
 	for i := 0; i < B.N; i++ {
 		options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "delegate", "delegate_key": "jGXjV57AKG7dpEv8T6x5H6nmPvNK5tZj72"}
-		limit := constant.Amount{}
+		limit := Amount{}
 		limit.Currency = "SWT"
 		limit.Value = "100.0001"
 		limit.Issuer = "jBciDE8Q3uJjf111VeiUNM775AMKHEbBLS"
@@ -355,9 +353,9 @@ func BenchmarkBuildOfferCreateTx(B *testing.B) {
 	defer remote.Disconnect()
 
 	options := map[string]interface{}{"account": "j3N35VHut94dD1Y9H1KoWmGZE2kNNRFcVk", "type": "property", "set_flag": "asfRequireDest", "clear": "asfDisableMaster"}
-	gets := constant.Amount{}
+	gets := Amount{}
 	gets.Currency = "SWT"
-	pays := constant.Amount{}
+	pays := Amount{}
 	pays.Currency = "CNY"
 	options["gets"] = gets
 	options["pays"] = pays

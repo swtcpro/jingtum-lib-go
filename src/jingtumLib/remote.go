@@ -682,11 +682,11 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 	if !ok {
 		return fmt.Errorf("invalid limit")
 	}
-	limitAmount, ok := limit.(constant.Amount)
+	limitAmount, ok := limit.(Amount)
 	if !ok {
-		return fmt.Errorf("invalid limit type. See also constant.Amount")
+		return fmt.Errorf("invalid limit type. See also Amount")
 	}
-	if !utils.IsValidAmount(&limitAmount) {
+	if !utils.IsValidAmount((*constant.Amount)(&limitAmount)) {
 		return fmt.Errorf("invalid amount")
 	}
 	if !utils.IsValidAddress(src.(string)) {
@@ -715,11 +715,12 @@ func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Trans
 	}
 	tx.AddTxJSON("RelationType", relationType)
 	if limit != 0 {
-		tx.AddTxJSON("LimitAmount", limit)
+		tx.AddTxJSON("LimitAmount", constant.Amount(limitAmount))
 	}
 	return nil
 }
 
+//BuildTrustSet BuildTrustSet
 func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transaction) error {
 	//tx, err := NewTransaction(remote, nil)
 	src, ok := options["source"]
@@ -729,8 +730,8 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	if !ok {
 		src, ok = options["account"]
 	}
-	quality_out := options["quality_out"]
-	quality_in := options["quality_in"]
+	qualityOut := options["quality_out"]
+	qualityIn := options["quality_in"]
 	if src, ok := src.(string); ok {
 		if !utils.IsValidAddress(src) {
 			return fmt.Errorf("invalid source address")
@@ -740,23 +741,23 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	if !ok {
 		return fmt.Errorf("invalid limit")
 	}
-	limitAmount, ok := limit.(constant.Amount)
+	limitAmount, ok := limit.(Amount)
 	if !ok {
-		return fmt.Errorf("invalid limit type. See also constant.Amount")
+		return fmt.Errorf("invalid limit type. See also Amount")
 	}
-	if !utils.IsValidAmount(&limitAmount) {
+	if !utils.IsValidAmount((*constant.Amount)(&limitAmount)) {
 		return fmt.Errorf("invalid amount")
 	}
 	tx.AddTxJSON("TransactionType", "TrustSet")
 	tx.AddTxJSON("Account", src)
 	if limit != 0 {
-		tx.AddTxJSON("LimitAmount", limit)
+		tx.AddTxJSON("LimitAmount", constant.Amount(limitAmount))
 	}
-	if quality_in != "" {
-		tx.AddTxJSON("QualityIn", quality_in)
+	if qualityIn != "" {
+		tx.AddTxJSON("QualityIn", qualityIn)
 	}
-	if quality_out != "" {
-		tx.AddTxJSON("QualityOut", quality_out)
+	if qualityOut != "" {
+		tx.AddTxJSON("QualityOut", qualityOut)
 	}
 	return nil
 }
@@ -786,7 +787,7 @@ func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transact
 	return tx, fmt.Errorf("build relation set error")
 }
 
-//BuildAccountSet
+//BuildAccountSet BuildAccountSet
 func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transaction) error {
 	src, ok := options["source"]
 	if !ok {
@@ -914,7 +915,7 @@ func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transa
 	return tx, fmt.Errorf("build account set should not go here")
 }
 
-//挂单
+//BuildOfferCreateTx 挂单
 func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
@@ -931,19 +932,19 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	if !ok {
 		src, ok = options["account"]
 	}
-	taker_gets, ok := options["taker_gets"]
+	takerGets, ok := options["taker_gets"]
 	if !ok {
-		taker_gets, ok = options["pays"]
+		takerGets, ok = options["pays"]
 	}
-	taker_gets_amount, ok := taker_gets.(constant.Amount)
+	takerGetsAmount, ok := takerGets.(Amount)
 	if !ok {
 		return tx, fmt.Errorf("invalid taker_gets")
 	}
-	taker_pays, ok := options["taker_pays"]
+	takerPays, ok := options["taker_pays"]
 	if !ok {
-		taker_pays, ok = options["gets"]
+		takerPays, ok = options["gets"]
 	}
-	taker_pays_amount, ok := taker_pays.(constant.Amount)
+	takerPaysAmount, ok := takerPays.(Amount)
 	if !ok {
 		return tx, fmt.Errorf("invalid taker_pays")
 	}
@@ -963,17 +964,17 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 		return tx, fmt.Errorf("invalid offer type")
 	}
 
-	if utils.IsStringType(taker_gets) && !utils.IsNumberString(taker_gets.(string)) {
+	if utils.IsStringType(takerGets) && !utils.IsNumberString(takerGets.(string)) {
 		return tx, fmt.Errorf("invalid to pays amount")
 	}
-	if !utils.IsValidAmount(&taker_gets_amount) {
+	if !utils.IsValidAmount((*constant.Amount)(&takerGetsAmount)) {
 		return tx, fmt.Errorf("invalid to pays amount object")
 	}
 
-	if utils.IsStringType(taker_pays) && !utils.IsNumberString(taker_pays.(string)) {
+	if utils.IsStringType(takerPays) && !utils.IsNumberString(takerPays.(string)) {
 		return tx, fmt.Errorf("invalid to gets amount")
 	}
-	if !utils.IsValidAmount(&taker_pays_amount) {
+	if !utils.IsValidAmount((*constant.Amount)(&takerPaysAmount)) {
 		return tx, fmt.Errorf("invalid to gets amount object")
 	}
 
@@ -982,11 +983,11 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 		tx.SetFlags(offer_type)
 	}
 	tx.AddTxJSON("Account", src)
-	takerpays, err := utils.ToAmount(taker_pays_amount)
+	takerpays, err := utils.ToAmount(constant.Amount(takerPaysAmount))
 	if err != nil {
 		return nil, err
 	}
-	takergets, err := utils.ToAmount(taker_gets_amount)
+	takergets, err := utils.ToAmount(constant.Amount(takerGetsAmount))
 	if err != nil {
 		return nil, err
 	}
