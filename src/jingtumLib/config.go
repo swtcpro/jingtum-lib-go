@@ -9,7 +9,6 @@ package jingtumlib
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -100,7 +99,7 @@ func (c *Config) InitConfig(path string) error {
 		key := c.strcet + middle + frist
 		c.Mymap[key] = strings.TrimSpace(second)
 	}
-	fmt.Printf("Init config succ.")
+	log.Println("Init config succ.")
 	return nil
 }
 
