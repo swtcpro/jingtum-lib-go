@@ -9,6 +9,7 @@ package jingtumlib
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -239,7 +240,7 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 		},
 
 		OnError: func(err error) {
-			fmt.Errorf("On error : %s", err.Error())
+			log.Printf("On error : %s", err.Error())
 			//自动重连
 			// server.Disconnect()
 			// server.connect(func(err error, result interface{}) {

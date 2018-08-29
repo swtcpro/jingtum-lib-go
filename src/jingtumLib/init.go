@@ -12,25 +12,27 @@ import (
 )
 
 var (
+	//JTConfig JTConfig
 	JTConfig = new(Config)
-	Seq      = 1
+	//Seq Seq
+	Seq = 1
 )
 
+//InitConfig 配置初始化
 func InitConfig() error {
 	return JTConfig.InitConfig("../../conf/jingtum-lib-config.txt")
 }
 
+//Init 项目初始化
 func Init() error {
 	err := InitConfig()
 	if err != nil {
 		return err
 	}
-
 	constant.CFGCurrency = JTConfig.Read("Config", "currency")
-
 	return nil
 }
 
-//退出
+//Exits 退出
 func Exits() {
 }

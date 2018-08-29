@@ -9,11 +9,12 @@ package jingtumlib
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 const middle = "========="
@@ -30,7 +31,7 @@ func (c *Config) InitConfig(path string) error {
 
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Errorf(err.Error())
+		log.Println(err.Error())
 		return err
 	}
 	defer f.Close()
@@ -42,12 +43,11 @@ func (c *Config) InitConfig(path string) error {
 			if err == io.EOF {
 				break
 			}
-			fmt.Errorf(err.Error())
+			log.Println(err.Error())
 			return err
 		}
 
 		s := strings.TrimSpace(string(b))
-		//fmt.Println(s)
 		if strings.Index(s, "#") == 0 {
 			continue
 		}
@@ -113,6 +113,7 @@ func (c Config) Read(node, key string) string {
 	return v
 }
 
+//ReadInt 读取int类型配置，可以使用默认值。
 func (c Config) ReadInt(node, key string, defaultv int) int {
 	key = node + middle + key
 	v, found := c.Mymap[key]

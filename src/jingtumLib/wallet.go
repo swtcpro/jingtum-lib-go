@@ -1,12 +1,9 @@
-/**
- * 钱包类，用于创建和导入钱包等功能.
- *
- * @FileName: wallet.go
- * @Auther : 杨雪波
- * @Email : yangxuebo@yeah.net
- * @CreateTime: 2018-07-26 10:44:32
- * @UpdateTime: 2018-07-26 10:44:54
- */
+// Package jingtumlib 钱包类，用于创建和导入钱包等功能。
+// @FileName: wallet.go
+// @Auther : 杨雪波
+// @Email : yangxuebo@yeah.net
+// @CreateTime: 2018-07-26 10:44:32
+// @UpdateTime: 2018-07-26 10:44:54
 package jingtumlib
 
 import (

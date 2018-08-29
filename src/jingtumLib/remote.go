@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -34,14 +35,18 @@ type Remote struct {
 	lock      sync.Mutex
 }
 
+//ResData 响应结构
 type ResData map[string]interface{}
 
+//Amount 金额
 type Amount constant.Amount
 
+//ParameterInfo ParameterInfo
 type ParameterInfo struct {
 	Parameter string
 }
 
+//ArgInfo ArgInfo
 type ArgInfo struct {
 	Arg *ParameterInfo
 }
@@ -130,14 +135,14 @@ func NewRemote(url string, localSign bool) (*Remote, error) {
 		url = JTConfig.Read("Service", "Host")
 
 		if url == "" {
-			fmt.Errorf("Config Service:Host is null.")
+			log.Println("Config Service:Host is null.")
 			return remote, errors.New("Config|service:Host setting error")
 		}
 
 		port := JTConfig.Read("Service", "Port")
 
 		if port == "" {
-			fmt.Errorf("Config Service:Port is null.")
+			log.Println("Config Service:Port is null.")
 			return remote, errors.New("Config|service:Port setting error")
 		}
 
@@ -526,8 +531,7 @@ func (remote *Remote) handleResponse(data ResData) {
 	request, ok := remote.requests[data.getUint64("id")]
 	remote.lock.Unlock()
 	if !ok {
-		fmt.Errorf("Request id error %d", data.getUint64("id"))
-
+		log.Printf("Request id error %d", data.getUint64("id"))
 		return
 	}
 
@@ -601,7 +605,7 @@ func (remote *Remote) handleMessage(msg []byte) {
 	var data ResData
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
-		fmt.Errorf("Received msg json Unmarshal error : %v", err)
+		log.Printf("Received msg json Unmarshal error : %v", err)
 		return
 	}
 
@@ -664,7 +668,7 @@ func (remote *Remote) BuildPaymentTx(account string, to string, amount Amount) (
 	return tx, nil
 }
 
-//BuildRelationSet
+//BuildRelationSet BuildRelationSet
 func (remote *Remote) BuildRelationSet(options map[string]interface{}, tx *Transaction) error {
 	src, ok := options["source"]
 	if !ok {
@@ -762,7 +766,7 @@ func (remote *Remote) BuildTrustSet(options map[string]interface{}, tx *Transact
 	return nil
 }
 
-//创建关系对象
+//BuildRelationTx 创建关系对象
 func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
@@ -783,7 +787,7 @@ func (remote *Remote) BuildRelationTx(options map[string]interface{}) (*Transact
 	case "authorize", "freeze", "unfreeze":
 		return tx, remote.BuildRelationSet(options, tx)
 	}
-	fmt.Errorf("build relation set should not go here")
+	log.Println("build relation set should not go here")
 	return tx, fmt.Errorf("build relation set error")
 }
 
@@ -799,16 +803,16 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 	if !ok {
 		return fmt.Errorf("invalid account")
 	}
-	set_flag, ok := options["set_flag"]
+	setFlag, ok := options["set_flag"]
 	if !ok {
-		set_flag, ok = options["set"]
+		setFlag, ok = options["set"]
 	}
 	if !ok {
 		return fmt.Errorf("invalid set_flag")
 	}
-	clear_flag, ok := options["clear_flag"]
+	clearFlag, ok := options["clear_flag"]
 	if !ok {
-		clear_flag, ok = options["clear"]
+		clearFlag, ok = options["clear"]
 	}
 	if !ok {
 		return fmt.Errorf("invalid clear_flag")
@@ -820,13 +824,13 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 	tx.AddTxJSON("Account", src)
 
 	setclearflags := SetClearFlags[1]
-	_set_flag := 0
-	if utils.IsNumberType(set_flag) {
-		_set_flag, _ = strconv.Atoi(set_flag.(string))
+	_setFlag := 0
+	if utils.IsNumberType(setFlag) {
+		_setFlag, _ = strconv.Atoi(setFlag.(string))
 	} else {
 		for k, v := range setclearflags {
-			if strings.Compare(k, set_flag.(string)) == 0 || strings.Compare(k, "asf"+set_flag.(string)) == 0 {
-				_set_flag = int(v)
+			if strings.Compare(k, setFlag.(string)) == 0 || strings.Compare(k, "asf"+setFlag.(string)) == 0 {
+				_setFlag = int(v)
 			}
 		}
 	}
@@ -842,25 +846,25 @@ func (remote *Remote) BuildAccountSet(options map[string]interface{}, tx *Transa
 	/*if set_flag {
 		set_flag = _set_flag
 	}*/
-	tx.AddTxJSON("SetFlag", _set_flag)
+	tx.AddTxJSON("SetFlag", _setFlag)
 
-	_clear_flag := 0
-	if utils.IsNumberType(clear_flag) {
-		_clear_flag, _ = strconv.Atoi(clear_flag.(string))
-	} else if !utils.IsNumberType(setclearflags[clear_flag.(string)]) {
-		_clear_flag = int(setclearflags["asf"+clear_flag.(string)])
+	_clearFlag := 0
+	if utils.IsNumberType(clearFlag) {
+		_clearFlag, _ = strconv.Atoi(clearFlag.(string))
+	} else if !utils.IsNumberType(setclearflags[clearFlag.(string)]) {
+		_clearFlag = int(setclearflags["asf"+clearFlag.(string)])
 	} else {
-		_clear_flag = int(setclearflags[clear_flag.(string)])
+		_clearFlag = int(setclearflags[clearFlag.(string)])
 	}
 	/*if clear_flag {
 		clear_flag = _clear_flag
 	}*/
-	tx.AddTxJSON("ClearFlag", _clear_flag)
+	tx.AddTxJSON("ClearFlag", _clearFlag)
 
 	return nil
 }
 
-//BuildDelegateKeySet
+//BuildDelegateKeySet BuildDelegateKeySet
 func (remote *Remote) BuildDelegateKeySet(options map[string]interface{}, tx *Transaction) error {
 	src, ok := options["source"]
 	if !ok {
@@ -869,26 +873,26 @@ func (remote *Remote) BuildDelegateKeySet(options map[string]interface{}, tx *Tr
 	if !ok {
 		src, ok = options["account"]
 	}
-	delegate_key := options["delegate_key"]
+	delegateKey := options["delegate_key"]
 	if !utils.IsValidAddress(src.(string)) {
 		return fmt.Errorf("invalid source address")
 	}
-	if !utils.IsValidAddress(delegate_key.(string)) {
+	if !utils.IsValidAddress(delegateKey.(string)) {
 		return fmt.Errorf("invalid regular key address")
 	}
 	tx.AddTxJSON("TransactionType", "SetRegularKey")
 	tx.AddTxJSON("Account", src)
-	tx.AddTxJSON("RegularKey", delegate_key)
+	tx.AddTxJSON("RegularKey", delegateKey)
 	return nil
 }
 
-//BuildSignerSet
+//BuildSignerSet BuildSignerSet
 func (remote *Remote) BuildSignerSet(options map[string]interface{}, tx *Transaction) error {
 	// TODO
 	return nil
 }
 
-//创建属性对象
+//BuildAccountSetTx 创建属性对象
 func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transaction, error) {
 	tx, err := NewTransaction(remote, nil)
 	if err != nil {
@@ -911,7 +915,7 @@ func (remote *Remote) BuildAccountSetTx(options map[string]interface{}) (*Transa
 		return tx, remote.BuildSignerSet(options, tx)
 	}
 
-	fmt.Errorf("build account set should not go here")
+	log.Println("build account set should not go here")
 	return tx, fmt.Errorf("build account set should not go here")
 }
 
@@ -921,7 +925,7 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	if err != nil {
 		return nil, err
 	}
-	offer_type, ok := options["type"].(string)
+	offerType, ok := options["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid realtion type")
 	}
@@ -960,7 +964,7 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	if _, ok := OfferTypes[optype]; !ok {
 		return tx, fmt.Errorf("invalid offer type")
 	}
-	if !utils.IsStringType(offer_type) {
+	if !utils.IsStringType(offerType) {
 		return tx, fmt.Errorf("invalid offer type")
 	}
 
@@ -979,8 +983,8 @@ func (remote *Remote) BuildOfferCreateTx(options map[string]interface{}) (*Trans
 	}
 
 	tx.AddTxJSON("TransactionType", "OfferCreate")
-	if offer_type == "Sell" {
-		tx.SetFlags(offer_type)
+	if offerType == "Sell" {
+		tx.SetFlags(offerType)
 	}
 	tx.AddTxJSON("Account", src)
 	takerpays, err := utils.ToAmount(constant.Amount(takerPaysAmount))
