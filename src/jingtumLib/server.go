@@ -119,14 +119,12 @@ func (server *Server) Disconnect() bool {
 		// log.Println("Unsubscribe result : ", result, err)
 		server.wg.Done()
 	})
-	// server.wg.Wait()
 	rc := new(ReqCtx)
 	rc.command = constant.CommandDisconnect
-	// server.wg.Add(1)
 	server.sendMessage(rc)
 	server.remote.emit.Off("*")
 	server.wg.Wait()
-	// server.conn.Close()
+	server.conn.Close()
 	// close(server.reqs)
 	server.state = "offline"
 	server.connected = false
@@ -245,17 +243,9 @@ func (server *Server) connect(callback func(err error, result interface{})) erro
 
 		OnError: func(err error) {
 			log.Printf("On error : %s", err.Error())
-			//自动重连
-			// server.Disconnect()
-			// server.connect(func(err error, result interface{}) {
-			// 	if err != nil {
-			// 		Errorf("ReConnect fail. error : %v", err)
-			// 		server.Disconnect()
-			// 	}
-			// })
 		},
 
-		Reconnect: true,
+		Reconnect: false,
 	}
 	err := server.conn.Dial(server.url, "")
 	if err != nil {
