@@ -114,15 +114,19 @@ func (server *Server) Disconnect() bool {
 	}
 
 	req := server.remote.UnSubscribe([]string{"transactions", "ledger", "server"})
-	req.Submit(func(err error, result interface{}) {})
-
+	server.wg.Add(2)
+	req.Submit(func(err error, result interface{}) {
+		// log.Println("Unsubscribe result : ", result, err)
+		server.wg.Done()
+	})
+	// server.wg.Wait()
 	rc := new(ReqCtx)
 	rc.command = constant.CommandDisconnect
-	server.wg.Add(1)
+	// server.wg.Add(1)
 	server.sendMessage(rc)
 	server.remote.emit.Off("*")
 	server.wg.Wait()
-	server.conn.Close()
+	// server.conn.Close()
 	// close(server.reqs)
 	server.state = "offline"
 	server.connected = false
