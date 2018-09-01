@@ -99,7 +99,7 @@ func (*Secp256KeyPair) GenerateSeed() (string, error) {
 	seedBytes := make([]byte, 16)
 	_, err := io.ReadFull(rand.Reader, seedBytes)
 	if err != nil {
-		return "", fmt.Errorf("Reading random reader: %v", err)
+		return "", fmt.Errorf("Reading random reader: %s", err.Error())
 	}
 	return jtUtils.EncodeB58(jtConst.SeedPrefix, seedBytes), nil
 }
