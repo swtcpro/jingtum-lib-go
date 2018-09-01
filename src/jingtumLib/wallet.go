@@ -7,9 +7,9 @@
 package jingtumlib
 
 import (
-	"fmt"
 	"crypto/ecdsa"
-	
+	"fmt"
+
 	"jingtumlib/constant"
 	"jingtumlib/crypto/secp256k1"
 	"jingtumlib/utils"
@@ -102,7 +102,7 @@ func (wallet *Wallet) signTx(hash []byte) (string, error) {
 
 	signature, err := (*btcec.PrivateKey)(priv).Sign(hash)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return fmt.Sprintf("%X", signature.Serialize()), nil
