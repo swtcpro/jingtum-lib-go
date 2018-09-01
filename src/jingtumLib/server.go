@@ -195,7 +195,7 @@ func (server *Server) listeningSend() {
 
 		// 发送消息
 		if err := server.conn.Send(bm); err != nil {
-			server.Disconnect()
+			// server.Disconnect()
 			req.callback(err, nil)
 			break
 		}
