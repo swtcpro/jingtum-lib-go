@@ -19,7 +19,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -82,7 +81,7 @@ func derivePrivateKey(seed []byte) *big.Int {
 func (*Secp256KeyPair) DeriveKeyPair(secret string) (*PrivateKey, error) {
 	decodedBytes, err := jtEncode.Base58Decode(secret, jtEncode.JingTumAlphabet)
 	if err != nil || decodedBytes[0] != jtConst.SeedPrefix || len(decodedBytes) < 5 {
-		err = errors.New("invalid input size")
+		err = fmt.Errorf("invalid input size")
 		return nil, err
 	}
 	var priv PrivateKey
@@ -109,7 +108,6 @@ func (*Secp256KeyPair) CheckAddress(address string) bool {
 	_, err := jtUtils.DecodeB58(jtConst.AccountPrefix, address)
 
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
 
@@ -176,7 +174,7 @@ func scalarMultipleDiscrim(bytes []byte, discrim uint32) *big.Int {
 		sh512.Add32(discrim)
 		sh512.Add32(i)
 		privateGenBytes := sh512.Finish256()
-		privateGen = new(big.Int).SetBytes(privateGenBytes) //BytesToBigInt(privateGenBytes)
+		privateGen = new(big.Int).SetBytes(privateGenBytes)
 		if privateGen.Cmp(big.NewInt(0)) == 1 && privateGen.Cmp(ec.N) == -1 {
 			return privateGen
 		}
